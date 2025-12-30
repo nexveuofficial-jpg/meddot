@@ -1,0 +1,103 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 3rem;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.greeting {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+}
+
+.userName {
+    color: var(--muted-foreground);
+    font-weight: 400;
+}
+
+.logoutButton {
+    padding: 0.75rem 1.5rem;
+    border-radius: 2rem;
+    background: white;
+    border: 1px solid var(--border);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+}
+
+.announcementSection {
+    margin-bottom: 3rem;
+    animation: fadeInUp 0.6s ease-out 0.1s backwards;
+}
+
+.announcementTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.announcementList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.announcementCard {
+    padding: 1rem 1.5rem;
+    background: #fff;
+    border-left: 4px solid var(--primary);
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    padding-bottom: 2rem;
+}
+
+.cardContainer {
+    height: 240px;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .greeting {
+        font-size: 1.75rem;
+    }
+
+    .logoutButton {
+        display: none;
+        /* Hide logout on mobile header if it creates clutter, or move it to sidebar settings */
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+        /* Stack cards on mobile */
+        gap: 1rem;
+    }
+
+    .cardContainer {
+        height: auto;
+        min-height: 200px;
+    }
+}

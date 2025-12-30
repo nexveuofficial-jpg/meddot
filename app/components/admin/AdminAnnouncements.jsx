@@ -24,18 +24,22 @@ export default function AdminAnnouncements() {
         fetchData();
     }, []);
 
+    const [priority, setPriority] = useState('normal');
+
     const handlePost = async (e) => {
         e.preventDefault();
         if (!newContent.trim()) return;
 
         const { error } = await supabase.from('announcements').insert({
             content: newContent,
-            type: 'info',
+            type: priority, // Using priority column logic mapping to type/priority
+            priority: priority,
             is_active: true
         });
 
         if (!error) {
             setNewContent("");
+            setPriority("normal");
             fetchData();
         }
     };
@@ -51,15 +55,23 @@ export default function AdminAnnouncements() {
                 <Megaphone size={20} /> Announcements
             </h2>
 
-            <form onSubmit={handlePost} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <form onSubmit={handlePost} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                 <input
                     type="text"
                     value={newContent}
                     onChange={e => setNewContent(e.target.value)}
                     placeholder="New announcement..."
-                    style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }}
+                    style={{ flex: 1, minWidth: '200px', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }}
                 />
-                <button type="submit" style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '0.5rem', padding: '0 1rem', cursor: 'pointer' }}>
+                <select
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value)}
+                    style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--background)' }}
+                >
+                    <option value="normal">Normal</option>
+                    <option value="urgent">Urgent 🚨</option>
+                </select>
+                <button type="submit" style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '0.5rem', padding: '0 1rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                     <Plus size={18} />
                 </button>
             </form>

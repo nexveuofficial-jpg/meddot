@@ -8,6 +8,8 @@ import { Plus, Search, Loader2 } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 
+import styles from "./ask-senior.module.css";
+
 export default function AskSeniorPage() {
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -46,39 +48,21 @@ export default function AskSeniorPage() {
     }
 
     return (
-        <div style={{ padding: "2rem 4rem", maxWidth: "1200px", margin: "0 auto", minHeight: "100vh" }}>
-            <header style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "end",
-                marginBottom: "3rem"
-            }}>
+        <div className={styles.container}>
+            <header className={styles.header}>
                 <div>
                     <Link href="/dashboard" style={{ color: "var(--muted-foreground)", textDecoration: "none", fontSize: "0.9rem", marginBottom: "0.5rem", display: "inline-block" }}>← Back</Link>
-                    <h1 style={{ fontSize: "3rem", fontWeight: "800", letterSpacing: "-0.04em", color: "var(--foreground)", lineHeight: 1 }}>
+                    <h1 className={styles.title}>
                         Ask Senior
                     </h1>
-                    <p style={{ marginTop: "1rem", color: "var(--muted-foreground)", maxWidth: "500px" }}>
+                    <p className={styles.subtitle}>
                         Get guidance, clear doubts, and learn from experienced seniors.
                     </p>
                 </div>
 
                 {user && (
-                    <Link href="/ask-senior/ask">
-                        <button style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                            background: "var(--primary)",
-                            color: "white",
-                            border: "none",
-                            padding: "0.75rem 1.5rem",
-                            borderRadius: "0.75rem",
-                            fontSize: "0.95rem",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            boxShadow: "var(--shadow-md)"
-                        }}>
+                    <Link href="/ask-senior/ask" style={{ width: 'fit-content' }}>
+                        <button className={styles.askButton}>
                             <Plus size={18} />
                             Ask a Question
                         </button>
@@ -93,7 +77,7 @@ export default function AskSeniorPage() {
                     <p>No questions yet. Be the first to ask!</p>
                 </div>
             ) : (
-                <div style={{ display: "grid", gap: "1.5rem" }}>
+                <div className={styles.grid}>
                     {questions.map(q => <QuestionCard key={q.id} question={q} />)}
                 </div>
             )}

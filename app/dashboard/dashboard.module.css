@@ -1,0 +1,118 @@
+.container {
+    min-height: 100vh;
+    display: flex;
+    background: var(--muted);
+    position: relative;
+}
+
+.sidebar {
+    width: 280px;
+    background: var(--background);
+    border-right: 1px solid var(--border);
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    z-index: 50;
+    transition: transform 0.3s ease;
+}
+
+.main {
+    flex: 1;
+    padding: 3rem 4rem;
+    overflow-y: auto;
+    width: 100%;
+}
+
+.toggleButton {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 60;
+    padding: 0.5rem;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+}
+
+.navItem {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    color: var(--foreground);
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.navItem:hover {
+    background: var(--muted);
+}
+
+.activeNav {
+    composes: navItem;
+    background: var(--accent);
+    color: var(--accent-foreground);
+    font-weight: 600;
+}
+
+.header {
+    margin-bottom: 3rem;
+    padding-left: 0.5rem;
+}
+
+.title {
+    font-size: 1.5rem;
+    color: var(--primary);
+    letter-spacing: -0.03em;
+    font-weight: 700;
+}
+
+.subtitle {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .toggleButton {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform: translateX(-100%);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .main {
+        padding: 6rem 1.5rem 2rem;
+        /* Increased top padding for content not to hide behind fixed header if any, or just spacing */
+    }
+
+    .overlay.visible {
+        display: block;
+    }
+}

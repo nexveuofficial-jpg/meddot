@@ -2,135 +2,240 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
+import { useFeature } from "@/app/context/FeatureFlagContext";
+import { supabase } from "@/lib/supabase";
+import { UploadCloud, FileText, Loader2, ArrowLeft, AlertCircle } from "lucide-react";
 import Link from "next/link";
-import { Loader2, ArrowLeft } from "lucide-react";
 
 export default function UploadNotePage() {
     const { user } = useAuth();
+    const { isEnabled } = useFeature();
     const router = useRouter();
-    const [submitting, setSubmitting] = useState(false);
+
+    const [file, setFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
     const [formData, setFormData] = useState({
         title: "",
         subject: "",
-        description: "",
+        category: "Anatomy", // Default
+        description: ""
     });
+    const [error, setError] = useState("");
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!user) return;
-        setSubmitting(true);
+    // Gate access
+    if (!isEnabled('enable_uploads') && user?.role !== 'admin') {
+        return (
+            <div style={{ padding: '4rem', textAlign: 'center' }}>
+                <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Uploads are currently disabled.</h2>
+                <Link href="/dashboard" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Back to Dashboard</Link>
+            </div>
+        );
+    }
 
-        const { error } = await supabase.from('notes').insert({
-            title: formData.title,
-            subject: formData.subject,
-            description: formData.description,
-            author_id: user.id,
-            status: 'pending'
-        });
-
-        setSubmitting(false);
-
-        if (error) {
-            alert("Error uploading note: " + error.message);
+    const handleFileChange = (e) => {
+        const selected = e.target.files[0];
+        if (selected && selected.type === "application/pdf") {
+            setFile(selected);
+            setError("");
         } else {
-            alert("Note submitted for review!");
-            router.push('/notes');
+            setFile(null);
+            setError("Only PDF files are allowed.");
+        }
+    };
+
+    const handleUpload = async (e) => {
+        e.preventDefault();
+        if (!file || !formData.title || !formData.subject) {
+            setError("Please fill in all required fields and select a PDF.");
+            return;
+        }
+
+        setUploading(true);
+        setError("");
+
+        try {
+            // 1. Upload to Supabase Storage
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+            const filePath = `${user.id}/${fileName}`;
+
+            const { data: storageData, error: storageError } = await supabase.storage
+                .from('notes_documents')
+                .upload(filePath, file);
+
+            if (storageError) throw storageError;
+
+            // 2. Insert into Database
+            const { data: publicUrlData } = supabase.storage
+                .from('notes_documents')
+                .getPublicUrl(filePath);
+
+            const { error: dbError } = await supabase.from('notes').insert({
+                title: formData.title,
+                description: formData.description,
+                subject: formData.subject,
+                category: formData.category,
+                file_path: filePath,
+                file_url: publicUrlData.publicUrl,
+                uploader_id: user.id,
+                author_name: user?.full_name || 'Anonymous',
+                status: 'pending' // Default to pending approval
+            });
+
+            if (dbError) throw dbError;
+
+            // Success
+            alert("Note uploaded successfully! It is pending admin approval.");
+            router.push("/notes");
+
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "An error occurred during upload.");
+        } finally {
+            setUploading(false);
         }
     };
 
     return (
-        <div style={{ minHeight: '100vh', padding: '4rem 2rem', maxWidth: '800px', margin: '0 auto' }}>
-            <Link href="/notes" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--muted-foreground)', textDecoration: 'none', marginBottom: '2rem' }}>
-                <ArrowLeft size={18} />
-                Back to Library
+        <div style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem" }}>
+            <Link href="/notes" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--muted-foreground)', marginBottom: '2rem', textDecoration: 'none' }}>
+                <ArrowLeft size={18} /> Back to Library
             </Link>
 
-            <div style={{
-                background: 'white',
-                padding: '2.5rem',
-                borderRadius: '1.5rem',
-                border: '1px solid var(--border)',
-                boxShadow: 'var(--shadow-lg)'
-            }}>
-                <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--foreground)' }}>Upload Note</h1>
-                <p style={{ color: 'var(--muted-foreground)', marginBottom: '2rem' }}>
-                    Share your knowledge with the community. All notes are reviewed by admins before publishing.
-                </p>
+            <div style={{ background: "#fff", borderRadius: "1rem", padding: "2.5rem", boxShadow: "var(--shadow-lg)", border: "1px solid var(--border)" }}>
+                <div style={{ marginBottom: "2rem", textAlign: "center" }}>
+                    <h1 style={{ fontSize: "2rem", fontWeight: "800", marginBottom: "0.5rem", background: "linear-gradient(135deg, var(--primary), var(--accent))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                        Contribute Note
+                    </h1>
+                    <p style={{ color: "var(--muted-foreground)" }}>Share your knowledge with the Meddot community.</p>
+                </div>
 
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Title</label>
+                {error && (
+                    <div style={{ padding: "1rem", background: "#fef2f2", color: "#ef4444", borderRadius: "0.5rem", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem", border: "1px solid #fecaca" }}>
+                        <AlertCircle size={20} />
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleUpload} style={{ display: "grid", gap: "1.5rem" }}>
+                    {/* File Upload Zone */}
+                    <div style={{
+                        border: "2px dashed var(--border)",
+                        borderRadius: "1rem",
+                        padding: "3rem 1rem",
+                        textAlign: "center",
+                        cursor: "pointer",
+                        background: file ? "#f0fdf4" : "transparent",
+                        borderColor: file ? "#22c55e" : "var(--border)",
+                        transition: "all 0.2s"
+                    }} onClick={() => document.getElementById('fileInput').click()}>
                         <input
-                            required
-                            type="text"
-                            placeholder="e.g. Cranial Nerves Summary"
-                            value={formData.title}
-                            onChange={e => setFormData({ ...formData, title: e.target.value })}
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }}
+                            id="fileInput"
+                            type="file"
+                            accept="application/pdf"
+                            onChange={handleFileChange}
+                            style={{ display: "none" }}
                         />
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
+                            {file ? <FileText size={48} color="#22c55e" /> : <UploadCloud size={48} color="var(--muted-foreground)" />}
+                            <div>
+                                <h3 style={{ fontSize: "1.1rem", fontWeight: 600 }}>{file ? file.name : "Click to select PDF"}</h3>
+                                <p style={{ fontSize: "0.9rem", color: "var(--muted-foreground)" }}>
+                                    {file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "Max file size: 10MB"}
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                    {/* Metadata Fields */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Subject</label>
-                            <select
+                            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Title *</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Cranial Nerves Summary"
+                                value={formData.title}
+                                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                style={inputStyle}
                                 required
-                                value={formData.subject}
-                                onChange={e => setFormData({ ...formData, subject: e.target.value })}
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'white' }}
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Category</label>
+                            <select
+                                value={formData.category}
+                                onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                style={inputStyle}
                             >
-                                <option value="">Select a Subject</option>
-                                <option>Anatomy</option>
-                                <option>Physiology</option>
-                                <option>Biochemistry</option>
-                                <option>Pharmacology</option>
-                                <option>Pathology</option>
-                                <option>Microbiology</option>
+                                {['Anatomy', 'Physiology', 'Biochemistry', 'Pathology', 'Pharmacology', 'Microbiology', 'Medicine', 'Surgery', 'Other'].map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
                             </select>
                         </div>
                     </div>
 
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Description / Summary</label>
-                        <textarea
+                        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Specific Subject / Topic *</label>
+                        <input
+                            type="text"
+                            placeholder="e.g. Neuroanatomy"
+                            value={formData.subject}
+                            onChange={e => setFormData({ ...formData, subject: e.target.value })}
+                            style={inputStyle}
                             required
-                            rows={4}
-                            placeholder="Brief description of what this note covers..."
-                            value={formData.description}
-                            onChange={e => setFormData({ ...formData, description: e.target.value })}
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }}
                         />
                     </div>
 
-                    <div style={{ background: 'var(--muted)', padding: '1rem', borderRadius: '0.5rem', border: '1px dashed var(--border)', textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '0.9rem' }}>
-                        PDF Upload is disabled for this prototype. (Metadata only)
+                    <div>
+                        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Description</label>
+                        <textarea
+                            rows="3"
+                            placeholder="Brief description of what this note covers..."
+                            value={formData.description}
+                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                            style={inputStyle}
+                        />
                     </div>
 
                     <button
                         type="submit"
-                        disabled={submitting}
+                        disabled={uploading}
                         style={{
-                            background: 'var(--primary)',
-                            color: 'white',
-                            padding: '1rem',
-                            borderRadius: '0.75rem',
+                            padding: "1rem",
+                            borderRadius: "0.75rem",
+                            background: "var(--foreground)",
+                            color: "var(--background)",
                             fontWeight: 600,
-                            border: 'none',
-                            cursor: submitting ? 'not-allowed' : 'pointer',
-                            opacity: submitting ? 0.7 : 1,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: '0.5rem'
+                            fontSize: "1rem",
+                            border: "none",
+                            cursor: uploading ? "not-allowed" : "pointer",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                            marginTop: "1rem",
+                            opacity: uploading ? 0.7 : 1
                         }}
                     >
-                        {submitting && <Loader2 className="animate-spin" size={20} />}
-                        {submitting ? 'Submitting...' : 'Submit to Community'}
+                        {uploading ? <>Uploading... <Loader2 className="animate-spin" /></> : "Submit Note"}
                     </button>
+
+                    <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', textAlign: 'center' }}>
+                        Note: All uploads are reviewed by Key Seniors or Admins before publishing.
+                    </p>
                 </form>
             </div>
         </div>
     );
 }
+
+const inputStyle = {
+    width: "100%",
+    padding: "0.75rem",
+    borderRadius: "0.5rem",
+    border: "1px solid var(--border)",
+    fontSize: "0.95rem",
+    background: "var(--background)",
+    color: "var(--foreground)"
+};

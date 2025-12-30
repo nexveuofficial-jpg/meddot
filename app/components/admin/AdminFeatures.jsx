@@ -14,6 +14,8 @@ export default function AdminFeatures() {
         { key: 'enable_chat', label: 'Global Chat System', desc: 'Enable subject-wise chat rooms' },
         { key: 'enable_uploads', label: 'Student Uploads', desc: 'Allow students to upload notes' },
         { key: 'enable_ask_senior', label: 'Ask Senior Q&A', desc: 'Enable Q&A section' },
+        { key: 'enable_private_messages', label: 'Private Messaging', desc: 'Enable 1-to-1 chat between users' },
+        { key: 'enable_focus_rooms', label: 'Focus Rooms', desc: 'Enable public Pomodoro study rooms' },
     ];
 
     return (

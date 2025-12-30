@@ -3,18 +3,20 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import styles from "../../admin/AdminDashboard.module.css";
-import { Loader2, Check, X, FileText, Eye } from "lucide-react";
+import { Loader2, Check, X, Eye } from "lucide-react";
 
 export default function AdminNotes() {
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('all'); // all, pending, approved
+    const [filter, setFilter] = useState('pending'); // Default to pending for better workflow
 
     const fetchNotes = async () => {
         setLoading(true);
+        // Using author_name (denormalized) and uploader_id for now.
+        // If we want exact profile name join, we need foreign key set up correctly.
         let query = supabase
             .from('notes')
-            .select('*, profiles(full_name)')
+            .select('*')
             .order('created_at', { ascending: false });
 
         if (filter !== 'all') {
@@ -23,7 +25,7 @@ export default function AdminNotes() {
 
         const { data, error } = await query;
         if (error) console.error(error);
-        else setNotes(data);
+        else setNotes(data || []);
         setLoading(false);
     };
 
@@ -63,7 +65,7 @@ export default function AdminNotes() {
                 >
                     <option value="all">All Notes</option>
                     <option value="pending">Pending Review</option>
-                    <option value="approved">Published</option>
+                    <option value="published">Published</option>
                     <option value="rejected">Rejected</option>
                 </select>
             </div>
@@ -71,7 +73,7 @@ export default function AdminNotes() {
             {loading ? (
                 <div className="p-10 flex justify-center"><Loader2 className="animate-spin" /></div>
             ) : notes.length === 0 ? (
-                <div className={styles.emptyState}>No notes found.</div>
+                <div className={styles.emptyState}>No notes found in this category.</div>
             ) : (
                 <div className={styles.tableContainer}>
                     <table className={styles.table}>
@@ -92,27 +94,34 @@ export default function AdminNotes() {
                                         <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{new Date(note.created_at).toLocaleDateString()}</div>
                                     </td>
                                     <td>{note.subject}</td>
-                                    <td>{note.profiles?.full_name || 'Unknown'}</td>
+                                    <td>{note.author_name || 'Anonymous'}</td>
                                     <td>
                                         <span className={styles.badge} style={{
-                                            background: note.status === 'approved' ? '#dcfce7' : note.status === 'pending' ? '#fef9c3' : '#fee2e2',
-                                            color: note.status === 'approved' ? '#166534' : note.status === 'pending' ? '#854d0e' : '#991b1b',
-                                            border: `1px solid ${note.status === 'approved' ? '#bbf7d0' : note.status === 'pending' ? '#fde047' : '#fecaca'}`
+                                            background: note.status === 'published' ? '#dcfce7' : note.status === 'pending' ? '#fef9c3' : '#fee2e2',
+                                            color: note.status === 'published' ? '#166534' : note.status === 'pending' ? '#854d0e' : '#991b1b',
+                                            border: `1px solid ${note.status === 'published' ? '#bbf7d0' : note.status === 'pending' ? '#fde047' : '#fecaca'}`
                                         }}>
                                             {note.status}
                                         </span>
                                     </td>
                                     <td style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <button className={styles.actionButton} style={{ background: 'var(--muted)', color: 'var(--foreground)' }} title="View">
+                                        <a
+                                            href={note.file_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={styles.actionButton}
+                                            style={{ background: 'var(--muted)', color: 'var(--foreground)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                                            title="View PDF"
+                                        >
                                             <Eye size={14} />
-                                        </button>
+                                        </a>
                                         {note.status === 'pending' && (
                                             <>
                                                 <button
-                                                    onClick={() => updateStatus(note.id, 'approved')}
+                                                    onClick={() => updateStatus(note.id, 'published')}
                                                     className={styles.actionButton}
                                                     style={{ background: '#dcfce7', color: '#166534' }}
-                                                    title="Approve"
+                                                    title="Approve & Publish"
                                                 >
                                                     <Check size={14} />
                                                 </button>
@@ -126,7 +135,7 @@ export default function AdminNotes() {
                                                 </button>
                                             </>
                                         )}
-                                        {note.status === 'approved' && (
+                                        {note.status === 'published' && (
                                             <button
                                                 onClick={() => updateStatus(note.id, 'rejected')}
                                                 className={styles.actionButton}

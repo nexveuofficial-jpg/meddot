@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
+import styles from "./dashboard.module.css";
+import { Menu, X } from "lucide-react";
 
 export default function DashboardLayout({ children }) {
     const { user } = useAuth();
     const router = useRouter();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("meddot_user");
@@ -15,54 +18,53 @@ export default function DashboardLayout({ children }) {
         }
     }, [user, router]);
 
+    // Close mobile menu on route change or when screen resizes to desktop
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth > 768) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     if (!user && typeof window !== 'undefined' && !localStorage.getItem("meddot_user")) {
         return null;
     }
 
-    const navItemStyle = {
-        padding: "0.75rem 1rem",
-        borderRadius: "0.5rem",
-        color: "var(--foreground)",
-        fontSize: "0.95rem",
-        fontWeight: 500,
-        marginBottom: "0.5rem",
-        cursor: "pointer",
-        transition: "all 0.2s ease"
-    };
-
-    const activeNavStyle = {
-        ...navItemStyle,
-        background: "var(--accent)",
-        color: "var(--accent-foreground)",
-        fontWeight: 600
-    };
-
     return (
-        <div style={{ minHeight: "100vh", display: "flex", background: "var(--muted)" }}>
-            <aside style={{
-                width: "280px",
-                background: "var(--background)",
-                borderRight: "1px solid var(--border)",
-                padding: "2rem 1.5rem",
-                display: "flex",
-                flexDirection: "column",
-                position: "sticky",
-                top: 0,
-                height: "100vh"
-            }}>
-                <div style={{ marginBottom: "3rem", paddingLeft: "0.5rem" }}>
-                    <h2 style={{ fontSize: "1.5rem", color: "var(--primary)", letterSpacing: "-0.03em" }}>Meddot.</h2>
-                    <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Student Portal</p>
+        <div className={styles.container}>
+            {/* Mobile Toggle Button */}
+            <button
+                className={styles.toggleButton}
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle Menu"
+            >
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+
+            {/* Overlay for mobile */}
+            <div
+                className={`${styles.overlay} ${isMobileMenuOpen ? styles.visible : ''}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+            />
+
+            <aside className={`${styles.sidebar} ${isMobileMenuOpen ? styles.open : ''}`}>
+                <div className={styles.header}>
+                    <h2 className={styles.title}>Meddot.</h2>
+                    <p className={styles.subtitle}>Student Portal</p>
                 </div>
 
                 <nav style={{ display: "flex", flexDirection: "column" }}>
-                    <div style={activeNavStyle}>Dashboard</div>
-                    <div style={navItemStyle} className="hover-nav">Notes Library</div>
-                    <div style={navItemStyle} className="hover-nav">My Bookmarks</div>
-                    <div style={{ ...navItemStyle, marginTop: "auto", color: "var(--muted-foreground)" }}>Settings</div>
+                    <div className={styles.activeNav}>Dashboard</div>
+                    <div className={styles.navItem}>Notes Library</div>
+                    <div className={styles.navItem}>My Bookmarks</div>
+                    <div className={styles.navItem} style={{ marginTop: "auto" }}>Settings</div>
                 </nav>
             </aside>
-            <main style={{ flex: 1, padding: "3rem 4rem", overflowY: "auto" }}>
+
+            <main className={styles.main}>
                 <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
                     {children}
                 </div>
