@@ -43,6 +43,7 @@ This plan documents the step-by-step expansion of Meddot into a daily-use medica
 
 ### Feature: User Profile Settings [DONE]
 - [x] **Database**: `profiles` table extension (Schema in `supabase/schema_profile_updates.sql`).
+- [x] **CRITICAL FIX**: Vercel Build Hang (Cleanup Realtime Subscriptions)
 - [x] **UI**: `/settings` page for Avatar and Bio.
 
 ### Feature 5 & 10: Gamification (Streaks & Leaderboard) [PENDING]
