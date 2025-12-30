@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
     }, [router]);
 
     const login = async (email, password) => {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
         });
@@ -62,7 +62,13 @@ export function AuthProvider({ children }) {
             alert(error.message);
             return false;
         }
-        // Redirect handled by onAuthStateChange or logic below
+
+        // Critical: Set user state immediately to prevent redirect race condition
+        if (data?.session?.user) {
+            const combinedUser = await fetchProfile(data.session.user);
+            setUser(combinedUser);
+        }
+
         return true;
     };
 

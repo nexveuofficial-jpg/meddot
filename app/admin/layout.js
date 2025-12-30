@@ -7,15 +7,13 @@ import { useFeature } from "@/app/context/FeatureFlagContext";
 import styles from "./AdminDashboard.module.css";
 
 export default function AdminLayout({ children }) {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
     const router = useRouter();
     const [isAuthorized, setIsAuthorized] = useState(null); // null = loading, false = denied, true = allowed
 
     useEffect(() => {
-        // We need to wait for the user state to be determined (which might happen after a mount if it depends on localStorage)
-        // However, AuthContext initializes from localStorage in its own effect.
-        // We double check localStorage here just to be safe and avoid flickering if context is slow, 
-        // but primarily rely on context if available.
+        // Wait for auth loading to finish
+        if (loading) return;
 
         const checkAuth = () => {
             const storedUserStr = localStorage.getItem("meddot_user");
@@ -38,7 +36,7 @@ export default function AdminLayout({ children }) {
         };
 
         checkAuth();
-    }, [user, router]);
+    }, [user, loading, router]);
 
     if (isAuthorized === null) {
         return (

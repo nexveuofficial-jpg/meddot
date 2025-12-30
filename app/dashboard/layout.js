@@ -7,16 +7,18 @@ import styles from "./dashboard.module.css";
 import { Menu, X } from "lucide-react";
 
 export default function DashboardLayout({ children }) {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
     const router = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("meddot_user");
-        if (!storedUser && !user) {
+
+        // Only redirect if NOT loading and NO user
+        if (!loading && !user && !storedUser) {
             router.push("/login");
         }
-    }, [user, router]);
+    }, [user, loading, router]);
 
     // Close mobile menu on route change or when screen resizes to desktop
     useEffect(() => {
@@ -28,6 +30,14 @@ export default function DashboardLayout({ children }) {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     if (!user && typeof window !== 'undefined' && !localStorage.getItem("meddot_user")) {
         return null;
