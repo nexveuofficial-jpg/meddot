@@ -1,0 +1,196 @@
+:root {
+  /* Goodnotes-inspired "Clean & Premium" Palette */
+
+  /* Base - Soft Paper-like White */
+  --background: #fdfdfc;
+  --foreground: #1e293b;
+  /* Slate-800 - Softer than pure black */
+
+  /* Primary - Trustworthy, Calm Blue */
+  --primary: #0ea5e9;
+  --primary-foreground: #ffffff;
+
+  /* Secondary - Fresh Teal (Accents) */
+  --secondary: #14b8a6;
+  --secondary-foreground: #ffffff;
+
+  /* UI Elements */
+  --muted: #f1f5f9;
+  /* Slate-100 */
+  --muted-foreground: #64748b;
+  /* Slate-500 */
+
+  --accent: #f0f9ff;
+  /* Sky-50 */
+  --accent-foreground: #0284c7;
+  /* Sky-600 */
+
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #0ea5e9;
+
+  /* Card Specifics */
+  --card-bg: #ffffff;
+  --card-border: rgba(226, 232, 240, 0.8);
+
+  /* Radii */
+  --radius: 0.75rem;
+
+  /* Shadows - Soft & Diffused */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  --shadow-premium: 0 20px 40px -10px rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    /* Deep Slate */
+    --foreground: #f8fafc;
+
+    --primary: #38bdf8;
+    --primary-foreground: #0f172a;
+
+    --secondary: #2dd4bf;
+    --secondary-foreground: #0f172a;
+
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+
+    --accent: #0c4a6e;
+    --accent-foreground: #e0f2fe;
+
+    --border: #334155;
+    --input: #334155;
+    --ring: #38bdf8;
+
+    --card-bg: rgba(30, 41, 59, 0.6);
+    --card-border: rgba(255, 255, 255, 0.1);
+  }
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  height: 100%;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  line-height: 1.2;
+  /* Slightly looser than 1.1 */
+  letter-spacing: -0.025em;
+  color: var(--foreground);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+/* Glassmorphism Utilities - Refined */
+.glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: var(--shadow-md);
+}
+
+.glass-clean {
+  background: rgba(255, 255, 255, 0.85);
+  /* More opaque, cleaner look */
+  backdrop-filter: blur(8px);
+  /* Subtle blur */
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  box-shadow: var(--shadow-sm);
+}
+
+.glass-heavy {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode adjustments for glass */
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-clean {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .glass-heavy {
+    background: rgba(15, 23, 42, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+}

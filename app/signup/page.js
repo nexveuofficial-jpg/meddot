@@ -1,0 +1,114 @@
+"use client";
+
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+export default function SignupPage() {
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const { signup } = useAuth();
+    const router = useRouter();
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        signup(name, email, password);
+        router.push("/dashboard");
+    };
+
+    return (
+        <div style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "2rem"
+        }}>
+            <div style={{
+                width: "100%",
+                maxWidth: "400px",
+                padding: "2rem",
+                borderRadius: "1rem",
+                background: "var(--background)",
+                border: "1px solid var(--border)",
+                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
+            }}>
+                <h1 style={{ marginBottom: "1.5rem", textAlign: "center", color: "var(--primary)" }}>Join Meddot</h1>
+
+                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    <div>
+                        <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem", fontWeight: 500 }}>Full Name</label>
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            style={{
+                                width: "100%",
+                                padding: "0.75rem",
+                                borderRadius: "0.5rem",
+                                border: "1px solid var(--border)",
+                                background: "var(--muted)"
+                            }}
+                        />
+                    </div>
+
+                    <div>
+                        <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem", fontWeight: 500 }}>Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            style={{
+                                width: "100%",
+                                padding: "0.75rem",
+                                borderRadius: "0.5rem",
+                                border: "1px solid var(--border)",
+                                background: "var(--muted)"
+                            }}
+                        />
+                    </div>
+
+                    <div>
+                        <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem", fontWeight: 500 }}>Password</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            style={{
+                                width: "100%",
+                                padding: "0.75rem",
+                                borderRadius: "0.5rem",
+                                border: "1px solid var(--border)",
+                                background: "var(--muted)"
+                            }}
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        style={{
+                            marginTop: "1rem",
+                            padding: "0.75rem",
+                            borderRadius: "0.5rem",
+                            background: "var(--primary)",
+                            color: "white",
+                            fontWeight: 600,
+                            fontSize: "1rem"
+                        }}
+                    >
+                        Sign Up
+                    </button>
+                </form>
+
+                <p style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+                    Already have an account? <Link href="/login" style={{ color: "var(--primary)" }}>Sign in</Link>
+                </p>
+            </div>
+        </div>
+    );
+}

@@ -1,0 +1,181 @@
+"use client";
+
+import { useEffect, useState, use } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/app/context/AuthContext";
+import Link from "next/link";
+import { Loader2, ArrowLeft, Send, CheckCircle } from "lucide-react";
+
+export default function QuestionDetailPage(props) {
+    const params = use(props.params);
+    const [question, setQuestion] = useState(null);
+    const [answers, setAnswers] = useState([]);
+    const [newAnswer, setNewAnswer] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+    const { user } = useAuth();
+
+    const fetchQuestionAndAnswers = async () => {
+        if (!params?.id) return;
+
+        // Fetch Question
+        const { data: qData, error: qError } = await supabase
+            .from('questions')
+            .select('*, profiles(full_name)')
+            .eq('id', params.id)
+            .single();
+
+        if (qError) {
+            console.error(qError);
+            setLoading(false);
+            return;
+        }
+
+        setQuestion(qData);
+
+        // Fetch Answers
+        const { data: aData, error: aError } = await supabase
+            .from('answers')
+            .select('*, profiles(full_name)')
+            .eq('question_id', params.id)
+            .order('created_at', { ascending: true });
+
+        if (aError) console.error(aError);
+        else setAnswers(aData);
+
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchQuestionAndAnswers();
+
+        // Realtime Subscription
+        const sub = supabase
+            .channel(`question_${params.id}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'answers', filter: `question_id=eq.${params.id}` }, () => {
+                fetchQuestionAndAnswers();
+            })
+            .subscribe();
+
+        return () => supabase.removeChannel(sub);
+    }, [params]);
+
+    const handleAnswerSubmit = async (e) => {
+        e.preventDefault();
+        if (!newAnswer.trim() || !user) return;
+        setSubmitting(true);
+
+        const { error } = await supabase.from('answers').insert({
+            question_id: params.id,
+            content: newAnswer,
+            author_id: user.id
+        });
+
+        if (error) alert("Error posting answer: " + error.message);
+        else setNewAnswer("");
+
+        setSubmitting(false);
+    };
+
+    if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin" /></div>;
+    if (!question) return <div className="p-20 text-center">Question not found</div>;
+
+    return (
+        <div style={{ padding: "2rem 4rem", maxWidth: "1000px", margin: "0 auto", minHeight: "100vh" }}>
+            <Link href="/ask-senior" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--muted-foreground)', textDecoration: 'none', marginBottom: '2rem' }}>
+                <ArrowLeft size={18} />
+                Back to Q&A
+            </Link>
+
+            {/* Question Section */}
+            <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '2rem', boxShadow: 'var(--shadow-sm)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <span style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", color: "var(--primary)", background: "var(--accent)", padding: "0.25rem 0.75rem", borderRadius: "99px" }}>
+                        {question.topic}
+                    </span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>
+                        {new Date(question.created_at).toLocaleDateString()}
+                    </span>
+                </div>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '1rem', lineHeight: 1.3 }}>{question.content}</h1>
+                <p style={{ color: 'var(--muted-foreground)', fontWeight: 500 }}>
+                    Asked by {question.profiles?.full_name || 'Anonymous'}
+                </p>
+            </div>
+
+            {/* Answers Section */}
+            <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Answers ({answers.length})</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {answers.map(answer => (
+                        <div key={answer.id} style={{
+                            background: answer.author_id === user?.id ? '#f0f9ff' : 'white', // Highlight own answers
+                            padding: '1.5rem',
+                            borderRadius: '1rem',
+                            border: '1px solid var(--border)',
+                            position: 'relative'
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                                    {answer.profiles?.full_name || 'Anonymous'}
+                                    {answer.profiles?.role !== 'student' && <span style={{ marginLeft: '0.5rem', fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 6px', borderRadius: '4px' }}>{answer.profiles?.role}</span>}
+                                </span>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{new Date(answer.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <p style={{ lineHeight: 1.6 }}>{answer.content}</p>
+                        </div>
+                    ))}
+                    {answers.length === 0 && <p style={{ color: 'var(--muted-foreground)', fontStyle: 'italic' }}>No answers yet. Be the first!</p>}
+                </div>
+            </div>
+
+            {/* Post Answer Form */}
+            {user ? (
+                <form onSubmit={handleAnswerSubmit} style={{
+                    background: 'white',
+                    padding: '1.5rem',
+                    borderRadius: '1rem',
+                    border: '1px solid var(--border)',
+                    boxShadow: 'var(--shadow-lg)',
+                    position: 'sticky',
+                    bottom: '2rem'
+                }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Post your Answer</label>
+                    <textarea
+                        rows={3}
+                        value={newAnswer}
+                        onChange={e => setNewAnswer(e.target.value)}
+                        placeholder="Write a helpful response..."
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', marginBottom: '1rem', resize: 'vertical' }}
+                    />
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        style={{
+                            background: 'var(--primary)',
+                            color: 'white',
+                            padding: '0.75rem 1.5rem',
+                            borderRadius: '0.5rem',
+                            fontWeight: 600,
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            float: 'right'
+                        }}
+                    >
+                        {submitting ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
+                        Post Answer
+                    </button>
+                    <div style={{ clear: 'both' }}></div>
+                </form>
+            ) : (
+                <div style={{ textAlign: 'center', padding: '2rem', background: 'var(--muted)', borderRadius: '1rem' }}>
+                    <Link href="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>Login</Link> to post an answer.
+                </div>
+            )}
+        </div>
+    );
+}
