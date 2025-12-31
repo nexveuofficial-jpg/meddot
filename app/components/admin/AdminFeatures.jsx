@@ -7,6 +7,18 @@ import { ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
 
 export default function AdminFeatures() {
     const { flags, toggleFlag, loading } = useFeature();
+    const [updating, setUpdating] = useState(null); // Key being updated
+
+    const handleToggle = async (key, value) => {
+        setUpdating(key);
+        try {
+            await toggleFlag(key, value);
+        } catch (err) {
+            alert("Failed to toggle feature");
+        } finally {
+            setUpdating(null);
+        }
+    };
 
     if (loading) return <div className="p-4"><Loader2 className="animate-spin" /></div>;
 
@@ -40,7 +52,8 @@ export default function AdminFeatures() {
                             <input
                                 type="checkbox"
                                 checked={flags[feat.key] || false}
-                                onChange={(e) => toggleFlag(feat.key, e.target.checked)}
+                                onChange={(e) => handleToggle(feat.key, e.target.checked)}
+                                disabled={updating === feat.key}
                             />
                             <span className="slider round"></span>
                         </label>

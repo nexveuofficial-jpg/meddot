@@ -25,13 +25,25 @@ export default function AdminUsers() {
         fetchUsers();
     }, []);
 
+    const [actionLoading, setActionLoading] = useState(null); // ID of user being updated
+
     const updateRole = async (id, newRole) => {
+        if (!confirm(`Are you sure you want to promote/demote this user to ${newRole}?`)) return;
+
+        setActionLoading(id);
         const { error } = await supabase
             .from('profiles')
             .update({ role: newRole })
             .eq('id', id);
 
-        if (!error) fetchUsers();
+        setActionLoading(null);
+
+        if (!error) {
+            alert(`User role updated to ${newRole}`);
+            fetchUsers();
+        } else {
+            alert("Failed to update role: " + error.message);
+        }
     };
 
     if (loading) return <div className="p-4"><Loader2 className="animate-spin" /></div>;

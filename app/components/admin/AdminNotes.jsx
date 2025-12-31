@@ -44,13 +44,19 @@ export default function AdminNotes() {
     }, [filter]);
 
     const updateStatus = async (id, status) => {
+        if (!confirm(`Are you sure you want to mark this note as ${status}?`)) return;
+
         const { error } = await supabase
             .from('notes')
             .update({ status })
             .eq('id', id);
 
-        if (error) alert("Error updating status");
-        // Realtime will auto-refresh
+        if (error) {
+            alert("Error updating status: " + error.message);
+        } else {
+            // Success feedback
+            // Realtime subscription will handle refresh, but a toast would be nice
+        }
     };
 
     return (

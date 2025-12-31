@@ -173,12 +173,13 @@ export default function ChatRoomPage(props) {
                             <div style={{
                                 padding: "0.75rem 1rem",
                                 borderRadius: isOwn ? "1rem 1rem 0 1rem" : "1rem 1rem 1rem 0",
-                                background: isOwn ? "var(--primary)" : "white",
-                                color: isOwn ? "white" : "var(--foreground)",
+                                background: isOwn ? "var(--primary)" : "var(--card-bg)",
+                                color: isOwn ? "var(--primary-foreground)" : "var(--text-primary)",
                                 boxShadow: isOwn ? "var(--shadow-md)" : "var(--shadow-sm)",
                                 border: isOwn ? "none" : "1px solid var(--border)",
                                 position: "relative",
-                                wordBreak: "break-word"
+                                wordBreak: "break-word",
+                                fontWeight: 500
                             }}>
                                 {msg.content}
                             </div>

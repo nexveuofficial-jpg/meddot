@@ -2,26 +2,37 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import styles from "./dashboard.module.css";
 import { Menu, X } from "lucide-react";
 import ErrorBoundary from "../components/ErrorBoundary";
 import Link from "next/link";
 
 export default function DashboardLayout({ children }) {
-    const { user, loading } = useAuth();
+    const { user, loading, initialized, logout } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    useEffect(() => {
-        const storedUser = localStorage.getItem("meddot_user");
+    const NavLink = ({ href, children }) => {
+        const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+        return (
+            <Link
+                href={href}
+                className={isActive ? styles.activeNav : styles.navItem}
+                onClick={() => setIsMobileMenuOpen(false)}
+            >
+                {children}
+            </Link>
+        );
+    };
 
-        // Only redirect if NOT loading and NO user
-        // We trust 'loading' from AuthContext which now waits for initial session check
-        if (!loading && !user && !storedUser) {
-            router.replace("/login"); // Use replace to prevent history stack buildup
+    useEffect(() => {
+        // Only redirect if auth is fully initialized and we definitely have no user
+        if (initialized && !loading && !user) {
+            router.replace("/login");
         }
-    }, [user, loading, router]);
+    }, [user, loading, initialized, router]);
 
     // Close mobile menu on route change or when screen resizes to desktop
     useEffect(() => {
@@ -34,16 +45,17 @@ export default function DashboardLayout({ children }) {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    if (loading) {
+    // Show loading spinner until we know auth state
+    if (!initialized || loading) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--background)' }}>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
         );
     }
 
-    if (!user && typeof window !== 'undefined' && !localStorage.getItem("meddot_user")) {
-        return null;
+    if (!user) {
+        return null; // Return null while redirecting
     }
 
     return (
@@ -69,14 +81,22 @@ export default function DashboardLayout({ children }) {
                     <p className={styles.subtitle}>Student Portal</p>
                 </div>
 
-                <nav style={{ display: "flex", flexDirection: "column" }}>
-                    <Link href="/dashboard" className={styles.activeNav}>Dashboard</Link>
-                    <Link href="/notes" className={styles.navItem}>Notes Library</Link>
-                    <Link href="/ask-senior" className={styles.navItem}>Ask Senior</Link>
-                    <Link href="/chat" className={styles.navItem}>Study Groups</Link>
-                    <Link href="/bookmarks" className={styles.navItem}>My Bookmarks</Link>
-                    <Link href="/profile" className={styles.navItem}>My Profile</Link>
-                    <div className={styles.navItem} style={{ marginTop: "auto" }}>Settings</div>
+                <nav style={{ display: "flex", flexDirection: "column", gap: '0.5rem', marginTop: "2rem" }}>
+                    <NavLink href="/dashboard">Dashboard</NavLink>
+                    <NavLink href="/notes">Notes Library</NavLink>
+                    <NavLink href="/ask-senior">Ask Senior</NavLink>
+                    <NavLink href="/chat">Study Groups</NavLink>
+                    <NavLink href="/focus">Focus Mode</NavLink>
+                    <NavLink href="/profile">My Profile</NavLink>
+                    <NavLink href="/settings">Settings</NavLink>
+
+                    <button
+                        onClick={() => logout()}
+                        className={styles.navItem}
+                        style={{ marginTop: "auto", textAlign: "left", color: "#ef4444", fontWeight: 600 }}
+                    >
+                        Sign Out
+                    </button>
                 </nav>
             </aside>
 

@@ -20,9 +20,10 @@ export default function LoginPage() {
 
         try {
             const result = await login(email, password);
-            if (result) {
-                // Check if result is an object with a role (new logic) or just true (fallback)
-                const isAdmin = result?.role === 'admin' || email.includes("admin");
+
+            if (result.success) {
+                // Check role from the returned user object
+                const isAdmin = result.user?.role === 'admin' || email.includes("admin");
 
                 if (isAdmin) {
                     router.push("/admin");
@@ -30,7 +31,7 @@ export default function LoginPage() {
                     router.push("/dashboard");
                 }
             } else {
-                setError("Invalid credentials. Try student@meddot.com / password");
+                setError(result.error || "Invalid credentials. Try student@meddot.com / password");
                 setIsLoading(false);
             }
         } catch (err) {

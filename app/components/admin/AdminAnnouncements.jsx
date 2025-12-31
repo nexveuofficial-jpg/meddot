@@ -41,12 +41,16 @@ export default function AdminAnnouncements() {
             setNewContent("");
             setPriority("normal");
             fetchData();
+        } else {
+            alert("Failed to post announcement: " + error.message);
         }
     };
 
     const handleDelete = async (id) => {
+        if (!confirm("Are you sure you want to delete this announcement?")) return;
         const { error } = await supabase.from('announcements').delete().eq('id', id);
         if (!error) fetchData();
+        else alert("Failed to delete: " + error.message);
     };
 
     return (

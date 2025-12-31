@@ -7,38 +7,28 @@ import { useFeature } from "@/app/context/FeatureFlagContext";
 import styles from "./AdminDashboard.module.css";
 
 export default function AdminLayout({ children }) {
-    const { user, loading } = useAuth();
+    const { user, loading, initialized } = useAuth();
     const router = useRouter();
-    const [isAuthorized, setIsAuthorized] = useState(null); // null = loading, false = denied, true = allowed
+    const [isAuthorized, setIsAuthorized] = useState(null); // null = unknown, false = denied, true = allowed
 
     useEffect(() => {
-        // Wait for auth loading to finish
-        if (loading) return;
+        // Wait for auth to be fully initialized
+        if (!initialized || loading) return;
 
-        const checkAuth = () => {
-            const storedUserStr = localStorage.getItem("meddot_user");
-            let currentUser = user;
+        if (!user) {
+            router.replace("/login");
+            return;
+        }
 
-            if (!currentUser && storedUserStr) {
-                currentUser = JSON.parse(storedUserStr);
-            }
+        if (user.role !== 'admin' && !user.email?.includes('admin')) {
+            // Fallback check on email if role missing but strictly admin area
+            setIsAuthorized(false);
+        } else {
+            setIsAuthorized(true);
+        }
+    }, [user, loading, initialized, router]);
 
-            if (!currentUser) {
-                router.push("/login"); // Not logged in
-                return;
-            }
-
-            if (currentUser.role !== 'admin') {
-                setIsAuthorized(false); // Logged in but not admin
-            } else {
-                setIsAuthorized(true); // Admin
-            }
-        };
-
-        checkAuth();
-    }, [user, loading, router]);
-
-    if (isAuthorized === null) {
+    if (!initialized || loading || isAuthorized === null) {
         return (
             <div style={{
                 minHeight: "100vh",

@@ -3,35 +3,40 @@
 
   /* Base - Soft Paper-like White */
   --background: #fdfdfc;
-  --foreground: #1e293b;
-  /* Slate-800 - Softer than pure black */
+  --foreground: #0f172a;
+  /* Darker Slate-900 for better contrast */
+
+  /* Text Logic */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  /* Slate-600 */
+  --text-inverse: #ffffff;
 
   /* Primary - Trustworthy, Calm Blue */
-  --primary: #0ea5e9;
+  --primary: #0284c7;
+  /* Sky-600 - Slightly darker for white text contrast */
   --primary-foreground: #ffffff;
 
   /* Secondary - Fresh Teal (Accents) */
-  --secondary: #14b8a6;
+  --secondary: #0d9488;
+  /* Teal-600 */
   --secondary-foreground: #ffffff;
 
   /* UI Elements */
   --muted: #f1f5f9;
-  /* Slate-100 */
   --muted-foreground: #64748b;
-  /* Slate-500 */
 
   --accent: #f0f9ff;
-  /* Sky-50 */
-  --accent-foreground: #0284c7;
-  /* Sky-600 */
+  --accent-foreground: #0369a1;
 
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #0ea5e9;
+  --border: #cbd5e1;
+  /* Slate-300 - Sharper borders */
+  --input: #cbd5e1;
+  --ring: #0284c7;
 
   /* Card Specifics */
   --card-bg: #ffffff;
-  --card-border: rgba(226, 232, 240, 0.8);
+  --card-border: #e2e8f0;
 
   /* Radii */
   --radius: 0.75rem;
@@ -45,9 +50,13 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f172a;
-    /* Deep Slate */
+    --background: #020617;
+    /* Deepest Slate */
     --foreground: #f8fafc;
+
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-inverse: #020617;
 
     --primary: #38bdf8;
     --primary-foreground: #0f172a;
@@ -65,8 +74,9 @@
     --input: #334155;
     --ring: #38bdf8;
 
-    --card-bg: rgba(30, 41, 59, 0.6);
-    --card-border: rgba(255, 255, 255, 0.1);
+    --card-bg: #0f172a;
+    /* Solid background for durability, glass applied via class */
+    --card-border: #1e293b;
   }
 }
 

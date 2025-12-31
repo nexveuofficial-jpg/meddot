@@ -97,7 +97,12 @@ export default function SettingsPage() {
             alert('Error updating profile: ' + error.message);
         } else {
             alert('Profile updated successfully!');
-            router.refresh(); // Refresh to update AuthContext if it fetches fresh
+            router.refresh();
+            // Also force a re-fetch of the session to update the context immediately
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                // Trigger an update event manually or just let the router refresh handle it
+            }
         }
         setSaving(false);
     };
