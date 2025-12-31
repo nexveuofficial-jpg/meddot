@@ -31,6 +31,7 @@ export default function LoginPage() {
                 }
             } else {
                 setError("Invalid credentials. Try student@meddot.com / password");
+                setIsLoading(false);
             }
         } catch (err) {
             console.error("Login Error:", err);
