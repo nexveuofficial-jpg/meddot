@@ -72,6 +72,8 @@ export default function DashboardLayout({ children }) {
                 <nav style={{ display: "flex", flexDirection: "column" }}>
                     <Link href="/dashboard" className={styles.activeNav}>Dashboard</Link>
                     <Link href="/notes" className={styles.navItem}>Notes Library</Link>
+                    <Link href="/ask-senior" className={styles.navItem}>Ask Senior</Link>
+                    <Link href="/chat" className={styles.navItem}>Study Groups</Link>
                     <Link href="/bookmarks" className={styles.navItem}>My Bookmarks</Link>
                     <Link href="/profile" className={styles.navItem}>My Profile</Link>
                     <div className={styles.navItem} style={{ marginTop: "auto" }}>Settings</div>
