@@ -150,6 +150,28 @@ export function AuthProvider({ children }) {
         }
     };
 
+    if (!supabase) {
+        return (
+            <div style={{
+                height: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                background: '#f8fafc',
+                color: '#1e293b',
+                padding: '2rem',
+                textAlign: 'center'
+            }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626', marginBottom: '1rem' }}>Configuration Error</h1>
+                <p style={{ maxWidth: '400px', lineHeight: '1.6', color: '#64748b' }}>
+                    The application is missing its backend configuration. <br />
+                    If you are the administrator, please ensure <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> are set in your environment variables.
+                </p>
+            </div>
+        );
+    }
+
     return (
         <AuthContext.Provider value={{ user, login, signup, logout, loading, initialized }}>
             {children}
