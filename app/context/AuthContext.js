@@ -37,7 +37,17 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         let mounted = true;
 
+        // Safety valve: Force init after 5 seconds if stuck
+        const safetyTimer = setTimeout(() => {
+            if (mounted && loading) {
+                console.warn("AuthContext: Safety timer triggered. Forcing init.");
+                setLoading(false);
+                setInitialized(true);
+            }
+        }, 5000);
+
         const initAuth = async () => {
+            console.log("AuthContext: Starting initAuth");
             if (!supabase) {
                 console.error("AuthContext: Supabase client missing.");
                 if (mounted) {
@@ -49,18 +59,24 @@ export function AuthProvider({ children }) {
 
             try {
                 // 1. Get initial session
+                console.log("AuthContext: Getting session...");
                 const { data: { session }, error } = await supabase.auth.getSession();
+                console.log("AuthContext: Session retrieved", session ? "User exists" : "No user", error);
 
                 if (session?.user && mounted) {
+                    console.log("AuthContext: Fetching profile...");
                     const combinedUser = await fetchProfile(session.user);
+                    console.log("AuthContext: Profile fetched", combinedUser?.role);
                     if (mounted) setUser(combinedUser);
                 }
             } catch (error) {
                 console.error("AuthContext: Init error:", error);
             } finally {
                 if (mounted) {
+                    console.log("AuthContext: Finished initAuth");
                     setLoading(false);
                     setInitialized(true);
+                    clearTimeout(safetyTimer); // Clear safety timer on success
                 }
             }
         };
@@ -77,7 +93,7 @@ export function AuthProvider({ children }) {
             if (session?.user) {
                 // If we already have the same user, skip fetch to prevent flickering
                 // But if it's a new sign in, we MUST fetch profile
-                if (event === 'SIGNED_IN' || event === 'ToKEN_REFRESHED' || event === 'USER_UPDATED') {
+                if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
                     // Check if effective user changed or if we just need to refresh
                     const combinedUser = await fetchProfile(session.user);
                     if (mounted) setUser(combinedUser);
@@ -85,9 +101,6 @@ export function AuthProvider({ children }) {
             } else if (event === 'SIGNED_OUT') {
                 if (mounted) {
                     setUser(null);
-                    // Do not redirect here blindly. Let layouts handle it.
-                    // But for user convenience, if they explicitly signed out, we might want to.
-                    // However, 'SIGNED_OUT' can fire on bad sessions too.
                 }
             }
 
@@ -99,6 +112,7 @@ export function AuthProvider({ children }) {
 
         return () => {
             mounted = false;
+            clearTimeout(safetyTimer);
             subscription?.unsubscribe();
         };
     }, []);
