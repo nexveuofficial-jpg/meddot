@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
 
     // Fetch profile (role) for a given auth user
     const fetchProfile = async (sessionUser) => {
-        if (!sessionUser) return null;
+        if (!sessionUser || !supabase) return null;
         const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
@@ -31,6 +31,11 @@ export function AuthProvider({ children }) {
     // Initialize session
     useEffect(() => {
         const initAuth = async () => {
+            if (!supabase) {
+                console.warn("Supabase client not initialized.");
+                setLoading(false);
+                return;
+            }
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
                 const combinedUser = await fetchProfile(session.user);
@@ -39,6 +44,8 @@ export function AuthProvider({ children }) {
             setLoading(false);
         };
         initAuth();
+
+        if (!supabase) return;
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -54,6 +61,7 @@ export function AuthProvider({ children }) {
     }, [router]);
 
     const login = async (email, password) => {
+        if (!supabase) return false;
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
@@ -73,6 +81,7 @@ export function AuthProvider({ children }) {
     };
 
     const signup = async (name, email, password) => {
+        if (!supabase) return false;
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -91,6 +100,7 @@ export function AuthProvider({ children }) {
     };
 
     const logout = async () => {
+        if (!supabase) return;
         await supabase.auth.signOut();
         // Redirect handled by listener
     };

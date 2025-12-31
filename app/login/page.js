@@ -12,9 +12,9 @@ export default function LoginPage() {
     const { login } = useAuth();
     const router = useRouter();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = login(email, password);
+        const success = await login(email, password);
         if (success) {
             if (email.includes("admin")) {
                 router.push("/admin");

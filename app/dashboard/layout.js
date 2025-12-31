@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import styles from "./dashboard.module.css";
 import { Menu, X } from "lucide-react";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 export default function DashboardLayout({ children }) {
     const { user, loading } = useAuth();
@@ -76,7 +77,9 @@ export default function DashboardLayout({ children }) {
 
             <main className={styles.main}>
                 <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-                    {children}
+                    <ErrorBoundary>
+                        {children}
+                    </ErrorBoundary>
                 </div>
             </main>
         </div>

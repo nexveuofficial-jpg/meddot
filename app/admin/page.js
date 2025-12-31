@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import { useAuth } from "@/app/context/AuthContext";
 import styles from "./AdminDashboard.module.css";
 import AdminFeatures from "../components/admin/AdminFeatures";
