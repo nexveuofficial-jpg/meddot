@@ -2,28 +2,61 @@
 
 import { useState, useEffect } from "react";
 import styles from "./NotesViewer.module.css";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function NotesViewer({ note }) {
     const [zoomLevel, setZoomLevel] = useState(1);
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [readingProgress, setReadingProgress] = useState(0);
+    const { user } = useAuth();
 
-    // Bookmark persistence
+    // Check initial bookmark status
     useEffect(() => {
-        const savedBookmarks = JSON.parse(localStorage.getItem("meddot_bookmarks") || "[]");
-        setIsBookmarked(savedBookmarks.includes(String(note.id))); // Ensure ID type match
-    }, [note.id]);
+        const checkBookmark = async () => {
+            if (!user) return;
+            const { data } = await supabase
+                .from('bookmarks')
+                .select('id')
+                .eq('note_id', note.id)
+                .eq('user_id', user.id)
+                .single();
+            setIsBookmarked(!!data);
+        };
+        checkBookmark();
+    }, [note.id, user]);
 
-    const toggleBookmark = () => {
-        const savedBookmarks = JSON.parse(localStorage.getItem("meddot_bookmarks") || "[]");
-        let newBookmarks;
-        if (isBookmarked) {
-            newBookmarks = savedBookmarks.filter(id => id !== String(note.id));
-        } else {
-            newBookmarks = [...savedBookmarks, String(note.id)];
+    const toggleBookmark = async () => {
+        if (!user) {
+            alert("Please login to bookmark notes.");
+            return;
         }
-        localStorage.setItem("meddot_bookmarks", JSON.stringify(newBookmarks));
-        setIsBookmarked(!isBookmarked);
+
+        // Optimistic update
+        const newState = !isBookmarked;
+        setIsBookmarked(newState);
+
+        if (newState) {
+            // Add bookmark
+            const { error } = await supabase
+                .from('bookmarks')
+                .insert({ user_id: user.id, note_id: note.id });
+            if (error) {
+                console.error(error);
+                setIsBookmarked(!newState); // Revert on error
+            }
+        } else {
+            // Remove bookmark
+            const { error } = await supabase
+                .from('bookmarks')
+                .delete()
+                .eq('user_id', user.id)
+                .eq('note_id', note.id);
+            if (error) {
+                console.error(error);
+                setIsBookmarked(!newState); // Revert on error
+            }
+        }
     };
 
     // Scroll Progress

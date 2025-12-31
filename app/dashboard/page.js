@@ -16,12 +16,20 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const fetchAnnouncements = async () => {
-            const { data } = await supabase
-                .from('announcements')
-                .select('*')
-                .eq('is_active', true)
-                .order('created_at', { ascending: false });
-            if (data) setAnnouncements(data);
+            try {
+                const { data, error } = await supabase
+                    .from('announcements')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                if (data) setAnnouncements(data);
+            } catch (error) {
+                console.error("Error fetching announcements:", error);
+                // Fail silently for UI, maybe set empty array
+                setAnnouncements([]);
+            }
         };
         fetchAnnouncements();
     }, []);

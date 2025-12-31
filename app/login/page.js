@@ -9,20 +9,33 @@ export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const { login } = useAuth();
     const router = useRouter();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = await login(email, password);
-        if (success) {
-            if (email.includes("admin")) {
-                router.push("/admin");
+        setError("");
+        setIsLoading(true);
+
+        try {
+            const result = await login(email, password);
+            if (result) {
+                // Check if result is an object with a role (new logic) or just true (fallback)
+                const isAdmin = result?.role === 'admin' || email.includes("admin");
+
+                if (isAdmin) {
+                    router.push("/admin");
+                } else {
+                    router.push("/dashboard");
+                }
             } else {
-                router.push("/dashboard");
+                setError("Invalid credentials. Try student@meddot.com / password");
             }
-        } else {
-            setError("Invalid credentials. Try student@meddot.com / password");
+        } catch (err) {
+            console.error("Login Error:", err);
+            setError("An unexpected error occurred.");
+            setIsLoading(false);
         }
     };
 
@@ -84,17 +97,23 @@ export default function LoginPage() {
 
                     <button
                         type="submit"
+                        disabled={isLoading}
+                        onMouseEnter={(e) => !isLoading && (e.currentTarget.style.opacity = "0.9")}
+                        onMouseLeave={(e) => !isLoading && (e.currentTarget.style.opacity = "1")}
                         style={{
                             marginTop: "1rem",
                             padding: "0.75rem",
                             borderRadius: "0.5rem",
-                            background: "var(--primary)",
+                            background: isLoading ? "var(--muted)" : "var(--primary)",
                             color: "white",
                             fontWeight: 600,
-                            fontSize: "1rem"
+                            fontSize: "1rem",
+                            cursor: isLoading ? "not-allowed" : "pointer",
+                            opacity: isLoading ? 0.7 : 1,
+                            transition: "opacity 0.2s"
                         }}
                     >
-                        Sign In
+                        {isLoading ? "Signing In..." : "Sign In"}
                     </button>
                 </form>
 

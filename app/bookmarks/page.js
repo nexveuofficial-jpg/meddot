@@ -2,27 +2,57 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { NOTES_DB } from "../lib/data";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/app/context/AuthContext";
+import { Loader2 } from "lucide-react";
 
 export default function BookmarksPage() {
     const router = useRouter();
+    const { user } = useAuth();
     const [bookmarkedNotes, setBookmarkedNotes] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const savedIds = JSON.parse(localStorage.getItem("meddot_bookmarks") || "[]");
-        const notes = NOTES_DB.filter(n => savedIds.includes(String(n.id)));
-        setBookmarkedNotes(notes);
-        setLoading(false);
-    }, []);
+        const fetchBookmarks = async () => {
+            if (!user) return;
 
-    if (loading) return null;
+            setLoading(true);
+            const { data, error } = await supabase
+                .from('bookmarks')
+                .select(`
+                    note_id,
+                    notes:notes (*)
+                `)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Error fetching bookmarks:", error);
+            } else {
+                // Flatten the structure: we want the note objects
+                // data format: [{ note_id: "...", notes: { id: "...", title: "..." } }]
+                const validNotes = data
+                    ?.map(item => item.notes)
+                    .filter(note => note !== null); // Filter out any nulls if note was deleted
+                setBookmarkedNotes(validNotes || []);
+            }
+            setLoading(false);
+        };
+
+        fetchBookmarks();
+    }, [user]);
+
+    if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: "10rem" }}><Loader2 className="animate-spin" /></div>;
 
     return (
         <div style={{ minHeight: "100vh", background: "var(--background)", padding: "2rem" }}>
             <header style={{ marginBottom: "3rem", maxWidth: "1200px", margin: "0 auto 3rem auto" }}>
-                <button onClick={() => router.push('/dashboard')} style={{ marginBottom: "1rem", color: "var(--muted-foreground)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <button
+                    onClick={() => router.push('/dashboard')}
+                    style={{ marginBottom: "1rem", color: "var(--muted-foreground)", display: "flex", alignItems: "center", gap: "0.5rem", transition: "color 0.2s" }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = "var(--foreground)"}
+                    onMouseLeave={(e) => e.currentTarget.style.color = "var(--muted-foreground)"}
+                >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></svg>
                     Back to Dashboard
                 </button>

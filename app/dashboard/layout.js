@@ -16,8 +16,9 @@ export default function DashboardLayout({ children }) {
         const storedUser = localStorage.getItem("meddot_user");
 
         // Only redirect if NOT loading and NO user
+        // We trust 'loading' from AuthContext which now waits for initial session check
         if (!loading && !user && !storedUser) {
-            router.push("/login");
+            router.replace("/login"); // Use replace to prevent history stack buildup
         }
     }, [user, loading, router]);
 

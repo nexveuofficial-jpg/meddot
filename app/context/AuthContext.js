@@ -30,34 +30,50 @@ export function AuthProvider({ children }) {
 
     // Initialize session
     useEffect(() => {
+        let mounted = true;
+
         const initAuth = async () => {
             if (!supabase) {
                 console.warn("Supabase client not initialized.");
-                setLoading(false);
+                if (mounted) setLoading(false);
                 return;
             }
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                const combinedUser = await fetchProfile(session.user);
-                setUser(combinedUser);
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) throw error;
+
+                if (session?.user && mounted) {
+                    const combinedUser = await fetchProfile(session.user);
+                    if (mounted) setUser(combinedUser);
+                }
+            } catch (error) {
+                console.error("Session initialization error:", error);
+            } finally {
+                if (mounted) setLoading(false);
             }
-            setLoading(false);
         };
         initAuth();
 
         if (!supabase) return;
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (!mounted) return;
+
+            // Only update state if meaningful change
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-                const combinedUser = await fetchProfile(session.user);
+                const combinedUser = await fetchProfile(session?.user);
                 setUser(combinedUser);
             } else if (event === 'SIGNED_OUT') {
                 setUser(null);
                 router.push('/login');
             }
+            // 'INITIAL_SESSION' is handled by getSession above
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            mounted = false;
+            subscription?.unsubscribe();
+        };
     }, [router]);
 
     const login = async (email, password) => {
@@ -75,6 +91,7 @@ export function AuthProvider({ children }) {
         if (data?.session?.user) {
             const combinedUser = await fetchProfile(data.session.user);
             setUser(combinedUser);
+            return combinedUser;
         }
 
         return true;
@@ -101,8 +118,14 @@ export function AuthProvider({ children }) {
 
     const logout = async () => {
         if (!supabase) return;
-        await supabase.auth.signOut();
-        // Redirect handled by listener
+        try {
+            await supabase.auth.signOut();
+        } catch (error) {
+            console.error("Error signing out:", error);
+            // Force local cleanup even if server fails
+            setUser(null);
+            router.push('/login');
+        }
     };
 
     return (
