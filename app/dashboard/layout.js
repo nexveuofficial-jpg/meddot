@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import styles from "./dashboard.module.css";
 import { Menu, X } from "lucide-react";
 import ErrorBoundary from "../components/ErrorBoundary";
+import Link from "next/link";
 
 export default function DashboardLayout({ children }) {
     const { user, loading } = useAuth();
@@ -69,9 +70,10 @@ export default function DashboardLayout({ children }) {
                 </div>
 
                 <nav style={{ display: "flex", flexDirection: "column" }}>
-                    <div className={styles.activeNav}>Dashboard</div>
-                    <div className={styles.navItem}>Notes Library</div>
-                    <div className={styles.navItem}>My Bookmarks</div>
+                    <Link href="/dashboard" className={styles.activeNav}>Dashboard</Link>
+                    <Link href="/notes" className={styles.navItem}>Notes Library</Link>
+                    <Link href="/bookmarks" className={styles.navItem}>My Bookmarks</Link>
+                    <Link href="/profile" className={styles.navItem}>My Profile</Link>
                     <div className={styles.navItem} style={{ marginTop: "auto" }}>Settings</div>
                 </nav>
             </aside>
