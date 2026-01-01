@@ -28,6 +28,13 @@ export function FeatureFlagProvider({ children }) {
                 acc[flag.key] = flag.is_enabled;
                 return acc;
             }, {});
+
+            // FORCE ENABLE FEATURES (User Request)
+            flagMap['enable_chat'] = true;
+            flagMap['enable_uploads'] = true;
+            flagMap['enable_ask_senior'] = true;
+            flagMap['doctor_companion_enabled'] = true;
+
             setFlags(flagMap);
         }
         setLoading(false);
