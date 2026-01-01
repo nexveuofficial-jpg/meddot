@@ -18,9 +18,10 @@ export function FeatureFlagProvider({ children }) {
             console.error('Error fetching flags:', error);
             // Default fallbacks
             setFlags({
-                enable_chat: false,
+                enable_chat: true,
                 enable_uploads: true,
-                enable_ask_senior: false
+                enable_ask_senior: true,
+                doctor_companion_enabled: true
             });
         } else {
             const flagMap = data.reduce((acc, flag) => {

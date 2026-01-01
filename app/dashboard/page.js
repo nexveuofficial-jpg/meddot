@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import DashboardCard from "../components/ui/DashboardCard";
+import DoctorCompanion from "../components/companion/DoctorCompanion";
 import { supabase } from "@/lib/supabase";
 import { Megaphone, AlertCircle } from "lucide-react";
 import styles from "./page.module.css";
@@ -155,6 +156,8 @@ export default function DashboardPage() {
                     </div>
                 ))}
             </div>
+
+            <DoctorCompanion mood="idle" context="dashboard" />
         </div>
     );
 }

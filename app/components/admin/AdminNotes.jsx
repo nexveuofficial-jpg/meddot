@@ -62,7 +62,19 @@ export default function AdminNotes() {
     return (
         <div className={styles.section} style={{ minHeight: '400px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2 className={styles.title} style={{ marginBottom: 0 }}>Content Moderation</h2>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <h2 className={styles.title} style={{ marginBottom: 0 }}>Content Moderation</h2>
+                    <a href="/notes/upload" style={{
+                        background: 'var(--primary)',
+                        color: 'white',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        boxShadow: 'var(--shadow-sm)'
+                    }}>+ Upload Official Note</a>
+                </div>
                 <select
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}

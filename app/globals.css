@@ -1,57 +1,55 @@
 :root {
-  /* Goodnotes-inspired "Clean & Premium" Palette */
+  /* Winter Theme Palette - "Frost & Clarity" */
 
-  /* Base - Soft Paper-like White */
-  --background: #fdfdfc;
+  /* Base - Pure Snow White */
+  --background: #f8fafc;
   --foreground: #0f172a;
-  /* Darker Slate-900 for better contrast */
 
   /* Text Logic */
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  /* Slate-600 */
   --text-inverse: #ffffff;
 
-  /* Primary - Trustworthy, Calm Blue */
-  --primary: #0284c7;
-  /* Sky-600 - Slightly darker for white text contrast */
+  /* Primary - Icy Blue */
+  --primary: #0ea5e9;
+  /* Sky-500 */
   --primary-foreground: #ffffff;
 
-  /* Secondary - Fresh Teal (Accents) */
-  --secondary: #0d9488;
-  /* Teal-600 */
-  --secondary-foreground: #ffffff;
+  /* Secondary - Frost/Silver */
+  --secondary: #e2e8f0;
+  /* Slate-200 */
+  --secondary-foreground: #0f172a;
 
   /* UI Elements */
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
 
-  --accent: #f0f9ff;
-  --accent-foreground: #0369a1;
+  --accent: #e0f2fe;
+  /* Sky-100 */
+  --accent-foreground: #0284c7;
 
   --border: #cbd5e1;
-  /* Slate-300 - Sharper borders */
   --input: #cbd5e1;
-  --ring: #0284c7;
+  --ring: #38bdf8;
 
   /* Card Specifics */
-  --card-bg: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.85);
   --card-border: #e2e8f0;
 
   /* Radii */
-  --radius: 0.75rem;
+  --radius: 1rem;
 
-  /* Shadows - Soft & Diffused */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
-  --shadow-premium: 0 20px 40px -10px rgba(0, 0, 0, 0.06);
+  /* Shadows - Cold & Crisp */
+  --shadow-sm: 0 1px 3px 0 rgba(7, 89, 133, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(7, 89, 133, 0.1), 0 2px 4px -1px rgba(7, 89, 133, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(7, 89, 133, 0.1), 0 4px 6px -2px rgba(7, 89, 133, 0.05);
+  --shadow-premium: 0 20px 25px -5px rgba(7, 89, 133, 0.1), 0 10px 10px -5px rgba(7, 89, 133, 0.04);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Winter Night Theme */
     --background: #020617;
-    /* Deepest Slate */
     --foreground: #f8fafc;
 
     --text-primary: #f8fafc;
@@ -61,21 +59,20 @@
     --primary: #38bdf8;
     --primary-foreground: #0f172a;
 
-    --secondary: #2dd4bf;
-    --secondary-foreground: #0f172a;
+    --secondary: #1e293b;
+    --secondary-foreground: #f8fafc;
 
-    --muted: #1e293b;
+    --muted: #0f172a;
     --muted-foreground: #94a3b8;
 
     --accent: #0c4a6e;
     --accent-foreground: #e0f2fe;
 
-    --border: #334155;
-    --input: #334155;
+    --border: #1e293b;
+    --input: #1e293b;
     --ring: #38bdf8;
 
-    --card-bg: #0f172a;
-    /* Solid background for durability, glass applied via class */
+    --card-bg: rgba(15, 23, 42, 0.75);
     --card-border: #1e293b;
   }
 }
@@ -96,6 +93,39 @@ body {
   line-height: 1.6;
 }
 
+/* Snowflake Animation Container - Optional Overlay */
+.snow-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.snowflake {
+  position: absolute;
+  top: -10px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: fall linear infinite;
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-10vh) translateX(0);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateY(110vh) translateX(20px);
+    opacity: 0;
+  }
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -105,7 +135,11 @@ body {
 a {
   color: inherit;
   text-decoration: none;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+a:hover {
+  opacity: 0.8;
 }
 
 h1,
@@ -116,7 +150,6 @@ h5,
 h6 {
   font-weight: 700;
   line-height: 1.2;
-  /* Slightly looser than 1.1 */
   letter-spacing: -0.025em;
   color: var(--foreground);
 }
@@ -126,83 +159,50 @@ button {
   border: none;
   background: none;
   font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Glassmorphism Utilities - Refined */
+button:active {
+  transform: scale(0.98);
+}
+
+/* Glassmorphism Utilities - Frozen Glass */
 .glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.6);
-  /* Changed from white to slate-200 generic */
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: var(--shadow-md);
 }
 
 .glass-clean {
-  background: rgba(255, 255, 255, 0.85);
-  /* More opaque, cleaner look */
-  backdrop-filter: blur(8px);
-  /* Subtle blur */
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(226, 232, 240, 0.6);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: var(--shadow-sm);
 }
 
 .glass-heavy {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
 }
 
-/* Dark mode adjustments for glass */
 @media (prefers-color-scheme: dark) {
   .glass {
-    background: rgba(15, 23, 42, 0.75);
-    /* Increased opacity for better contrast */
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .glass-clean {
-    background: rgba(30, 41, 59, 0.8);
+    background: rgba(30, 41, 59, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
   .glass-heavy {
-    background: rgba(15, 23, 42, 0.9);
+    background: rgba(15, 23, 42, 0.8);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
-}
-
-/* Animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.3s ease-out forwards;
 }

@@ -7,12 +7,14 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import { useAuth } from "@/app/context/AuthContext";
+import DoctorCompanion from "../components/companion/DoctorCompanion";
 
 export default function NotesPage() {
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedSubject, setSelectedSubject] = useState("All Subjects");
+    const [sourceFilter, setSourceFilter] = useState("all"); // 'all', 'official', 'student'
     const { isEnabled } = useFeature();
     const { user } = useAuth();
 
@@ -28,6 +30,13 @@ export default function NotesPage() {
             if (selectedSubject !== "All Subjects") {
                 query = query.eq('subject', selectedSubject);
             }
+
+            if (sourceFilter === 'official') {
+                query = query.eq('author_role', 'admin');
+            } else if (sourceFilter === 'community') {
+                query = query.neq('author_role', 'admin');
+            }
+
             if (searchQuery) {
                 query = query.ilike('title', `%${searchQuery}%`);
             }
@@ -44,7 +53,7 @@ export default function NotesPage() {
         // Debounce search slightly
         const timer = setTimeout(fetchNotes, 300);
         return () => clearTimeout(timer);
-    }, [searchQuery, selectedSubject]);
+    }, [searchQuery, selectedSubject, sourceFilter]);
 
     return (
         <div style={{
@@ -186,36 +195,63 @@ export default function NotesPage() {
                         <option>Microbiology</option>
                     </select>
                 </div>
+
+                <div style={{ position: "relative" }}>
+                    <select
+                        value={sourceFilter}
+                        onChange={(e) => setSourceFilter(e.target.value)}
+                        style={{
+                            padding: "1rem 2rem 1rem 1rem",
+                            borderRadius: "0.75rem",
+                            border: "1px solid var(--border)",
+                            background: "white",
+                            fontSize: "0.95rem",
+                            fontWeight: 500,
+                            color: "var(--foreground)",
+                            boxShadow: "var(--shadow-sm)",
+                            cursor: "pointer",
+                            outline: "none",
+                            height: "100%"
+                        }}
+                    >
+                        <option value="all">All Sources</option>
+                        <option value="official">🎓 Official (Admin)</option>
+                        <option value="community">👤 Student Community</option>
+                    </select>
+                </div>
             </div>
 
             {/* Note Grid */}
-            {loading ? (
-                <div className="flex justify-center p-20"><Loader2 className="animate-spin" size={40} color="var(--primary)" /></div>
-            ) : notes.length === 0 ? (
-                <div style={{
-                    gridColumn: "1 / -1",
-                    textAlign: "center",
-                    padding: "4rem",
-                    background: "var(--muted)",
-                    borderRadius: "1rem",
-                    border: "1px dashed var(--border)",
-                    color: "var(--muted-foreground)"
-                }}>
-                    <p style={{ fontSize: "1.2rem", fontWeight: 500, marginBottom: "0.5rem" }}>No notes found</p>
-                    <p style={{ fontSize: "0.9rem" }}>Try adjusting your search or filters</p>
-                </div>
-            ) : (
-                <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-                    gap: "2rem",
-                    animation: "fadeInUp 0.6s ease-out 0.2s backwards"
-                }}>
-                    {notes.map((note) => (
-                        <NoteCard key={note.id} note={note} />
-                    ))}
-                </div>
-            )}
-        </div>
+            {
+                loading ? (
+                    <div className="flex justify-center p-20"><Loader2 className="animate-spin" size={40} color="var(--primary)" /></div>
+                ) : notes.length === 0 ? (
+                    <div style={{
+                        gridColumn: "1 / -1",
+                        textAlign: "center",
+                        padding: "4rem",
+                        background: "var(--muted)",
+                        borderRadius: "1rem",
+                        border: "1px dashed var(--border)",
+                        color: "var(--muted-foreground)"
+                    }}>
+                        <p style={{ fontSize: "1.2rem", fontWeight: 500, marginBottom: "0.5rem" }}>No notes found</p>
+                        <p style={{ fontSize: "0.9rem" }}>Try adjusting your search or filters</p>
+                        <DoctorCompanion mood="idle" context="empty" />
+                    </div>
+                ) : (
+                    <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+                        gap: "2rem",
+                        animation: "fadeInUp 0.6s ease-out 0.2s backwards"
+                    }}>
+                        {notes.map((note) => (
+                            <NoteCard key={note.id} note={note} />
+                        ))}
+                    </div>
+                )
+            }
+        </div >
     );
 }

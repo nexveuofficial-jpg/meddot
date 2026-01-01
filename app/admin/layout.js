@@ -90,12 +90,13 @@ export default function AdminLayout({ children }) {
     }
 
     return (
-        <div style={{ background: "#0f172a", minHeight: "100vh", color: "white", display: "flex" }}>
-            <aside style={{ width: "250px", borderRight: "1px solid #334155", padding: "1rem" }}>
+        <div style={{ background: "#f1f5f9", minHeight: "100vh", color: "#0f172a", display: "flex" }}>
+            <aside style={{ width: "250px", borderRight: "1px solid var(--border)", padding: "1rem", background: "#0f172a", color: "white" }}>
                 <h2 style={{ fontSize: "1.25rem", color: "#38bdf8", marginBottom: "2rem" }}>Meddot Admin</h2>
                 <nav style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                    <div style={{ padding: "0.5rem", background: "#1e293b", borderRadius: "0.5rem" }}>User Management</div>
-                    <div style={{ padding: "0.5rem", color: "#94a3b8" }}>Content Moderation</div>
+                    <a href="#users" style={{ padding: "0.5rem", color: "#e2e8f0", textDecoration: "none", borderRadius: "0.5rem", transition: "background 0.2s" }} className="hover:bg-slate-800">User Management</a>
+                    <a href="#moderation" style={{ padding: "0.5rem", color: "#94a3b8", textDecoration: "none", borderRadius: "0.5rem", transition: "background 0.2s" }} className="hover:text-white">Content Moderation</a>
+                    <a href="#announcements" style={{ padding: "0.5rem", color: "#94a3b8", textDecoration: "none", borderRadius: "0.5rem", transition: "background 0.2s" }} className="hover:text-white">Announcements</a>
                 </nav>
             </aside>
             <main style={{ flex: 1, padding: "2rem" }}>

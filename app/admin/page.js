@@ -53,13 +53,21 @@ export default function AdminPage() {
                 {/* Left Column: Controls */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                     <AdminFeatures />
-                    <AdminAnnouncements />
-                    <AdminUsers />
+
+                    <div id="announcements" style={{ scrollMarginTop: '2rem' }}>
+                        <AdminAnnouncements />
+                    </div>
+
+                    <div id="users" style={{ scrollMarginTop: '2rem' }}>
+                        <AdminUsers />
+                    </div>
                 </div>
 
                 {/* Right Column: Content */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    <AdminNotes />
+                    <div id="moderation" style={{ scrollMarginTop: '2rem' }}>
+                        <AdminNotes />
+                    </div>
                 </div>
             </div>
         </div>

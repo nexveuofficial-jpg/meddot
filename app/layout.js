@@ -18,7 +18,23 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
+        <div className="snow-container">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="snowflake"
+              style={{
+                left: `${Math.random() * 100}vw`,
+                animationDuration: `${Math.random() * 3 + 4}s`,
+                animationDelay: `${Math.random() * 5}s`,
+                width: `${Math.random() * 6 + 4}px`,
+                height: `${Math.random() * 6 + 4}px`,
+                filter: 'blur(1px)'
+              }}
+            />
+          ))}
+        </div>
         <AuthProvider>
           <FeatureFlagProvider>
             {children}

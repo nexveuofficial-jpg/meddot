@@ -80,14 +80,21 @@ export default function UploadNotePage() {
                 file_url: publicUrlData.publicUrl,
                 uploader_id: user.id,
                 author_name: user?.full_name || 'Anonymous',
-                status: 'pending' // Default to pending approval
+                author_name: user?.full_name || 'Anonymous',
+                status: user.role === 'admin' || user.email?.includes('admin') ? 'published' : 'pending', // Admins publish directly
+                author_role: user.role === 'admin' || user.email?.includes('admin') ? 'admin' : 'student'
             });
 
             if (dbError) throw dbError;
 
             // Success
-            alert("Note uploaded successfully! It is pending admin approval.");
-            router.push("/notes");
+            alert("Note uploaded successfully!");
+
+            if (user.role === 'admin' || user.email?.includes('admin')) {
+                router.push("/admin");
+            } else {
+                router.push("/notes");
+            }
 
         } catch (err) {
             console.error(err);
