@@ -95,6 +95,11 @@ export default function LoginPage() {
                                 background: "var(--muted)"
                             }}
                         />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                            <Link href="/forgot-password" style={{ fontSize: '0.85rem', color: 'var(--primary)' }}>
+                                Forgot Password?
+                            </Link>
+                        </div>
                     </div>
 
                     <button
