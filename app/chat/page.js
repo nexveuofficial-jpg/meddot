@@ -92,8 +92,8 @@ export default function ChatLobbyPage() {
                                 }}>
                                     <Icon size={24} />
                                 </div>
-                                <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>{room.name}</h3>
-                                <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem", flex: 1, marginBottom: "1.5rem" }}>
+                                <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem", color: "#0f172a" }}>{room.name}</h3>
+                                <p style={{ color: "#475569", fontSize: "0.9rem", flex: 1, marginBottom: "1.5rem" }}>
                                     {room.description}
                                 </p>
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", color: "var(--primary)", fontWeight: 600, fontSize: "0.9rem" }}>
