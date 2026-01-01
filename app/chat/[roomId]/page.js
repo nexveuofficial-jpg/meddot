@@ -70,7 +70,23 @@ export default function ChatRoomPage(props) {
                 table: 'chat_messages',
                 filter: `room_id=eq.${params.roomId}`
             }, (payload) => {
-                setMessages(prev => [...prev, payload.new]);
+                // Deduplicate: If we have an optimistic message with same content/user/timestamp-ish, replace it
+                // Or simpler: Just filter out the matching optimistic one if we used a temp ID strategy
+                // But since real ID is different, we might get specific duplicates.
+                // Strategy: The Optimistic one has 'is_optimistic'. The payload.new is real.
+                // We should remove any optimistic message that looks like this new one, or just append distinct.
+
+                setMessages(prev => {
+                    // Remove optimistic version of this message if it exists (heuristic matching)
+                    const filtered = prev.filter(m =>
+                        !(m.is_optimistic && m.content === payload.new.content && m.user_id === payload.new.user_id)
+                    );
+
+                    // Prevent duplicate insertion of the *same* real ID (just in case)
+                    if (filtered.some(m => m.id === payload.new.id)) return filtered;
+
+                    return [...filtered, payload.new];
+                });
             })
             .on('postgres_changes', {
                 event: 'DELETE',
@@ -92,10 +108,24 @@ export default function ChatRoomPage(props) {
         if (!newMessage.trim() || !user) return;
 
         const content = newMessage.trim();
-        setNewMessage(""); // Optimistic clear
+        setNewMessage(""); // Clear input immediately
 
-        // Optimistic UI update could go here, but realtime is fast enough usually
+        // 1. Optimistic Update (Instant Feedback)
+        const tempId = Math.random().toString(36).substring(7);
+        const optimisticMsg = {
+            id: tempId,
+            room_id: params.roomId,
+            user_id: user.id,
+            user_name: user.full_name || 'Anonymous',
+            role: user.role || 'student',
+            content: content,
+            created_at: new Date().toISOString(),
+            is_optimistic: true
+        };
 
+        setMessages(prev => [...prev, optimisticMsg]);
+
+        // 2. Send to DB
         const { error } = await supabase.from('chat_messages').insert({
             room_id: params.roomId,
             user_id: user.id,
@@ -106,6 +136,8 @@ export default function ChatRoomPage(props) {
 
         if (error) {
             console.error("Error sending message:", error);
+            // Revert on error
+            setMessages(prev => prev.filter(m => m.id !== tempId));
             alert("Failed to send message.");
         }
     };
