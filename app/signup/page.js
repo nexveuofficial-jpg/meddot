@@ -36,11 +36,12 @@ export default function SignupPage() {
                 maxWidth: "400px",
                 padding: "2rem",
                 borderRadius: "1rem",
-                background: "var(--background)",
-                border: "1px solid var(--border)",
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
+                background: "#ffffff",
+                border: "1px solid #e2e8f0",
+                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                color: "#0f172a"
             }}>
-                <h1 style={{ marginBottom: "1.5rem", textAlign: "center", color: "var(--primary)" }}>Join Meddot</h1>
+                <h1 style={{ marginBottom: "1.5rem", textAlign: "center", color: "#0ea5e9" }}>Join Meddot</h1>
 
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                     <div>
@@ -54,8 +55,9 @@ export default function SignupPage() {
                                 width: "100%",
                                 padding: "0.75rem",
                                 borderRadius: "0.5rem",
-                                border: "1px solid var(--border)",
-                                background: "var(--muted)"
+                                border: "1px solid #cbd5e1",
+                                background: "#f8fafc",
+                                color: "#0f172a"
                             }}
                         />
                     </div>
@@ -71,8 +73,9 @@ export default function SignupPage() {
                                 width: "100%",
                                 padding: "0.75rem",
                                 borderRadius: "0.5rem",
-                                border: "1px solid var(--border)",
-                                background: "var(--muted)"
+                                border: "1px solid #cbd5e1",
+                                background: "#f8fafc",
+                                color: "#0f172a"
                             }}
                         />
                     </div>
@@ -88,8 +91,9 @@ export default function SignupPage() {
                                 width: "100%",
                                 padding: "0.75rem",
                                 borderRadius: "0.5rem",
-                                border: "1px solid var(--border)",
-                                background: "var(--muted)"
+                                border: "1px solid #cbd5e1",
+                                background: "#f8fafc",
+                                color: "#0f172a"
                             }}
                         />
                     </div>

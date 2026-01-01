@@ -54,9 +54,10 @@ export default function LoginPage() {
                 maxWidth: "400px",
                 padding: "2rem",
                 borderRadius: "1rem",
-                background: "var(--background)",
-                border: "1px solid var(--border)",
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
+                background: "#ffffff", // Force White
+                border: "1px solid #e2e8f0",
+                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                color: "#0f172a" // Force Dark Text
             }}>
                 <h1 style={{ marginBottom: "1.5rem", textAlign: "center", color: "var(--primary)" }}>Login to Meddot</h1>
 
@@ -74,8 +75,9 @@ export default function LoginPage() {
                                 width: "100%",
                                 padding: "0.75rem",
                                 borderRadius: "0.5rem",
-                                border: "1px solid var(--border)",
-                                background: "var(--muted)"
+                                border: "1px solid #cbd5e1",
+                                background: "#f8fafc",
+                                color: "#0f172a"
                             }}
                         />
                     </div>
@@ -91,8 +93,9 @@ export default function LoginPage() {
                                 width: "100%",
                                 padding: "0.75rem",
                                 borderRadius: "0.5rem",
-                                border: "1px solid var(--border)",
-                                background: "var(--muted)"
+                                border: "1px solid #cbd5e1",
+                                background: "#f8fafc",
+                                color: "#0f172a"
                             }}
                         />
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
