@@ -8,7 +8,6 @@ import AdminFeatures from "../components/admin/AdminFeatures";
 import AdminUsers from "../components/admin/AdminUsers";
 import AdminNotes from "../components/admin/AdminNotes";
 import AdminAnnouncements from "../components/admin/AdminAnnouncements";
-import AdminAnnouncements from "../components/admin/AdminAnnouncements";
 import { Users, FileText, AlertCircle, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 
