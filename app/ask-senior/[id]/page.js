@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
-import { Loader2, ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send } from "lucide-react";
+import Loader from "../../components/ui/Loader";
 
 export default function QuestionDetailPage(props) {
     const params = use(props.params);
@@ -124,7 +125,7 @@ export default function QuestionDetailPage(props) {
         setSubmitting(false);
     };
 
-    if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin" /></div>;
+    if (loading) return <div className="flex justify-center p-20"><Loader /></div>;
     if (!question) return <div className="p-20 text-center">Question not found</div>;
 
     return (
@@ -214,7 +215,7 @@ export default function QuestionDetailPage(props) {
                             float: 'right'
                         }}
                     >
-                        {submitting ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
+                        {submitting ? <Loader size={16} /> : <Send size={16} />}
                         Post Answer
                     </button>
                     <div style={{ clear: 'both' }}></div>

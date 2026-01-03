@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Loader2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import Loader from "../ui/Loader";
 import { createPortal } from 'react-dom';
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -111,7 +112,7 @@ export default function SecurePDFReader({ isOpen, onClose, fileUrl, title, userE
                         flexDirection: 'column',
                         gap: '1rem'
                     }}>
-                        <Loader2 className="animate-spin" size={32} />
+                        <Loader size={32} />
                         <p>Loading secure document...</p>
                     </div>
                 )}

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
-import { Loader2 } from "lucide-react";
+import Loader from "../components/ui/Loader";
 
 export default function BookmarksPage() {
     const router = useRouter();
@@ -53,7 +53,7 @@ export default function BookmarksPage() {
         fetchBookmarks();
     }, [user]);
 
-    if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: "10rem" }}><Loader2 className="animate-spin" /></div>;
+    if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: "10rem" }}><Loader /></div>;
 
     return (
         <div style={{ minHeight: "100vh", background: "var(--background)", padding: "2rem" }}>

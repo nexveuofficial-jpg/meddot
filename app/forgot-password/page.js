@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
-import { ArrowLeft, Mail, Loader2 } from "lucide-react";
+import { ArrowLeft, Mail } from "lucide-react";
+import Loader from "../components/ui/Loader";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -108,7 +109,7 @@ export default function ForgotPasswordPage() {
                                 opacity: status === "loading" ? 0.8 : 1
                             }}
                         >
-                            {status === "loading" && <Loader2 className="animate-spin" size={18} />}
+                            {status === "loading" && <Loader size={18} />}
                             {status === "loading" ? "Sending..." : "Send Reset Link"}
                         </button>
                     </form>

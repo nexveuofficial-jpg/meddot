@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useFeature } from "@/app/context/FeatureFlagContext";
-import { Hash, Loader2, ArrowLeft } from "lucide-react";
+import { Hash, ArrowLeft } from "lucide-react";
+import Loader from "../components/ui/Loader";
 import { usePathname } from "next/navigation";
 
 export default function ChatLayout({ children }) {
@@ -40,7 +41,7 @@ export default function ChatLayout({ children }) {
     }, [isEnabled, flagsLoading]);
 
     if (flagsLoading) {
-        return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Loader2 className="animate-spin" /></div>;
+        return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Loader /></div>;
     }
 
     if (!isEnabled('enable_chat')) {
@@ -73,7 +74,7 @@ export default function ChatLayout({ children }) {
 
                 <div style={{ flex: 1, overflowY: "auto", padding: "1rem" }}>
                     {loading ? (
-                        <div className="flex justify-center p-4"><Loader2 className="animate-spin" size={20} /></div>
+                        <div className="flex justify-center p-4"><Loader size={20} /></div>
                     ) : (
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                             {rooms.map(room => {

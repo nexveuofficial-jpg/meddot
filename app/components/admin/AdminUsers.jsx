@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import styles from "../../admin/AdminDashboard.module.css";
-import { Loader2, User, Shield, GraduationCap } from "lucide-react";
+import { User, Shield, GraduationCap } from "lucide-react";
+import Loader from "../ui/Loader";
 import { motion } from "framer-motion";
 
 export default function AdminUsers() {
@@ -57,7 +58,7 @@ export default function AdminUsers() {
         setActionLoading(null);
     };
 
-    if (loading) return <div className="p-4"><Loader2 className="animate-spin" /></div>;
+    if (loading) return <div className="p-4"><Loader /></div>;
 
     return (
         <div className={styles.section} style={{ maxHeight: '500px' }}>

@@ -4,7 +4,7 @@ import { useEffect, useState, use } from "react";
 import NotesViewer from "../../components/notes/NotesViewer";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import Loader from "../../components/ui/Loader";
 
 export default function NotePage(props) {
     // Handling params unwrapping safely for Next.js 15+
@@ -42,7 +42,7 @@ export default function NotePage(props) {
         fetchNote();
     }, [params]);
 
-    if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: "10rem" }}><Loader2 className="animate-spin" /></div>;
+    if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: "10rem" }}><Loader /></div>;
 
     if (!note) {
         return (

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import { supabase } from "@/lib/supabase";
-import { Loader2, ArrowLeft, MessageSquare } from "lucide-react";
+import { ArrowLeft, MessageSquare } from "lucide-react";
+import Loader from "../../components/ui/Loader";
 import Link from "next/link";
 
 export default function AskPage() {
@@ -129,7 +130,7 @@ export default function AskPage() {
                             opacity: loading ? 0.7 : 1
                         }}
                     >
-                        {loading ? <Loader2 className="animate-spin" /> : <><MessageSquare size={18} /> Post Question</>}
+                        {loading ? <Loader size={20} /> : <><MessageSquare size={18} /> Post Question</>}
                     </button>
 
                     <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', textAlign: 'center' }}>

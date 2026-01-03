@@ -5,7 +5,8 @@ import styles from "./NotesViewer.module.css";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
 import { Document, Page, pdfjs } from 'react-pdf';
-import { Loader2, Plus, Minus, RotateCcw, Bookmark } from "lucide-react";
+import { Plus, Minus, RotateCcw, Bookmark } from "lucide-react";
+import Loader from "../ui/Loader";
 
 // Import styles for react-pdf
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -151,7 +152,7 @@ export default function NotesViewer({ note }) {
                             <Document
                                 file={note.file_url}
                                 onLoadSuccess={onDocumentLoadSuccess}
-                                loading={<div className="flex justify-center p-10"><Loader2 className="animate-spin text-primary" size={40} /></div>}
+                                loading={<div className="flex justify-center p-10"><Loader size={40} className="text-primary" /></div>}
                                 error={<div className="text-red-500 p-4">Failed to load PDF.</div>}
                             >
                                 {numPages && Array.from(new Array(numPages), (el, index) => (

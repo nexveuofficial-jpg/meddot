@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import styles from "../../admin/AdminDashboard.module.css";
-import { ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
+import { ToggleLeft, ToggleRight } from "lucide-react";
+import Loader from "../ui/Loader";
 import { toast } from "sonner";
 
 export default function AdminFeatures() {
@@ -23,7 +24,7 @@ export default function AdminFeatures() {
         }
     };
 
-    if (loading) return <div className="p-4"><Loader2 className="animate-spin" /></div>;
+    if (loading) return <div className="p-4"><Loader /></div>;
 
     const features = [
         { key: 'enable_chat', label: 'Global Chat System', desc: 'Enable subject-wise chat rooms' },

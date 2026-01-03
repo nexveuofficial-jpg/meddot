@@ -1,4 +1,5 @@
-import { FileText, Bookmark, Eye, ShieldCheck, Clock, GraduationCap, Loader2 } from "lucide-react";
+import { FileText, Bookmark, Eye, ShieldCheck, Clock, GraduationCap } from "lucide-react";
+import Loader from "../ui/Loader";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
@@ -176,7 +177,7 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
                             color: 'var(--primary)',
                             fontWeight: 600
                         }}>
-                            <Loader2 className="animate-spin" size={24} />
+                            <Loader size={24} />
                             <span style={{ fontSize: '0.85rem' }}>Fetching Securely...</span>
                         </div>
                     )}

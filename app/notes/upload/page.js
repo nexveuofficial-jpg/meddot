@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import { supabase } from "@/lib/supabase";
-import { UploadCloud, FileText, Loader2, ArrowLeft, AlertCircle } from "lucide-react";
+import { UploadCloud, FileText, ArrowLeft, AlertCircle } from "lucide-react";
+import Loader from "../../components/ui/Loader";
 import Link from "next/link";
 
 export default function UploadNotePage() {
@@ -259,7 +260,7 @@ export default function UploadNotePage() {
                             opacity: uploading ? 0.7 : 1
                         }}
                     >
-                        {uploading ? <>Uploading... <Loader2 className="animate-spin" /></> : "Submit Note"}
+                        {uploading ? <>Uploading... <Loader size={20} /></> : "Submit Note"}
                     </button>
 
                     <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', textAlign: 'center' }}>

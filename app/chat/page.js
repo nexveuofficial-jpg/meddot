@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useFeature } from "@/app/context/FeatureFlagContext";
-import { MessageCircle, Users, ArrowRight, Activity, Bone, FlaskConical, Microscope, Pill, Coffee, Loader2 } from "lucide-react";
+import { MessageCircle, Users, ArrowRight, Activity, Bone, FlaskConical, Microscope, Pill, Coffee } from "lucide-react";
+import Loader from "../components/ui/Loader";
 
 // Mapping icons string to components
 const iconMap = {
@@ -54,7 +55,7 @@ export default function ChatLobbyPage() {
         );
     }
 
-    if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin" /></div>;
+    if (loading) return <div className="flex justify-center p-20"><Loader /></div>;
 
     return (
         <div className={styles.container}>

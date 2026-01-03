@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import QuestionCard from "@/app/components/qna/QuestionCard";
-import { Plus, Search, Loader2 } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import Loader from "../components/ui/Loader";
 import { useAuth } from "@/app/context/AuthContext";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 
@@ -79,7 +80,7 @@ export default function AskSeniorPage() {
             </header>
 
             {loading ? (
-                <div className="flex justify-center p-20"><Loader2 className="animate-spin" /></div>
+                <div className="flex justify-center p-20"><Loader /></div>
             ) : questions.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "4rem", background: "var(--muted)", borderRadius: "1rem", border: "1px dashed var(--border)" }}>
                     <p>No questions yet. Be the first to ask!</p>

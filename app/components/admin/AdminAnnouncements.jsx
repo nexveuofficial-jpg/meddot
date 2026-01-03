@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import styles from "../../admin/AdminDashboard.module.css";
-import { Loader2, Plus, Trash2, Megaphone } from "lucide-react";
+import { Plus, Trash2, Megaphone } from "lucide-react";
+import Loader from "../ui/Loader";
 
 export default function AdminAnnouncements() {
     const [announcements, setAnnouncements] = useState([]);
@@ -100,7 +101,7 @@ export default function AdminAnnouncements() {
                 </button>
             </form>
 
-            {loading ? <Loader2 className="animate-spin" /> : (
+            {loading ? <Loader /> : (
                 <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     {announcements.map(item => (
                         <li key={item.id} style={{

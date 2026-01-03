@@ -4,7 +4,8 @@ import { useEffect, useState, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
-import { Send, ArrowLeft, Loader2, Trash2 } from "lucide-react";
+import { Send, ArrowLeft, Trash2 } from "lucide-react";
+import Loader from "../../components/ui/Loader";
 import Link from "next/link";
 import UserProfileModal from "@/app/components/UserProfileModal";
 import ToastContainer from "@/app/components/ui/Toast";
@@ -222,7 +223,7 @@ export default function ChatRoomPage(props) {
 
     const cancelDelete = () => setShowDeleteConfirm(null);
 
-    if (loading) return <div className="flex justify-center h-screen items-center"><Loader2 className="animate-spin" /></div>;
+    if (loading) return <div className="flex justify-center h-screen items-center"><Loader /></div>;
     if (!room) return <div className="p-10 text-center">Room not found</div>;
 
     return (

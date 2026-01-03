@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import styles from "../../admin/AdminDashboard.module.css";
-import { Loader2, Check, X, Eye, Trash2 } from "lucide-react";
+import { Check, X, Eye, Trash2 } from "lucide-react";
+import Loader from "../ui/Loader";
 import { toast } from "sonner";
 import ConfirmationModal from "../ui/ConfirmationModal";
 
@@ -152,7 +153,7 @@ export default function AdminNotes() {
             </div>
 
             {loading ? (
-                <div className="p-10 flex justify-center"><Loader2 className="animate-spin" /></div>
+                <div className="p-10 flex justify-center"><Loader /></div>
             ) : notes.length === 0 ? (
                 <div className={styles.emptyState}>No notes found in this category.</div>
             ) : (

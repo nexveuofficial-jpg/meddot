@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, Filter, Plus, Loader2 } from "lucide-react";
+import { Search, Filter, Plus } from "lucide-react";
+import Loader from "../components/ui/Loader";
 import NoteCard from "../components/notes/NoteCard";
 import { SkeletonGrid } from "../components/ui/LoadingSkeleton";
 import Link from "next/link";
@@ -358,7 +359,7 @@ export default function NotesPage() {
                                         fontSize: '0.95rem'
                                     }}
                                 >
-                                    {loadingMore && <Loader2 className="animate-spin" size={16} />}
+                                    {loadingMore && <Loader size={16} />}
                                     {loadingMore ? 'Loading...' : 'Load More Notes'}
                                 </button>
                             </div>
