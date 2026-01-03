@@ -1,6 +1,4 @@
-"use client";
-
-import { FileText, Bookmark, Eye, ShieldCheck, Clock, GraduationCap } from "lucide-react";
+import { FileText, Bookmark, Eye, ShieldCheck, Clock, GraduationCap, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
@@ -9,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle }) {
     const { user } = useAuth();
     const [bookmarked, setBookmarked] = useState(isBookmarked);
+    const [downloading, setDownloading] = useState(false);
 
     // Initial check (if isBookmarked prop isn't fully reliable or need self-check)
     useEffect(() => {
@@ -18,7 +17,7 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
 
     const handleBookmark = async (e) => {
         e.preventDefault();
-        e.stopPropagation(); // prevent link click
+        e.stopPropagation(); // prevent card click
         if (!user) return alert("Login to bookmark");
 
         const wasBookmarked = bookmarked;
@@ -52,13 +51,47 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
         }
     };
 
+    const handleNoteClick = async () => {
+        if (downloading) return;
+        setDownloading(true);
+
+        try {
+            if (!note.file_path) {
+                throw new Error("File path not found for this note.");
+            }
+
+            console.log("Fetching signed URL for:", note.file_path);
+
+            const { data, error } = await supabase
+                .storage
+                .from('notes_documents')
+                .createSignedUrl(note.file_path, 60); // Valid for 60 seconds
+
+            if (error) throw error;
+
+            if (data?.signedUrl) {
+                window.open(data.signedUrl, '_blank');
+            } else {
+                throw new Error("Could not generate download link.");
+            }
+
+        } catch (error) {
+            console.error("Download error:", error);
+            alert("Failed to download note. Please try again.");
+        } finally {
+            setDownloading(false);
+        }
+    };
+
     return (
-        <Link
-            href={`/notes/${note.id}`}
+        <div
+            onClick={handleNoteClick}
             style={{
                 textDecoration: "none",
                 color: "inherit",
-                display: "block"
+                display: "block",
+                cursor: downloading ? "wait" : "pointer",
+                position: "relative" // For absolute positioning of loading overlay
             }}
         >
             <div style={{
@@ -71,12 +104,15 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
-                boxShadow: "var(--shadow-sm)"
+                boxShadow: "var(--shadow-sm)",
+                opacity: downloading ? 0.7 : 1
             }}
                 onMouseEnter={e => {
-                    e.currentTarget.style.transform = "translateY(-4px)";
-                    e.currentTarget.style.boxShadow = "var(--shadow-lg)";
-                    e.currentTarget.style.borderColor = "var(--primary-light, #bae6fd)";
+                    if (!downloading) {
+                        e.currentTarget.style.transform = "translateY(-4px)";
+                        e.currentTarget.style.boxShadow = "var(--shadow-lg)";
+                        e.currentTarget.style.borderColor = "var(--primary-light, #bae6fd)";
+                    }
                 }}
                 onMouseLeave={e => {
                     e.currentTarget.style.transform = "none";
@@ -84,6 +120,29 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
                     e.currentTarget.style.borderColor = "var(--card-border, #e2e8f0)";
                 }}
             >
+                {/* Loading Overlay */}
+                {downloading && (
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(255,255,255,0.8)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 10,
+                        flexDirection: 'column',
+                        gap: '0.5rem',
+                        color: 'var(--primary)',
+                        fontWeight: 600
+                    }}>
+                        <Loader2 className="animate-spin" size={24} />
+                        <span style={{ fontSize: '0.85rem' }}>Opening...</span>
+                    </div>
+                )}
+
                 {/* Decorative Top Accent */}
                 <div style={{ height: "4px", background: "var(--primary)" }}></div>
 
@@ -109,7 +168,8 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
                                 border: "none",
                                 cursor: "pointer",
                                 color: bookmarked ? "var(--primary)" : "var(--muted-foreground)",
-                                padding: "4px"
+                                padding: "4px",
+                                zIndex: 5 // Ensure bookmark is clickable above card click
                             }}
                         >
                             <Bookmark
@@ -157,6 +217,6 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
                     </div>
                 </div>
             </div>
-        </Link>
+        </div>
     );
 }

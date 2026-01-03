@@ -3,77 +3,115 @@
 import { Search, Filter, Plus, Loader2 } from "lucide-react";
 import NoteCard from "../components/notes/NoteCard";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import { useAuth } from "@/app/context/AuthContext";
 import DoctorCompanion from "../components/companion/DoctorCompanion";
 
+const ITEMS_PER_PAGE = 50;
+
 export default function NotesPage() {
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedSubject, setSelectedSubject] = useState("All Subjects");
     const [sourceFilter, setSourceFilter] = useState("all"); // 'all', 'official', 'student'
+
     const { isEnabled } = useFeature();
     const { user } = useAuth();
 
+    // Debounce search value to prevent rapid firing API calls
+    const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+
     useEffect(() => {
-        const fetchNotes = async () => {
-            setLoading(true);
-            try {
-                // Base query: published notes
-                // Note: Compound queries in Firestore require indexes. 
-                // We'll fetch all published notes and filter client-side for complex combinations 
-                // to avoid index hell during migration, unless dataset is huge.
-                // Base query: published notes
-                let { data, error } = await supabase
-                    .from("notes")
-                    .select("*")
-                    .eq("status", "published")
-                    .order("created_at", { ascending: false });
-
-                if (error) {
-                    console.error("Error fetching notes:", error);
-                    return;
-                }
-
-                // Client-side filtering for features not easily doable without composite indexes
-                // or 'ilike' search which Firestore lacks.
-
-                // 1. Subject Filter
-                if (selectedSubject !== "All Subjects") {
-                    data = data.filter(note => note.subject === selectedSubject);
-                }
-
-                // 2. Source Filter
-                if (sourceFilter === 'official') {
-                    data = data.filter(note => note.author_role === 'admin' || note.author_role === 'senior');
-                } else if (sourceFilter === 'community') {
-                    data = data.filter(note => note.author_role !== 'admin' && note.author_role !== 'senior');
-                }
-
-                // 3. Search (Client-side fuzzy match)
-                if (searchQuery) {
-                    const lowerQ = searchQuery.toLowerCase();
-                    data = data.filter(note =>
-                        note.title?.toLowerCase().includes(lowerQ) ||
-                        note.description?.toLowerCase().includes(lowerQ) ||
-                        note.subject?.toLowerCase().includes(lowerQ)
-                    );
-                }
-
-                setNotes(data);
-            } catch (error) {
-                console.error("Error fetching notes:", error);
-            }
-            setLoading(false);
-        };
-
-        // Debounce search slightly
-        const timer = setTimeout(fetchNotes, 300);
+        const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
         return () => clearTimeout(timer);
-    }, [searchQuery, selectedSubject, sourceFilter]);
+    }, [searchQuery]);
+
+    // Reset list when filters change
+    useEffect(() => {
+        setNotes([]);
+        setPage(0);
+        setHasMore(true);
+        fetchNotes(0, true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedSearch, selectedSubject, sourceFilter]);
+
+    const fetchNotes = async (pageIndex, isFresh = false) => {
+        if (isFresh) setLoading(true);
+        else setLoadingMore(true);
+
+        try {
+            const from = pageIndex * ITEMS_PER_PAGE;
+            const to = from + ITEMS_PER_PAGE - 1;
+
+            let query = supabase
+                .from("notes")
+                .select("*")
+                .eq("status", "published")
+                .order("created_at", { ascending: false })
+                .range(from, to);
+
+            // Apply Filters Server-Side
+            if (selectedSubject !== "All Subjects") {
+                query = query.eq("subject", selectedSubject);
+            }
+
+            if (sourceFilter === 'official') {
+                query = query.in('author_role', ['admin', 'senior']);
+            } else if (sourceFilter === 'community') {
+                query = query.not('author_role', 'in', '("admin","senior")'); // Correct syntax for not.in might vary, checking safest simple filter or handling client side mixed? 
+                // Actual Supabase syntax: .not('author_role', 'in', ['admin', 'senior']) ??
+                // Let's use filter if needed or simple logic. 
+                // .filter('author_role', 'not.in', '("admin","senior")')
+                // safer:
+                // query = query.or('author_role.neq.admin,author_role.neq.senior') -> tricky.
+                // Simplest for now: .neq('author_role', 'admin').neq('author_role', 'senior')
+                query = query.neq('author_role', 'admin').neq('author_role', 'senior');
+            }
+
+            if (debouncedSearch) {
+                // ILIKE for case-insensitive search on title. 
+                // Note: Searching multiple columns (title OR description) is hard without Views or RPC in simple query chaining.
+                // We will stick to Title search for performance as requested.
+                query = query.ilike('title', `%${debouncedSearch}%`);
+            }
+
+            const { data, error } = await query;
+
+            if (error) throw error;
+
+            if (data) {
+                if (isFresh) {
+                    setNotes(data);
+                } else {
+                    setNotes(prev => [...prev, ...data]);
+                }
+
+                // If we got fewer items than requested, we reached the end
+                if (data.length < ITEMS_PER_PAGE) {
+                    setHasMore(false);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching notes:", error);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    };
+
+    const loadMoreNotes = () => {
+        if (!hasMore || loading || loadingMore) return;
+        const nextPage = page + 1;
+        setPage(nextPage);
+        fetchNotes(nextPage, false);
+    };
 
     return (
         <div style={{
@@ -160,7 +198,7 @@ export default function NotesPage() {
                     />
                     <input
                         type="text"
-                        placeholder="Search notes by title or keyword..."
+                        placeholder="Search notes by title..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         style={{
@@ -199,7 +237,7 @@ export default function NotesPage() {
                             background: "white",
                             fontSize: "0.95rem",
                             fontWeight: 500,
-                            color: "#334155", // Force dark text on white bg
+                            color: "#334155",
                             boxShadow: "var(--shadow-sm)",
                             cursor: "pointer",
                             outline: "none",
@@ -252,7 +290,7 @@ export default function NotesPage() {
                             background: "white",
                             fontSize: "0.95rem",
                             fontWeight: 500,
-                            color: "#334155", // Force dark text on white bg
+                            color: "#334155",
                             boxShadow: "var(--shadow-sm)",
                             cursor: "pointer",
                             outline: "none",
@@ -268,7 +306,7 @@ export default function NotesPage() {
 
             {/* Note Grid */}
             {
-                loading ? (
+                loading && notes.length === 0 ? (
                     <div className="flex justify-center p-20"><Loader2 className="animate-spin" size={40} color="var(--primary)" /></div>
                 ) : notes.length === 0 ? (
                     <div style={{
@@ -285,16 +323,46 @@ export default function NotesPage() {
                         <DoctorCompanion mood="idle" context="empty" />
                     </div>
                 ) : (
-                    <div style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-                        gap: "2rem",
-                        animation: "fadeInUp 0.6s ease-out 0.2s backwards"
-                    }}>
-                        {notes.map((note) => (
-                            <NoteCard key={note.id} note={note} />
-                        ))}
-                    </div>
+                    <>
+                        <div style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+                            gap: "2rem",
+                            animation: "fadeInUp 0.6s ease-out 0.2s backwards"
+                        }}>
+                            {notes.map((note) => (
+                                <NoteCard key={note.id} note={note} />
+                            ))}
+                        </div>
+
+                        {/* Load More Button */}
+                        {hasMore && (
+                            <div style={{ textAlign: 'center', marginTop: '3rem', marginBottom: '2rem' }}>
+                                <button
+                                    onClick={loadMoreNotes}
+                                    disabled={loadingMore}
+                                    style={{
+                                        padding: '0.75rem 2rem',
+                                        background: 'white',
+                                        border: '1px solid var(--border)',
+                                        borderRadius: '2rem',
+                                        color: 'var(--foreground)',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        boxShadow: 'var(--shadow-sm)',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        transition: 'all 0.2s',
+                                        fontSize: '0.95rem'
+                                    }}
+                                >
+                                    {loadingMore && <Loader2 className="animate-spin" size={16} />}
+                                    {loadingMore ? 'Loading...' : 'Load More Notes'}
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )
             }
         </div >
