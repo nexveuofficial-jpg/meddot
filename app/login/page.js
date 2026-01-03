@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const { login } = useAuth();
@@ -84,20 +86,39 @@ export default function LoginPage() {
 
                     <div>
                         <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem", fontWeight: 500 }}>Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            style={{
-                                width: "100%",
-                                padding: "0.75rem",
-                                borderRadius: "0.5rem",
-                                border: "1px solid #cbd5e1",
-                                background: "#f8fafc",
-                                color: "#0f172a"
-                            }}
-                        />
+                        <div style={{ position: "relative" }}>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                style={{
+                                    width: "100%",
+                                    padding: "0.75rem",
+                                    borderRadius: "0.5rem",
+                                    border: "1px solid #cbd5e1",
+                                    background: "#f8fafc",
+                                    color: "#0f172a",
+                                    paddingRight: "2.5rem"
+                                }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                    position: "absolute",
+                                    right: "0.75rem",
+                                    top: "50%",
+                                    transform: "translateY(-50%)",
+                                    background: "none",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    color: "#64748b"
+                                }}
+                            >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                             <Link href="/forgot-password" style={{ fontSize: '0.85rem', color: 'var(--primary)' }}>
                                 Forgot Password?
