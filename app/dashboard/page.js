@@ -12,7 +12,7 @@ import { Megaphone, AlertCircle } from "lucide-react";
 import styles from "./page.module.css";
 
 export default function DashboardPage() {
-    const { user, logout, loading } = useAuth();
+    const { user, profile, logout, loading } = useAuth();
     const router = useRouter(); // Missing import fix needed if not imported? it is not imported.
     const { isEnabled } = useFeature();
     const [announcements, setAnnouncements] = useState([]);
@@ -137,7 +137,9 @@ export default function DashboardPage() {
                             if (hour < 18) return "Good Afternoon,";
                             return "Good Evening,";
                         })()}<br />
-                        <span className={styles.userName}>{user?.full_name?.split(' ')[0] || 'Student'}</span>
+                        <span className={styles.userName}>
+                            {profile?.full_name || user?.user_metadata?.full_name || (profile?.role === 'admin' ? 'Admin' : 'Student')}
+                        </span>
                     </h1>
                 </div>
                 <button
