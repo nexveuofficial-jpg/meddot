@@ -12,14 +12,21 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
-    // Fetch profile from 'profiles' table
+    // Fetch profile from 'profiles' table with timeout
     const fetchProfile = async (userId) => {
         try {
-            const { data, error } = await supabase
+            const fetchPromise = supabase
                 .from("profiles")
                 .select("*")
                 .eq("id", userId)
                 .single();
+
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Profile fetch timeout")), 4000)
+            );
+
+            // Race against timeout
+            const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
 
             if (error) {
                 console.error("Error fetching profile:", error);
@@ -27,7 +34,8 @@ export function AuthProvider({ children }) {
                 setProfile(data);
             }
         } catch (err) {
-            console.error("Profile fetch crash:", err);
+            console.error("Profile fetch crash/timeout:", err);
+            // Non-blocking: allow app to load even if profile fails
         }
     };
 

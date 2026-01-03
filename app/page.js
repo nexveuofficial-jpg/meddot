@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useAuth } from "./context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -15,10 +15,32 @@ export default function Home() {
     }
   }, [user, loading, router]);
 
+  const [showLongLoadingMessage, setShowLongLoadingMessage] = useState(false);
+
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => setShowLongLoadingMessage(true), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}>
-        <p style={{ color: '#64748b', fontSize: '1.2rem', fontWeight: 500 }}>Loading Meddot...</p>
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc', padding: '2rem', textAlign: 'center' }}>
+        <p style={{ color: '#64748b', fontSize: '1.2rem', fontWeight: 500, marginBottom: '1rem' }}>Loading Meddot...</p>
+
+        {showLongLoadingMessage && (
+          <div style={{ maxWidth: '400px', animation: 'fadeIn 0.5s', color: '#dc2626', background: '#fef2f2', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #fee2e2' }}>
+            <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Taking longer than expected?</p>
+            <p style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>We are having trouble connecting to the database. This usually means the Vercel Environment Variables are missing.</p>
+            <button
+              onClick={() => window.location.reload()}
+              style={{ background: '#dc2626', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.3rem', cursor: 'pointer', fontWeight: 600 }}
+            >
+              Reload Page
+            </button>
+          </div>
+        )}
       </div>
     );
   }
