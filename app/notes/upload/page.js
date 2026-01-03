@@ -86,7 +86,7 @@ export default function UploadNotePage() {
                 category: formData.category,
                 file_path: filePath,
                 file_url: publicUrl,
-                uploader_id: user.id,
+                author_id: user.id, // Fixed: DB expects author_id, not uploader_id
                 author_name: profile?.full_name || user?.email || 'Anonymous',
                 status: status,
                 author_role: userRole,
