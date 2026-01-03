@@ -45,12 +45,11 @@ export function AuthProvider({ children }) {
                         // Fetch profile in background to allow faster UI (optional: or await if critical)
                         // Choosing to await to prevent flickering if role-based redirect is needed immediately
                         await fetchProfile(session.user.id);
-                    } else {
-                        setLoading(false);
                     }
                 }
             } catch (error) {
                 console.error("Auth init error:", error);
+            } finally {
                 if (mounted) setLoading(false);
             }
         };
@@ -64,13 +63,13 @@ export function AuthProvider({ children }) {
 
             if (session?.user) {
                 setUser(session.user);
-                // Only fetch profile if not already loaded or if user changed
                 await fetchProfile(session.user.id);
             } else {
                 setUser(null);
                 setProfile(null);
-                setLoading(false);
             }
+            // Always set loading to false after processing an auth change
+            setLoading(false);
         });
 
         return () => {
@@ -112,9 +111,6 @@ export function AuthProvider({ children }) {
             if (data?.user) {
                 // 2. Manual Profile Creation (If no trigger exists)
                 // Just in case, we can try to insert. If trigger handles it, this might fail or conflict, but 'upsert' is safer.
-                // However, usually we rely on Trigger or just insert if we know there isn't one.
-                // For this revert, assuming the original Supabase setup had a trigger OR we need to do it.
-                // Let's do it manually to be safe if it doesn't exist.
                 /*
                 const { error: profileError } = await supabase.from('profiles').upsert([{
                     id: data.user.id,
