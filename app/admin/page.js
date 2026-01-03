@@ -8,7 +8,9 @@ import AdminFeatures from "../components/admin/AdminFeatures";
 import AdminUsers from "../components/admin/AdminUsers";
 import AdminNotes from "../components/admin/AdminNotes";
 import AdminAnnouncements from "../components/admin/AdminAnnouncements";
+import AdminAnnouncements from "../components/admin/AdminAnnouncements";
 import { Users, FileText, AlertCircle, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function AdminPage() {
     const { logout, user } = useAuth();
@@ -101,13 +103,29 @@ export default function AdminPage() {
             </header>
 
             {/* Stats Row */}
-            <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '3rem', flexWrap: 'wrap' }}>
-                <StatCard icon={Users} label="Total Users" value={stats.users} color="#3b82f6" />
-                <StatCard icon={FileText} label="Total Notes" value={stats.notes} color="#10b981" />
-                <StatCard icon={AlertCircle} label="Pending Review" value={stats.pending} color="#f59e0b" />
-            </div>
+            <motion.div
+                style={{ display: 'flex', gap: '1.5rem', marginBottom: '3rem', flexWrap: 'wrap' }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, staggerChildren: 0.1 }}
+            >
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                    <StatCard icon={Users} label="Total Users" value={stats.users} color="#3b82f6" />
+                </motion.div>
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                    <StatCard icon={FileText} label="Total Notes" value={stats.notes} color="#10b981" />
+                </motion.div>
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                    <StatCard icon={AlertCircle} label="Pending Review" value={stats.pending} color="#f59e0b" />
+                </motion.div>
+            </motion.div>
 
-            <div className={styles.grid}>
+            <motion.div
+                className={styles.grid}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+            >
                 {/* Left Column: Controls */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                     <AdminFeatures />
@@ -127,7 +145,7 @@ export default function AdminPage() {
                         <AdminNotes />
                     </div>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 }

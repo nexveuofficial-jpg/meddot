@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import styles from "../../admin/AdminDashboard.module.css";
 import { Loader2, User, Shield, GraduationCap } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function AdminUsers() {
     const [users, setUsers] = useState([]);
@@ -16,7 +17,8 @@ export default function AdminUsers() {
             const { data, error } = await supabase
                 .from("profiles")
                 .select("*")
-                .order("created_at", { ascending: false });
+                .order("created_at", { ascending: false })
+                .limit(50);
 
             if (error) {
                 console.error("Error fetching users:", error);
@@ -70,8 +72,13 @@ export default function AdminUsers() {
                         </tr>
                     </thead>
                     <tbody>
-                        {users.map((u) => (
-                            <tr key={u.id}>
+                        {users.map((u, index) => (
+                            <motion.tr
+                                key={u.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, delay: index * 0.05 }}
+                            >
                                 <td>
                                     <div style={{ fontWeight: 600 }}>{u.full_name || 'Unknown'}</div>
                                     <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{u.email}</div>
@@ -113,7 +120,7 @@ export default function AdminUsers() {
                                         </button>
                                     )}
                                 </td>
-                            </tr>
+                            </motion.tr>
                         ))}
                     </tbody>
                 </table>
