@@ -129,16 +129,35 @@ export default function DirectMessageChat(props) {
                         <div key={msg.id} style={{
                             alignSelf: isOwn ? "flex-end" : "flex-start",
                             maxWidth: "70%",
-                            padding: "0.75rem 1rem",
-                            borderRadius: isOwn ? "1rem 1rem 0 1rem" : "1rem 1rem 1rem 0",
-                            background: isOwn ? "var(--primary)" : "white",
-                            color: isOwn ? "white" : "#0f172a",
-                            boxShadow: "var(--shadow-sm)",
-                            border: isOwn ? "none" : "1px solid var(--border)"
+                            display: "flex", flexDirection: "column", alignItems: isOwn ? "flex-end" : "flex-start"
                         }}>
-                            {msg.content}
-                            <div style={{ fontSize: "0.7rem", opacity: 0.7, marginTop: "0.25rem", textAlign: "right" }}>
-                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            <div style={{
+                                padding: "0.75rem 1rem",
+                                borderRadius: isOwn ? "1rem 1rem 0 1rem" : "1rem 1rem 1rem 0",
+                                background: isOwn ? "var(--primary)" : "white",
+                                color: isOwn ? "white" : "#0f172a",
+                                boxShadow: "var(--shadow-sm)",
+                                border: isOwn ? "none" : "1px solid var(--border)",
+                                position: 'relative'
+                            }}>
+                                {msg.content}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+                                <span style={{ fontSize: "0.7rem", opacity: 0.7 }}>
+                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                                {isOwn && (
+                                    <button
+                                        onClick={async () => {
+                                            if (!confirm("Delete this message?")) return;
+                                            setMessages(prev => prev.filter(m => m.id !== msg.id)); // Optimistic
+                                            await supabase.from("direct_messages").delete().eq("id", msg.id);
+                                        }}
+                                        style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}
+                                    >
+                                        Delete
+                                    </button>
+                                )}
                             </div>
                         </div>
                     );
