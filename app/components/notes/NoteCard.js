@@ -3,7 +3,12 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "../../context/AuthContext";
-import SecurePDFReader from "./SecurePDFReader";
+import dynamic from "next/dynamic";
+
+const SecurePDFReader = dynamic(() => import("./SecurePDFReader"), {
+    ssr: false,
+    loading: () => null
+});
 
 export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle }) {
     const { user } = useAuth();
