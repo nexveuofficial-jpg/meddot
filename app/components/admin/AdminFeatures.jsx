@@ -11,10 +11,13 @@ export default function AdminFeatures() {
 
     const handleToggle = async (key, value) => {
         setUpdating(key);
+        import { toast } from "sonner";
+
+        // ... inside function ...
         try {
             await toggleFlag(key, value);
         } catch (err) {
-            alert("Failed to toggle feature");
+            toast.error("Failed to toggle feature");
         } finally {
             setUpdating(null);
         }

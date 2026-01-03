@@ -6,6 +6,7 @@ const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
+import { Toaster } from "sonner";
 import { FeatureFlagProvider } from "./context/FeatureFlagContext";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <FeatureFlagProvider>
             {children}
+            <Toaster position="top-center" richColors />
           </FeatureFlagProvider>
         </AuthProvider>
       </body>
