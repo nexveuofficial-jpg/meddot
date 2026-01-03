@@ -27,12 +27,20 @@ export default function Home() {
   if (loading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc', padding: '2rem', textAlign: 'center' }}>
-        <p style={{ color: '#64748b', fontSize: '1.2rem', fontWeight: 500, marginBottom: '1rem' }}>Loading Meddot (v2.1)...</p>
+        <p style={{ color: '#64748b', fontSize: '1.2rem', fontWeight: 500, marginBottom: '1rem' }}>Loading Meddot (v2.2)...</p>
+        <p style={{ fontSize: '0.8rem', color: '#94a3b8', fontFamily: 'monospace' }}>Status: {debugStatus}</p>
 
         {showLongLoadingMessage && (
-          <div style={{ maxWidth: '400px', animation: 'fadeIn 0.5s', color: '#dc2626', background: '#fef2f2', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #fee2e2' }}>
+          <div style={{ maxWidth: '400px', animation: 'fadeIn 0.5s', color: '#dc2626', background: '#fef2f2', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #fee2e2', marginTop: '1rem' }}>
             <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Taking longer than expected?</p>
             <p style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>We are having trouble connecting to the database. This usually means the Vercel Environment Variables are missing.</p>
+
+            <div style={{ textAlign: 'left', background: 'rgba(255,255,255,0.5)', padding: '0.5rem', borderRadius: '0.3rem', fontSize: '0.75rem', marginBottom: '1rem' }}>
+              <p><strong>Env Check:</strong></p>
+              <p>URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? "✅ Set" : "❌ Missing"}</p>
+              <p>Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "✅ Set" : "❌ Missing"}</p>
+            </div>
+
             <button
               onClick={() => window.location.reload()}
               style={{ background: '#dc2626', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.3rem', cursor: 'pointer', fontWeight: 600 }}
