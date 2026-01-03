@@ -9,7 +9,7 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import Link from "next/link";
 
 export default function DashboardLayout({ children }) {
-    const { user, loading, initialized, logout, debugStatus } = useAuth();
+    const { user, loading, initialized, logout } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -48,13 +48,8 @@ export default function DashboardLayout({ children }) {
     // Show loading spinner until we know auth state
     if (!initialized || loading) {
         return (
-            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--background)', position: 'relative', zIndex: 9999 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--background)' }}>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <p style={{ marginTop: '1rem', color: '#64748b' }}>Initializing Dashboard...</p>
-                <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                    Auth Loading: {loading ? 'Yes' : 'No'}, Init: {initialized ? 'Yes' : 'No'}
-                </p>
-                <p style={{ fontSize: '0.7rem', color: '#cbd5e1', marginTop: '0.5rem' }}>Debug: {debugStatus}</p>
             </div>
         );
     }
