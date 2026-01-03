@@ -133,26 +133,25 @@ export default function SecurePDFReader({ isOpen, onClose, fileUrl, title, userE
                     </Document>
 
                     {/* Watermark Overlay */}
-                    {userEmail && (
-                        <div style={{
-                            position: 'absolute',
-                            inset: 0,
-                            pointerEvents: 'none',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            opacity: 0.1,
-                            transform: 'rotate(-45deg)',
-                            fontSize: '2rem',
-                            fontWeight: 'bold',
-                            color: 'red',
-                            zIndex: 10,
-                            overflow: 'hidden',
-                            whiteSpace: 'nowrap'
-                        }}>
-                            {Array(10).fill(userEmail).join('   •   ')}
-                        </div>
-                    )}
+                    <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        pointerEvents: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0.1,
+                        transform: 'rotate(-45deg)',
+                        fontSize: '3rem',
+                        fontWeight: 'bold',
+                        color: 'var(--primary, blue)', /* Changed to primary or safe color, keeping existing red if preferred but usually branding is subtle. existing was red. let's stick to existing style but change text */
+                        color: 'red',
+                        zIndex: 10,
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap'
+                    }}>
+                        {Array(5).fill("Meddot.online").join('      ')}
+                    </div>
                 </div>
             </div>
 
