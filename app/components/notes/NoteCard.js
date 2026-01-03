@@ -3,11 +3,16 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "../../context/AuthContext";
+import PDFViewerModal from "../ui/PDFViewerModal";
 
 export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle }) {
     const { user } = useAuth();
     const [bookmarked, setBookmarked] = useState(isBookmarked);
     const [downloading, setDownloading] = useState(false);
+
+    // Viewer State
+    const [viewerOpen, setViewerOpen] = useState(false);
+    const [pdfUrl, setPdfUrl] = useState(null);
 
     // Initial check (if isBookmarked prop isn't fully reliable or need self-check)
     useEffect(() => {
@@ -62,169 +67,180 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
                 const { data, error } = await supabase
                     .storage
                     .from('notes_documents')
-                    .createSignedUrl(note.file_path, 60);
+                    .createSignedUrl(note.file_path, 300); // Valid for 5 minutes for reading
 
                 if (error) {
                     console.warn("Signed URL generation failed:", error.message);
-                    // Don't throw yet, try fallback
                 } else if (data?.signedUrl) {
-                    window.open(data.signedUrl, '_blank');
-                    return; // Success
+                    setPdfUrl(data.signedUrl);
+                    setViewerOpen(true);
+                    return;
                 }
             }
 
-            // Priority 2: Fallback to Public URL if Signed Failed or Path Missing
+            // Priority 2: Fallback to Public URL
             if (note.file_url) {
                 console.log("Falling back to Public URL:", note.file_url);
-                window.open(note.file_url, '_blank');
+                setPdfUrl(note.file_url);
+                setViewerOpen(true);
                 return;
             }
 
-            // If we get here, both methods failed
-            throw new Error("Could not resolve a download link. File path or URL missing.");
+            throw new Error("Could not resolve a document link.");
 
         } catch (error) {
-            console.error("Download error:", error);
-            alert(`Failed to download note: ${error.message}`);
+            console.error("Viewer error:", error);
+            alert(`Failed to open note: ${error.message}`);
         } finally {
             setDownloading(false);
         }
     };
 
     return (
-        <div
-            onClick={handleNoteClick}
-            style={{
-                textDecoration: "none",
-                color: "inherit",
-                display: "block",
-                cursor: downloading ? "wait" : "pointer",
-                position: "relative" // For absolute positioning of loading overlay
-            }}
-        >
-            <div style={{
-                background: "var(--card-bg, #ffffff)",
-                border: "1px solid var(--card-border, #e2e8f0)",
-                borderRadius: "1rem",
-                overflow: "hidden",
-                transition: "all 0.3s ease",
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-                boxShadow: "var(--shadow-sm)",
-                opacity: downloading ? 0.7 : 1
-            }}
-                onMouseEnter={e => {
-                    if (!downloading) {
-                        e.currentTarget.style.transform = "translateY(-4px)";
-                        e.currentTarget.style.boxShadow = "var(--shadow-lg)";
-                        e.currentTarget.style.borderColor = "var(--primary-light, #bae6fd)";
-                    }
-                }}
-                onMouseLeave={e => {
-                    e.currentTarget.style.transform = "none";
-                    e.currentTarget.style.boxShadow = "var(--shadow-sm)";
-                    e.currentTarget.style.borderColor = "var(--card-border, #e2e8f0)";
+        <>
+            <div
+                onClick={handleNoteClick}
+                style={{
+                    textDecoration: "none",
+                    color: "inherit",
+                    display: "block",
+                    cursor: downloading ? "wait" : "pointer",
+                    position: "relative"
                 }}
             >
-                {/* Loading Overlay */}
-                {downloading && (
-                    <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'rgba(255,255,255,0.8)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 10,
-                        flexDirection: 'column',
-                        gap: '0.5rem',
-                        color: 'var(--primary)',
-                        fontWeight: 600
-                    }}>
-                        <Loader2 className="animate-spin" size={24} />
-                        <span style={{ fontSize: '0.85rem' }}>Opening...</span>
-                    </div>
-                )}
-
-                {/* Decorative Top Accent */}
-                <div style={{ height: "4px", background: "var(--primary)" }}></div>
-
-                <div style={{ padding: "1.5rem", flex: 1, display: "flex", flexDirection: "column" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
-                        <span style={{
-                            fontSize: "0.7rem",
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.05em",
-                            color: "var(--primary)",
-                            background: "var(--accent)",
-                            padding: "0.25rem 0.6rem",
-                            borderRadius: "99px"
+                {/* ... (Existing Card UI) ... */}
+                <div style={{
+                    background: "var(--card-bg, #ffffff)",
+                    border: "1px solid var(--card-border, #e2e8f0)",
+                    borderRadius: "1rem",
+                    overflow: "hidden",
+                    transition: "all 0.3s ease",
+                    position: "relative",
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                    boxShadow: "var(--shadow-sm)",
+                    opacity: downloading ? 0.7 : 1
+                }}
+                    onMouseEnter={e => {
+                        if (!downloading) {
+                            e.currentTarget.style.transform = "translateY(-4px)";
+                            e.currentTarget.style.boxShadow = "var(--shadow-lg)";
+                            e.currentTarget.style.borderColor = "var(--primary-light, #bae6fd)";
+                        }
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+                        e.currentTarget.style.borderColor = "var(--card-border, #e2e8f0)";
+                    }}
+                >
+                    {/* Loading Overlay */}
+                    {downloading && (
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(255,255,255,0.8)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 10,
+                            flexDirection: 'column',
+                            gap: '0.5rem',
+                            color: 'var(--primary)',
+                            fontWeight: 600
                         }}>
-                            {note.subject}
-                        </span>
-
-                        <button
-                            onClick={handleBookmark}
-                            style={{
-                                background: "transparent",
-                                border: "none",
-                                cursor: "pointer",
-                                color: bookmarked ? "var(--primary)" : "var(--muted-foreground)",
-                                padding: "4px",
-                                zIndex: 5 // Ensure bookmark is clickable above card click
-                            }}
-                        >
-                            <Bookmark
-                                size={18}
-                                fill={bookmarked ? "currentColor" : "none"}
-                            />
-                        </button>
-                    </div>
-
-                    <h3 style={{
-                        fontSize: "1.25rem",
-                        fontWeight: 700,
-                        marginBottom: "0.75rem",
-                        lineHeight: 1.3,
-                        color: "var(--foreground)"
-                    }}>
-                        {note.title}
-                    </h3>
-
-                    {note.description && (
-                        <p style={{
-                            fontSize: "0.9rem",
-                            color: "var(--muted-foreground)",
-                            marginBottom: "1.5rem",
-                            lineHeight: 1.5,
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden"
-                        }}>
-                            {note.description}
-                        </p>
+                            <Loader2 className="animate-spin" size={24} />
+                            <span style={{ fontSize: '0.85rem' }}>Opening...</span>
+                        </div>
                     )}
 
-                    <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: "1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                            <GraduationCap size={14} />
-                            <span>{new Date(note.created_at).getFullYear()}</span>
+                    {/* Decorative Top Accent */}
+                    <div style={{ height: "4px", background: "var(--primary)" }}></div>
+
+                    <div style={{ padding: "1.5rem", flex: 1, display: "flex", flexDirection: "column" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+                            <span style={{
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                                color: "var(--primary)",
+                                background: "var(--accent)",
+                                padding: "0.25rem 0.6rem",
+                                borderRadius: "99px"
+                            }}>
+                                {note.subject}
+                            </span>
+
+                            <button
+                                onClick={handleBookmark}
+                                style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    color: bookmarked ? "var(--primary)" : "var(--muted-foreground)",
+                                    padding: "4px",
+                                    zIndex: 5
+                                }}
+                            >
+                                <Bookmark
+                                    size={18}
+                                    fill={bookmarked ? "currentColor" : "none"}
+                                />
+                            </button>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                            <Eye size={14} />
-                            {/* Mock read time or views */}
-                            <span>{note.views || 0} views</span>
+
+                        <h3 style={{
+                            fontSize: "1.25rem",
+                            fontWeight: 700,
+                            marginBottom: "0.75rem",
+                            lineHeight: 1.3,
+                            color: "var(--foreground)"
+                        }}>
+                            {note.title}
+                        </h3>
+
+                        {note.description && (
+                            <p style={{
+                                fontSize: "0.9rem",
+                                color: "var(--muted-foreground)",
+                                marginBottom: "1.5rem",
+                                lineHeight: 1.5,
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden"
+                            }}>
+                                {note.description}
+                            </p>
+                        )}
+
+                        <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: "1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                                <GraduationCap size={14} />
+                                <span>{new Date(note.created_at).getFullYear()}</span>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                                <Eye size={14} />
+                                {/* Mock read time or views */}
+                                <span>{note.views || 0} views</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* PDF Viewer Modal */}
+            <PDFViewerModal
+                isOpen={viewerOpen}
+                onClose={() => setViewerOpen(false)}
+                fileUrl={pdfUrl}
+                title={note.title}
+            />
+        </>
     );
 }
