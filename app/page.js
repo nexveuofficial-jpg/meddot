@@ -27,8 +27,11 @@ export default function Home() {
   if (loading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc', padding: '2rem', textAlign: 'center' }}>
-        <p style={{ color: '#64748b', fontSize: '1.2rem', fontWeight: 500, marginBottom: '1rem' }}>Loading Meddot (v2.2)...</p>
-        <p style={{ fontSize: '0.8rem', color: '#94a3b8', fontFamily: 'monospace' }}>Status: {debugStatus}</p>
+        {/* Professional Loader */}
+        <div className="flex flex-col items-center gap-4">
+          <h1 style={{ fontSize: "2rem", fontWeight: "800", color: "#0ea5e9", marginBottom: "0.5rem" }}>Meddot.</h1>
+          <div style={{ width: "40px", height: "40px", border: "3px solid #e2e8f0", borderTopColor: "#0ea5e9", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
+        </div>
 
         {showLongLoadingMessage && (
           <div style={{ maxWidth: '400px', animation: 'fadeIn 0.5s', color: '#dc2626', background: '#fef2f2', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #fee2e2', marginTop: '1rem' }}>
@@ -122,6 +125,11 @@ export default function Home() {
           </Link>
         </div>
       </div>
+      <style jsx global>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

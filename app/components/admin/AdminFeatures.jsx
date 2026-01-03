@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import styles from "../../admin/AdminDashboard.module.css";
 import { ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminFeatures() {
     const { flags, toggleFlag, loading } = useFeature();
@@ -11,7 +12,6 @@ export default function AdminFeatures() {
 
     const handleToggle = async (key, value) => {
         setUpdating(key);
-        import { toast } from "sonner";
 
         // ... inside function ...
         try {
