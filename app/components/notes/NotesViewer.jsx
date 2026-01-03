@@ -8,8 +8,8 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import { Loader2, Plus, Minus, RotateCcw, Bookmark } from "lucide-react";
 
 // Import styles for react-pdf
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import 'react-pdf/dist/esm/Page/TextLayer.css';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
 // Set worker from CDN
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
