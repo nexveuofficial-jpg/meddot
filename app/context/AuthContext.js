@@ -10,7 +10,7 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [debugStatus, setDebugStatus] = useState("Starting..."); // New debug state
+    const [debugStatus, setDebugStatus] = useState("Checking Session..."); // Initial state
     const router = useRouter();
 
     // Fetch profile from 'profiles' table with timeout
@@ -45,19 +45,29 @@ export function AuthProvider({ children }) {
 
         const initializeAuth = async () => {
             try {
-                // 1. Get initial session
-                const { data: { session } } = await supabase.auth.getSession();
+                setDebugStatus("Contacting Supabase Auth...");
+
+                // Timeout wrapper for getSession
+                const sessionPromise = supabase.auth.getSession();
+                const sessionTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Session check timeout")), 5000));
+
+                // 1. Get initial session with timeout
+                const { data: { session } } = await Promise.race([sessionPromise, sessionTimeout]);
 
                 if (mounted) {
                     if (session?.user) {
+                        setDebugStatus("Session Found. Fetching Profile...");
                         setUser(session.user);
-                        // Fetch profile in background to allow faster UI (optional: or await if critical)
-                        // Choosing to await to prevent flickering if role-based redirect is needed immediately
                         await fetchProfile(session.user.id);
+                        setDebugStatus("Profile Fetched. Finalizing...");
+                    } else {
+                        setDebugStatus("No Session Found.");
+                        setLoading(false);
                     }
                 }
             } catch (error) {
                 console.error("Auth init error:", error);
+                if (mounted) setDebugStatus(`Error: ${error.message}`);
             } finally {
                 if (mounted) setLoading(false);
             }
