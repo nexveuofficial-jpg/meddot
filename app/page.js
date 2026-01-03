@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  // Combined above
+  const { user, loading, debugStatus } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!loading && user) {
