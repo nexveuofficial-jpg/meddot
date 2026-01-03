@@ -10,11 +10,12 @@ import { usePathname } from "next/navigation";
 export default function ChatLayout({ children }) {
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { isEnabled } = useFeature();
+    const { isEnabled, loading: flagsLoading } = useFeature();
     const pathname = usePathname();
 
     useEffect(() => {
         const fetchRooms = async () => {
+            // ... existing fetch logic ...
             try {
                 const { data, error } = await supabase
                     .from("chat_rooms")
@@ -33,10 +34,14 @@ export default function ChatLayout({ children }) {
             setLoading(false);
         };
 
-        if (isEnabled('enable_chat')) {
+        if (!flagsLoading && isEnabled('enable_chat')) {
             fetchRooms();
         }
-    }, [isEnabled]);
+    }, [isEnabled, flagsLoading]);
+
+    if (flagsLoading) {
+        return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Loader2 className="animate-spin" /></div>;
+    }
 
     if (!isEnabled('enable_chat')) {
         return (

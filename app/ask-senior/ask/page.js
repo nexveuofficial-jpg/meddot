@@ -42,7 +42,7 @@ export default function AskPage() {
         try {
             const { error } = await supabase.from("questions").insert([{
                 title,
-                body,
+                content: body, // Fixed: Schema expects 'content', not 'body'
                 topic: subject, // Mapping 'subject' to 'topic' as per schema likely
                 author_id: user.id,
                 author_name: user.full_name || user.email || 'Anonymous',

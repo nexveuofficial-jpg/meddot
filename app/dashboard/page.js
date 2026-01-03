@@ -131,7 +131,12 @@ export default function DashboardPage() {
             <header className={styles.header}>
                 <div>
                     <h1 className={styles.greeting}>
-                        Good Afternoon,<br />
+                        {(() => {
+                            const hour = new Date().getHours();
+                            if (hour < 12) return "Good Morning,";
+                            if (hour < 18) return "Good Afternoon,";
+                            return "Good Evening,";
+                        })()}<br />
                         <span className={styles.userName}>{user?.full_name?.split(' ')[0] || 'Student'}</span>
                     </h1>
                 </div>

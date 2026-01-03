@@ -80,10 +80,15 @@ export default function ChatRoomPage(props) {
                 },
                 (payload) => {
                     const newMsg = payload.new;
-                    const eventType = payload.eventType; // 'INSERT', 'UPDATE', 'DELETE'
+                    const eventType = payload.eventType;
 
                     if (eventType === 'INSERT') {
-                        setMessages(prev => [...prev, newMsg]);
+                        setMessages(prev => {
+                            // Avoid duplicates if optimistic update already added it (check content/user or better yet, handling logic in send)
+                            // Since we replace the optimistic ID in handleSendMessage, we just need to avoid adding if ID exists.
+                            if (prev.find(m => m.id === newMsg.id)) return prev;
+                            return [...prev, newMsg];
+                        });
                     } else if (eventType === 'DELETE') {
                         setMessages(prev => prev.filter(m => m.id !== payload.old.id));
                     }
@@ -101,10 +106,23 @@ export default function ChatRoomPage(props) {
         if (!newMessage.trim() || !user) return;
 
         const content = newMessage.trim();
+        const optimisticId = Date.now().toString(); // temporary ID
         setNewMessage(""); // Clear input immediately
 
+        // 1. Optimistic Update (Show immediately)
+        const optimisticMsg = {
+            id: optimisticId, // Temp ID
+            room_id: params.roomId,
+            user_id: user.id,
+            user_name: user.full_name || user.email || 'You',
+            role: user.role || 'student',
+            content: content,
+            created_at: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, optimisticMsg]);
+
         try {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from("chat_messages")
                 .insert([{
                     room_id: params.roomId,
@@ -113,26 +131,44 @@ export default function ChatRoomPage(props) {
                     role: user.role || 'student',
                     content: content,
                     created_at: new Date().toISOString()
-                }]);
+                }])
+                .select()
+                .single();
 
             if (error) throw error;
+
+            // Replace optimistic message with real one (if needed, but subscription handles 'INSERT' usually)
+            // We just let the subscription or next fetch normalize it. 
+            // Ideally, we replace the temp ID with the real ID to allow deletion.
+            setMessages(prev => prev.map(m => m.id === optimisticId ? data : m));
+
         } catch (error) {
             console.error("Error sending message:", error);
             alert("Failed to send message.");
+            // Rollback on error
+            setMessages(prev => prev.filter(m => m.id !== optimisticId));
         }
     };
 
     const handleDelete = async (msgId) => {
         if (!confirm("Delete this message?")) return;
+
+        // Optimistic Delete
+        setMessages(prev => prev.filter(m => m.id !== msgId));
+
         try {
             const { error } = await supabase
                 .from("chat_messages")
                 .delete()
                 .eq("id", msgId);
 
-            if (error) throw error;
+            if (error) {
+                // Rollback if failed (fetch again or alert)
+                throw error;
+            }
         } catch (error) {
             console.error("Error deleting message:", error);
+            alert("Delete failed.");
         }
     };
 
@@ -153,12 +189,12 @@ export default function ChatRoomPage(props) {
                 top: 0,
                 zIndex: 10
             }}>
-                <Link href="/chat" style={{ color: "var(--muted-foreground)" }}>
+                <Link href="/chat" style={{ color: "#0f172a" }}> {/* Fixed Color */}
                     <ArrowLeft size={20} />
                 </Link>
                 <div>
-                    <h1 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>{room.name}</h1>
-                    <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{room.subject} • Live</span>
+                    <h1 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#0f172a" }}>{room.name}</h1> {/* Fixed Color */}
+                    <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{room.subject} • Live</span> {/* Fixed Color */}
                 </div>
             </header>
 
