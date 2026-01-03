@@ -61,15 +61,18 @@ export function FeatureFlagProvider({ children }) {
 
     const toggleFlag = async (key, value) => {
         try {
+            // Use upsert to handle cases where the flag row doesn't exist yet
             const { error } = await supabase
                 .from('feature_flags')
-                .update({ is_enabled: value })
-                .eq('key', key);
+                .upsert({ key: key, is_enabled: value }, { onConflict: 'key' });
 
             if (error) throw error;
+
+            // Optimistically update local state to reflect change immediately (Realtime will confirm)
+            setFlags(prev => ({ ...prev, [key]: value }));
         } catch (error) {
             console.error('Error updating flag:', error);
-            alert('Failed to update feature flag');
+            alert('Failed to update feature flag: ' + error.message);
         }
     };
 
