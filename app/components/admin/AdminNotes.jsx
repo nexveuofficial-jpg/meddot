@@ -3,12 +3,19 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import styles from "../../admin/AdminDashboard.module.css";
-import { Loader2, Check, X, Eye } from "lucide-react";
+import { Loader2, Check, X, Eye, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import ConfirmationModal from "../ui/ConfirmationModal";
 
 export default function AdminNotes() {
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('pending'); // Default to pending for better workflow
+
+    // Delete State
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [noteToDelete, setNoteToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     const fetchNotes = async () => {
         setLoading(true);
@@ -26,6 +33,7 @@ export default function AdminNotes() {
 
             if (error) {
                 console.error("Error fetching notes:", error);
+                toast.error("Failed to fetch notes");
             } else {
                 setNotes(data || []);
             }
@@ -60,9 +68,57 @@ export default function AdminNotes() {
                 .eq("id", id);
 
             if (error) throw error;
-            // Realtime listener will handle UI update
+            toast.success(`Note marked as ${status}`);
         } catch (error) {
-            alert("Error updating status: " + error.message);
+            toast.error("Error updating status: " + error.message);
+        }
+    };
+
+    const confirmDelete = (note) => {
+        setNoteToDelete(note);
+        setDeleteModalOpen(true);
+    };
+
+    const handleDeleteNote = async () => {
+        if (!noteToDelete) return;
+        setDeleting(true);
+
+        try {
+            // Step 1: Get File Path (Already in note object, but good to double check or use existing)
+            const filePath = noteToDelete.file_path; // 'user_id/filename.pdf' typically
+
+            // Step 2: Delete from Storage
+            if (filePath) {
+                const { error: storageError } = await supabase
+                    .storage
+                    .from('notes_documents')
+                    .remove([filePath]);
+
+                if (storageError) {
+                    console.warn("Storage delete warning:", storageError.message);
+                    // Don't block DB delete if file missing, but log it
+                }
+            }
+
+            // Step 3: Delete from Database
+            const { error: dbError } = await supabase
+                .from("notes")
+                .delete()
+                .eq("id", noteToDelete.id);
+
+            if (dbError) throw dbError;
+
+            // Step 4: Update UI Immediately
+            setNotes(prev => prev.filter(n => n.id !== noteToDelete.id));
+            toast.success("Note and file permanently deleted.");
+            setDeleteModalOpen(false);
+            setNoteToDelete(null);
+
+        } catch (error) {
+            console.error("Delete failed:", error);
+            toast.error("Failed to delete note: " + error.message);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -176,6 +232,15 @@ export default function AdminNotes() {
                                                 <X size={14} />
                                             </button>
                                         )}
+                                        {/* Hard Delete Button */}
+                                        <button
+                                            onClick={() => confirmDelete(note)}
+                                            className={styles.actionButton}
+                                            style={{ background: '#ef4444', color: 'white', marginLeft: 'auto' }}
+                                            title="Permanently Delete"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -184,6 +249,18 @@ export default function AdminNotes() {
                 </div>
             )
             }
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={handleDeleteNote}
+                title="Delete Note Permanently"
+                description={`Are you sure you want to delete "${noteToDelete?.title}"? This will remove the file from storage and cannot be undone.`}
+                confirmText="Yes, delete it"
+                isDestructive={true}
+                isLoading={deleting}
+            />
         </div >
     );
 }
