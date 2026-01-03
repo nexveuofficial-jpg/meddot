@@ -19,7 +19,7 @@ export default function UploadNotePage() {
     const [formData, setFormData] = useState({
         title: "",
         subject: "",
-        category: "Anatomy", // Default
+        category: "", // Default empty
         description: ""
     });
     const [error, setError] = useState("");
@@ -178,28 +178,53 @@ export default function UploadNotePage() {
                             />
                         </div>
                         <div>
-                            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Category</label>
+                            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Subject (Broad) *</label>
                             <select
-                                value={formData.category}
-                                onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                value={formData.subject}
+                                onChange={e => setFormData({ ...formData, subject: e.target.value })}
                                 style={inputStyle}
+                                required
                             >
-                                {['Anatomy', 'Physiology', 'Biochemistry', 'Pathology', 'Pharmacology', 'Microbiology', 'Medicine', 'Surgery', 'Other'].map(cat => (
-                                    <option key={cat} value={cat}>{cat}</option>
-                                ))}
+                                <option value="">Select Subject</option>
+                                <optgroup label="First Year (Pre-Clinical)">
+                                    <option value="Anatomy">Anatomy</option>
+                                    <option value="Physiology">Physiology</option>
+                                    <option value="Biochemistry">Biochemistry</option>
+                                </optgroup>
+                                <optgroup label="Second Year (Para-Clinical)">
+                                    <option value="Pathology">Pathology</option>
+                                    <option value="Pharmacology">Pharmacology</option>
+                                    <option value="Microbiology">Microbiology</option>
+                                    <option value="Forensic Medicine">Forensic Medicine</option>
+                                </optgroup>
+                                <optgroup label="Third Year">
+                                    <option value="Community Medicine">Community Medicine</option>
+                                    <option value="Ophthalmology">Ophthalmology</option>
+                                    <option value="ENT">ENT</option>
+                                </optgroup>
+                                <optgroup label="Final Year (Clinical)">
+                                    <option value="General Medicine">General Medicine</option>
+                                    <option value="General Surgery">General Surgery</option>
+                                    <option value="Obstetrics & Gynecology">Obstetrics & Gynecology</option>
+                                    <option value="Pediatrics">Pediatrics</option>
+                                    <option value="Orthopedics">Orthopedics</option>
+                                    <option value="Psychiatry">Psychiatry</option>
+                                    <option value="Dermatology">Dermatology</option>
+                                    <option value="Anesthesiology">Anesthesiology</option>
+                                    <option value="Radiology">Radiology</option>
+                                </optgroup>
                             </select>
                         </div>
                     </div>
 
                     <div>
-                        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Specific Subject / Topic *</label>
+                        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Topic / Sub-Category</label>
                         <input
                             type="text"
-                            placeholder="e.g. Neuroanatomy"
-                            value={formData.subject}
-                            onChange={e => setFormData({ ...formData, subject: e.target.value })}
+                            placeholder="e.g. Neuroanatomy, CVS, etc."
+                            value={formData.category} // Storing specific topic in category
+                            onChange={e => setFormData({ ...formData, category: e.target.value })}
                             style={inputStyle}
-                            required
                         />
                     </div>
 
