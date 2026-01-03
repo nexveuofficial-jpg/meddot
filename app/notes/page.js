@@ -199,7 +199,7 @@ export default function NotesPage() {
                             background: "white",
                             fontSize: "0.95rem",
                             fontWeight: 500,
-                            color: "var(--foreground)",
+                            color: "#334155", // Force dark text on white bg
                             boxShadow: "var(--shadow-sm)",
                             cursor: "pointer",
                             outline: "none",
@@ -227,7 +227,7 @@ export default function NotesPage() {
                             background: "white",
                             fontSize: "0.95rem",
                             fontWeight: 500,
-                            color: "var(--foreground)",
+                            color: "#334155", // Force dark text on white bg
                             boxShadow: "var(--shadow-sm)",
                             cursor: "pointer",
                             outline: "none",
