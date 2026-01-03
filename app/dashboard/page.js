@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
+import { useRouter } from "next/navigation";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import DashboardCard from "../components/ui/DashboardCard";
 import DoctorCompanion from "../components/companion/DoctorCompanion";
@@ -11,9 +12,16 @@ import { Megaphone, AlertCircle } from "lucide-react";
 import styles from "./page.module.css";
 
 export default function DashboardPage() {
-    const { user, logout } = useAuth();
+    const { user, logout, loading } = useAuth();
+    const router = useRouter(); // Missing import fix needed if not imported? it is not imported.
     const { isEnabled } = useFeature();
     const [announcements, setAnnouncements] = useState([]);
+
+    useEffect(() => {
+        if (!loading && !user) {
+            window.location.href = '/login'; // Force reload to clear any weird state
+        }
+    }, [user, loading]);
 
     useEffect(() => {
         const fetchAnnouncements = async () => {
@@ -109,6 +117,8 @@ export default function DashboardPage() {
         };
         return {}; // Default handled by CSS class
     };
+
+    if (loading) return null;
 
     return (
         <div>
