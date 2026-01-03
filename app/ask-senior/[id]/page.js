@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
-import { Loader2, ArrowLeft, Send, CheckCircle } from "lucide-react";
+import { Loader2, ArrowLeft, Send } from "lucide-react";
 
 export default function QuestionDetailPage(props) {
     const params = use(props.params);
@@ -19,31 +19,48 @@ export default function QuestionDetailPage(props) {
     const fetchQuestionAndAnswers = async () => {
         if (!params?.id) return;
 
-        // Fetch Question
-        const { data: qData, error: qError } = await supabase
-            .from('questions')
-            .select('*, profiles(full_name)')
-            .eq('id', params.id)
-            .single();
+        try {
+            // Fetch Question
+            const { data: qData, error: qError } = await supabase
+                .from("questions")
+                .select("*")
+                .eq("id", params.id)
+                .single();
 
-        if (qError) {
-            console.error(qError);
-            setLoading(false);
-            return;
+            if (qError) throw qError;
+
+            if (!qData) {
+                setLoading(false);
+                return;
+            }
+
+            setQuestion({
+                ...qData,
+                profiles: { full_name: qData.author_name || 'Anonymous' }
+            });
+
+            // Fetch Answers
+            const { data: aData, error: aError } = await supabase
+                .from("answers")
+                .select("*")
+                .eq("question_id", params.id)
+                .order("created_at", { ascending: true });
+
+            if (aError) throw aError;
+
+            const mappedAnswers = (aData || []).map(d => ({
+                ...d,
+                profiles: {
+                    full_name: d.author_name || 'Anonymous',
+                    role: d.author_role || 'student'
+                }
+            }));
+
+            setAnswers(mappedAnswers);
+
+        } catch (error) {
+            console.error(error);
         }
-
-        setQuestion(qData);
-
-        // Fetch Answers
-        const { data: aData, error: aError } = await supabase
-            .from('answers')
-            .select('*, profiles(full_name)')
-            .eq('question_id', params.id)
-            .order('created_at', { ascending: true });
-
-        if (aError) console.error(aError);
-        else setAnswers(aData);
-
         setLoading(false);
     };
 
@@ -51,29 +68,58 @@ export default function QuestionDetailPage(props) {
         fetchQuestionAndAnswers();
 
         // Realtime Subscription
-        const sub = supabase
-            .channel(`question_${params.id}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'answers', filter: `question_id=eq.${params.id}` }, () => {
-                fetchQuestionAndAnswers();
-            })
+        const channel = supabase
+            .channel(`question:${params.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'answers',
+                    filter: `question_id=eq.${params.id}`
+                },
+                (payload) => {
+                    const newAns = payload.new;
+                    setAnswers(prev => [...prev, {
+                        ...newAns,
+                        profiles: {
+                            full_name: newAns.author_name || 'Anonymous',
+                            role: newAns.author_role || 'student'
+                        }
+                    }]);
+                }
+            )
             .subscribe();
 
-        return () => supabase.removeChannel(sub);
-    }, [params]);
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [params.id]);
 
     const handleAnswerSubmit = async (e) => {
         e.preventDefault();
         if (!newAnswer.trim() || !user) return;
         setSubmitting(true);
 
-        const { error } = await supabase.from('answers').insert({
-            question_id: params.id,
-            content: newAnswer,
-            author_id: user.id
-        });
+        try {
+            const { error } = await supabase.from("answers").insert([{
+                question_id: params.id,
+                content: newAnswer,
+                author_id: user.id,
+                author_name: user.full_name || user.email || 'Anonymous',
+                author_role: user.role || 'student',
+                created_at: new Date().toISOString()
+            }]);
 
-        if (error) alert("Error posting answer: " + error.message);
-        else setNewAnswer("");
+            if (error) throw error;
+
+            // Optionally update answer count on question
+            // await supabase.rpc('increment_answer_count', { row_id: params.id });
+
+            setNewAnswer("");
+        } catch (error) {
+            alert("Error posting answer: " + error.message);
+        }
 
         setSubmitting(false);
     };
@@ -92,13 +138,15 @@ export default function QuestionDetailPage(props) {
             <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '2rem', boxShadow: 'var(--shadow-sm)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                     <span style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", color: "var(--primary)", background: "var(--accent)", padding: "0.25rem 0.75rem", borderRadius: "99px" }}>
-                        {question.topic}
+                        {question.topic || 'General'}
                     </span>
                     <span style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>
                         {new Date(question.created_at).toLocaleDateString()}
                     </span>
                 </div>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '1rem', lineHeight: 1.3 }}>{question.content}</h1>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '1rem', lineHeight: 1.3 }}>{question.title || question.content}</h1>
+                {question.body && <p style={{ fontSize: '1rem', color: 'var(--foreground)', marginBottom: '1.5rem', lineHeight: 1.6 }}>{question.body}</p>}
+
                 <p style={{ color: 'var(--muted-foreground)', fontWeight: 500 }}>
                     Asked by {question.profiles?.full_name || 'Anonymous'}
                 </p>

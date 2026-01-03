@@ -1,25 +1,55 @@
 "use client";
 
-import { FileText, Bookmark, Eye, ShieldCheck, Clock } from "lucide-react";
+import { FileText, Bookmark, Eye, ShieldCheck, Clock, GraduationCap } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-// import { supabase } from "@/lib/supabase"; // For future backend toggle
-// import { useAuth } from "../../context/AuthContext"; // For future backend toggle
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "../../context/AuthContext";
 
 export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle }) {
-    // const { user } = useAuth(); // For future backend toggle
-    const user = null; // Mock user for now
+    const { user } = useAuth();
     const [bookmarked, setBookmarked] = useState(isBookmarked);
+
+    // Initial check (if isBookmarked prop isn't fully reliable or need self-check)
+    useEffect(() => {
+        // Here we rely on prop typically, but could fetch status if needed. 
+        // For list views, passing isBookmarked is better performance.
+    }, []);
 
     const handleBookmark = async (e) => {
         e.preventDefault();
+        e.stopPropagation(); // prevent link click
         if (!user) return alert("Login to bookmark");
 
-        // Optimistic UI
-        setBookmarked(!bookmarked);
+        const wasBookmarked = bookmarked;
+        setBookmarked(!bookmarked); // Optimistic
 
-        // TODO: Real DB toggle (Phase 3.3)
-        // onBookmarkToggle(note.id); 
+        try {
+            if (wasBookmarked) {
+                // Remove bookmark
+                const { error } = await supabase
+                    .from("bookmarks")
+                    .delete()
+                    .eq("user_id", user.id)
+                    .eq("note_id", note.id);
+
+                if (error) throw error;
+            } else {
+                // Add bookmark
+                const { error } = await supabase
+                    .from("bookmarks")
+                    .insert([{
+                        user_id: user.id,
+                        note_id: note.id,
+                        created_at: new Date().toISOString()
+                    }]);
+
+                if (error) throw error;
+            }
+        } catch (error) {
+            console.error("Error toggling bookmark:", error);
+            setBookmarked(wasBookmarked); // Revert
+        }
     };
 
     return (

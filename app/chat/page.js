@@ -25,14 +25,18 @@ export default function ChatLobbyPage() {
 
     useEffect(() => {
         const fetchRooms = async () => {
-            const { data, error } = await supabase
-                .from('chat_rooms')
-                .select('*')
-                .eq('is_active', true)
-                .order('name');
+            try {
+                const { data, error } = await supabase
+                    .from("chat_rooms")
+                    .select("*")
+                    .eq("is_active", true)
+                    .order("name", { ascending: true });
 
-            if (error) console.error(error);
-            else setRooms(data || []);
+                if (error) throw error;
+                setRooms(data);
+            } catch (error) {
+                console.error("Error fetching rooms:", error);
+            }
             setLoading(false);
         };
 

@@ -2,192 +2,158 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
+    const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [initialized, setInitialized] = useState(false);
     const router = useRouter();
 
-    // Fetch profile (role) for a given auth user
-    const fetchProfile = async (sessionUser) => {
-        if (!sessionUser || !supabase) return null;
+    // Fetch profile from 'profiles' table
+    const fetchProfile = async (userId) => {
         try {
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', sessionUser.id)
+            const { data, error } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", userId)
                 .single();
 
             if (error) {
-                console.warn("AuthContext: Profile fetch warning:", error.message);
-                return { ...sessionUser, role: 'student' }; // Safe fallback
+                console.error("Error fetching profile:", error);
+            } else {
+                setProfile(data);
             }
-            return { ...sessionUser, ...profile };
         } catch (err) {
-            console.error("AuthContext: Profile fetch crash:", err);
-            return { ...sessionUser, role: 'student' };
+            console.error("Profile fetch crash:", err);
         }
     };
 
-    // Initialize session
     useEffect(() => {
         let mounted = true;
 
-        // Safety valve: Force init after 5 seconds if stuck
-        const safetyTimer = setTimeout(() => {
-            if (mounted && loading) {
-                console.warn("AuthContext: Safety timer triggered. Forcing init.");
-                setLoading(false);
-                setInitialized(true);
-            }
-        }, 5000);
-
-        const initAuth = async () => {
-            console.log("AuthContext: Starting initAuth");
-            if (!supabase) {
-                console.error("AuthContext: Supabase client missing.");
-                if (mounted) {
-                    setLoading(false);
-                    setInitialized(true);
-                }
-                return;
-            }
-
+        const initializeAuth = async () => {
             try {
                 // 1. Get initial session
-                console.log("AuthContext: Getting session...");
-                const { data: { session }, error } = await supabase.auth.getSession();
-                console.log("AuthContext: Session retrieved", session ? "User exists" : "No user", error);
+                const { data: { session } } = await supabase.auth.getSession();
 
-                if (session?.user && mounted) {
-                    console.log("AuthContext: Fetching profile...");
-                    const combinedUser = await fetchProfile(session.user);
-                    console.log("AuthContext: Profile fetched", combinedUser?.role);
-                    if (mounted) setUser(combinedUser);
+                if (mounted) {
+                    if (session?.user) {
+                        setUser(session.user);
+                        // Fetch profile in background to allow faster UI (optional: or await if critical)
+                        // Choosing to await to prevent flickering if role-based redirect is needed immediately
+                        await fetchProfile(session.user.id);
+                    } else {
+                        setLoading(false);
+                    }
                 }
             } catch (error) {
-                console.error("AuthContext: Init error:", error);
-            } finally {
-                if (mounted) {
-                    console.log("AuthContext: Finished initAuth");
-                    setLoading(false);
-                    setInitialized(true);
-                    clearTimeout(safetyTimer); // Clear safety timer on success
-                }
+                console.error("Auth init error:", error);
+                if (mounted) setLoading(false);
             }
         };
 
-        initAuth();
-
-        if (!supabase) return;
+        initializeAuth();
 
         // 2. Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log("Auth Event:", event);
             if (!mounted) return;
-            console.log(`AuthContext: Auth event ${event}`);
 
             if (session?.user) {
-                // If we already have the same user, skip fetch to prevent flickering
-                // But if it's a new sign in, we MUST fetch profile
-                if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-                    // Check if effective user changed or if we just need to refresh
-                    const combinedUser = await fetchProfile(session.user);
-                    if (mounted) setUser(combinedUser);
-                }
-            } else if (event === 'SIGNED_OUT') {
-                if (mounted) {
-                    setUser(null);
-                }
-            }
-
-            if (mounted) {
+                setUser(session.user);
+                // Only fetch profile if not already loaded or if user changed
+                await fetchProfile(session.user.id);
+            } else {
+                setUser(null);
+                setProfile(null);
                 setLoading(false);
-                setInitialized(true);
             }
         });
 
         return () => {
             mounted = false;
-            clearTimeout(safetyTimer);
-            subscription?.unsubscribe();
+            subscription.unsubscribe();
         };
     }, []);
 
+    // Login
     const login = async (email, password) => {
-        if (!supabase) return false;
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
-        if (error) {
-            console.error("Login failed:", error.message);
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+            if (error) throw error;
+            return { success: true };
+        } catch (error) {
             return { success: false, error: error.message };
         }
-
-        if (data?.session?.user) {
-            const combinedUser = await fetchProfile(data.session.user);
-            setUser(combinedUser);
-            return { success: true, user: combinedUser };
-        }
-        return { success: false, error: "No session created." };
     };
 
+    // Signup
     const signup = async (name, email, password) => {
-        if (!supabase) return false;
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: { full_name: name }
+        try {
+            // 1. Create Auth User
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: name,
+                    },
+                },
+            });
+
+            if (error) throw error;
+
+            if (data?.user) {
+                // 2. Manual Profile Creation (If no trigger exists)
+                // Just in case, we can try to insert. If trigger handles it, this might fail or conflict, but 'upsert' is safer.
+                // However, usually we rely on Trigger or just insert if we know there isn't one.
+                // For this revert, assuming the original Supabase setup had a trigger OR we need to do it.
+                // Let's do it manually to be safe if it doesn't exist.
+                /*
+                const { error: profileError } = await supabase.from('profiles').upsert([{
+                    id: data.user.id,
+                    full_name: name,
+                    email: email,
+                    role: 'student'
+                }]);
+                */
             }
-        });
-        if (error) {
+
+            return { success: true };
+        } catch (error) {
             return { success: false, error: error.message };
         }
-        return { success: true };
     };
 
+    // Logout
     const logout = async () => {
-        if (!supabase) return;
         try {
             await supabase.auth.signOut();
             setUser(null);
-            router.push('/login');
+            setProfile(null);
+            router.push("/login");
         } catch (error) {
-            console.error("Error signing out:", error);
-            setUser(null); // Force local cleanup
-            router.push('/login');
+            console.error("Logout failed:", error);
         }
     };
 
-    if (!supabase) {
-        return (
-            <div style={{
-                height: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                background: '#f8fafc',
-                color: '#1e293b',
-                padding: '2rem',
-                textAlign: 'center'
-            }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626', marginBottom: '1rem' }}>Configuration Error</h1>
-                <p style={{ maxWidth: '400px', lineHeight: '1.6', color: '#64748b' }}>
-                    The application is missing its backend configuration. <br />
-                    If you are the administrator, please ensure <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> are set in your environment variables.
-                </p>
-            </div>
-        );
-    }
-
     return (
-        <AuthContext.Provider value={{ user, login, signup, logout, loading, initialized }}>
+        <AuthContext.Provider value={{
+            user,
+            profile,
+            loading,
+            login,
+            signup,
+            logout,
+            isAdmin: profile?.role === 'admin',
+            isSenior: profile?.role === 'senior'
+        }}>
             {children}
         </AuthContext.Provider>
     );

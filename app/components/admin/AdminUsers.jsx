@@ -11,13 +11,21 @@ export default function AdminUsers() {
 
     const fetchUsers = async () => {
         setLoading(true);
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .order('created_at', { ascending: false });
+        try {
+            // Revert: Use Supabase 'profiles' table
+            const { data, error } = await supabase
+                .from("profiles")
+                .select("*")
+                .order("created_at", { ascending: false });
 
-        if (error) console.error(error);
-        else setUsers(data);
+            if (error) {
+                console.error("Error fetching users:", error);
+            } else {
+                setUsers(data);
+            }
+        } catch (error) {
+            console.error("Crash fetching users:", error);
+        }
         setLoading(false);
     };
 
@@ -31,19 +39,20 @@ export default function AdminUsers() {
         if (!confirm(`Are you sure you want to promote/demote this user to ${newRole}?`)) return;
 
         setActionLoading(id);
-        const { error } = await supabase
-            .from('profiles')
-            .update({ role: newRole })
-            .eq('id', id);
+        try {
+            const { error } = await supabase
+                .from("profiles")
+                .update({ role: newRole })
+                .eq("id", id);
 
-        setActionLoading(null);
+            if (error) throw error;
 
-        if (!error) {
             alert(`User role updated to ${newRole}`);
             fetchUsers();
-        } else {
+        } catch (error) {
             alert("Failed to update role: " + error.message);
         }
+        setActionLoading(null);
     };
 
     if (loading) return <div className="p-4"><Loader2 className="animate-spin" /></div>;

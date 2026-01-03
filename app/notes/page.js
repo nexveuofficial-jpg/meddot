@@ -21,31 +21,51 @@ export default function NotesPage() {
     useEffect(() => {
         const fetchNotes = async () => {
             setLoading(true);
-            let query = supabase
-                .from('notes')
-                .select('*')
-                .eq('status', 'approved') // Only show approved notes
-                .order('created_at', { ascending: false });
+            try {
+                // Base query: published notes
+                // Note: Compound queries in Firestore require indexes. 
+                // We'll fetch all published notes and filter client-side for complex combinations 
+                // to avoid index hell during migration, unless dataset is huge.
+                // Base query: published notes
+                let { data, error } = await supabase
+                    .from("notes")
+                    .select("*")
+                    .eq("status", "published")
+                    .order("created_at", { ascending: false });
 
-            if (selectedSubject !== "All Subjects") {
-                query = query.eq('subject', selectedSubject);
-            }
+                if (error) {
+                    console.error("Error fetching notes:", error);
+                    return;
+                }
 
-            if (sourceFilter === 'official') {
-                query = query.eq('author_role', 'admin');
-            } else if (sourceFilter === 'community') {
-                query = query.neq('author_role', 'admin');
-            }
+                // Client-side filtering for features not easily doable without composite indexes
+                // or 'ilike' search which Firestore lacks.
 
-            if (searchQuery) {
-                query = query.ilike('title', `%${searchQuery}%`);
-            }
+                // 1. Subject Filter
+                if (selectedSubject !== "All Subjects") {
+                    data = data.filter(note => note.subject === selectedSubject);
+                }
 
-            const { data, error } = await query;
-            if (error) {
-                console.error(error);
-            } else {
-                setNotes(data || []);
+                // 2. Source Filter
+                if (sourceFilter === 'official') {
+                    data = data.filter(note => note.author_role === 'admin' || note.author_role === 'senior');
+                } else if (sourceFilter === 'community') {
+                    data = data.filter(note => note.author_role !== 'admin' && note.author_role !== 'senior');
+                }
+
+                // 3. Search (Client-side fuzzy match)
+                if (searchQuery) {
+                    const lowerQ = searchQuery.toLowerCase();
+                    data = data.filter(note =>
+                        note.title?.toLowerCase().includes(lowerQ) ||
+                        note.description?.toLowerCase().includes(lowerQ) ||
+                        note.subject?.toLowerCase().includes(lowerQ)
+                    );
+                }
+
+                setNotes(data);
+            } catch (error) {
+                console.error("Error fetching notes:", error);
             }
             setLoading(false);
         };

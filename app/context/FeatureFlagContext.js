@@ -10,11 +10,25 @@ export function FeatureFlagProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     const fetchFlags = async () => {
-        const { data, error } = await supabase
-            .from('feature_flags')
-            .select('*');
+        try {
+            const { data, error } = await supabase.from('feature_flags').select('*');
+            if (error) throw error;
 
-        if (error) {
+            const flagMap = {};
+            data.forEach((flag) => {
+                if (flag.key) {
+                    flagMap[flag.key] = flag.is_enabled;
+                }
+            });
+
+            // FORCE ENABLE FEATURES (Persist override)
+            flagMap['enable_chat'] = true;
+            flagMap['enable_uploads'] = true;
+            flagMap['enable_ask_senior'] = true;
+            flagMap['doctor_companion_enabled'] = true;
+
+            setFlags(flagMap);
+        } catch (error) {
             console.error('Error fetching flags:', error);
             // Default fallbacks
             setFlags({
@@ -23,19 +37,6 @@ export function FeatureFlagProvider({ children }) {
                 enable_ask_senior: true,
                 doctor_companion_enabled: true
             });
-        } else {
-            const flagMap = data.reduce((acc, flag) => {
-                acc[flag.key] = flag.is_enabled;
-                return acc;
-            }, {});
-
-            // FORCE ENABLE FEATURES (User Request)
-            flagMap['enable_chat'] = true;
-            flagMap['enable_uploads'] = true;
-            flagMap['enable_ask_senior'] = true;
-            flagMap['doctor_companion_enabled'] = true;
-
-            setFlags(flagMap);
         }
         setLoading(false);
     };
@@ -45,28 +46,28 @@ export function FeatureFlagProvider({ children }) {
 
         // Realtime subscription for flags
         const subscription = supabase
-            .channel('feature_flags')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'feature_flags' }, (payload) => {
-                console.log('Flag update:', payload);
+            .channel('public:feature_flags')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'feature_flags' }, () => {
                 fetchFlags();
             })
             .subscribe();
 
         return () => {
-            supabase.removeChannel(subscription);
+            subscription.unsubscribe();
         };
     }, []);
 
     const isEnabled = (key) => !!flags[key];
 
-    // Admin helper to toggle flags
     const toggleFlag = async (key, value) => {
-        const { error } = await supabase
-            .from('feature_flags')
-            .update({ is_enabled: value })
-            .eq('key', key);
+        try {
+            const { error } = await supabase
+                .from('feature_flags')
+                .update({ is_enabled: value })
+                .eq('key', key);
 
-        if (error) {
+            if (error) throw error;
+        } catch (error) {
             console.error('Error updating flag:', error);
             alert('Failed to update feature flag');
         }

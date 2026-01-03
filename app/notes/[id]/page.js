@@ -17,24 +17,24 @@ export default function NotePage(props) {
         if (!params?.id) return;
 
         const fetchNote = async () => {
-            const { data, error } = await supabase
-                .from('notes')
-                .select('*, profiles(full_name)')
-                .eq('id', params.id)
-                .single();
+            try {
+                const { data, error } = await supabase
+                    .from("notes")
+                    .select("*")
+                    .eq("id", params.id)
+                    .single();
 
-            if (error) {
+                if (data) {
+                    setNote({
+                        ...data,
+                        author: data.author_name || 'Unknown', // Use denormalized name
+                        content: <div dangerouslySetInnerHTML={{ __html: data.description || "<p>No content provided.</p>" }} />
+                    });
+                } else {
+                    console.error("Note not found");
+                }
+            } catch (error) {
                 console.error("Error fetching note:", error);
-            } else {
-                // Enhance note with HTML content wrapper if description is used as content
-                // For now, we assume description IS the content or we need a content field.
-                // The schema has 'description' and 'file_url'.
-                // Let's use description as the text content.
-                setNote({
-                    ...data,
-                    author: data.profiles?.full_name || 'Unknown',
-                    content: <div dangerouslySetInnerHTML={{ __html: data.description || "<p>No content provided.</p>" }} />
-                });
             }
             setLoading(false);
         };

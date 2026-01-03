@@ -18,23 +18,34 @@ export default function BookmarksPage() {
             if (!user) return;
 
             setLoading(true);
-            const { data, error } = await supabase
-                .from('bookmarks')
-                .select(`
-                    note_id,
-                    notes:notes (*)
-                `)
-                .order('created_at', { ascending: false });
+            try {
+                // 1. Get user's bookmarks
+                const { data: bookmarks, error: bookmarkError } = await supabase
+                    .from("bookmarks")
+                    .select("note_id")
+                    .eq("user_id", user.id)
+                    .order("created_at", { ascending: false });
 
-            if (error) {
+                if (bookmarkError) throw bookmarkError;
+
+                if (bookmarks && bookmarks.length > 0) {
+                    const noteIds = bookmarks.map(b => b.note_id);
+
+                    // 2. Fetch associated notes
+                    const { data: notes, error: notesError } = await supabase
+                        .from("notes")
+                        .select("*")
+                        .in("id", noteIds);
+
+                    if (notesError) throw notesError;
+
+                    setBookmarkedNotes(notes || []);
+                } else {
+                    setBookmarkedNotes([]);
+                }
+
+            } catch (error) {
                 console.error("Error fetching bookmarks:", error);
-            } else {
-                // Flatten the structure: we want the note objects
-                // data format: [{ note_id: "...", notes: { id: "...", title: "..." } }]
-                const validNotes = data
-                    ?.map(item => item.notes)
-                    .filter(note => note !== null); // Filter out any nulls if note was deleted
-                setBookmarkedNotes(validNotes || []);
             }
             setLoading(false);
         };
@@ -93,18 +104,18 @@ export default function BookmarksPage() {
                                 justifyContent: "space-between",
                                 alignItems: "center"
                             }}>
-                                <span>{note.subject} • {note.year}</span>
+                                <span>{note.subject} • {note.year || '1st Year'}</span>
                                 <span style={{ color: "#fbbf24" }}>★</span>
                             </div>
                             <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "var(--foreground)", marginBottom: "0.5rem", lineHeight: "1.4" }}>
                                 {note.title}
                             </h2>
                             <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBottom: "auto" }}>
-                                By {note.author}
+                                By {note.author_name || 'Anonymous'}
                             </p>
                             <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid var(--border)", fontSize: "0.80rem", color: "var(--muted-foreground)", display: "flex", justifyContent: "space-between" }}>
-                                <span>{note.date}</span>
-                                <span>{note.readTime}</span>
+                                <span>{new Date(note.created_at).toLocaleDateString()}</span>
+                                <span>PDF</span>
                             </div>
                         </div>
                     </Link>

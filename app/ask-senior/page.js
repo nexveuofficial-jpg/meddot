@@ -18,17 +18,25 @@ export default function AskSeniorPage() {
 
     useEffect(() => {
         const fetchQuestions = async () => {
-            const { data, error } = await supabase
-                .from('questions')
-                .select(`
-                    *,
-                    profiles(full_name),
-                    answers(count)
-                `)
-                .order('created_at', { ascending: false });
+            setLoading(true);
+            try {
+                const { data, error } = await supabase
+                    .from("questions")
+                    .select("*")
+                    .order("created_at", { ascending: false });
 
-            if (error) console.error(error);
-            else setQuestions(data || []);
+                if (error) throw error;
+
+                const questionsData = data.map(doc => ({
+                    ...doc,
+                    profiles: { full_name: doc.author_name || 'Anonymous' }, // Mock profile struct
+                    answers: [{ count: doc.answer_count || 0 }] // Mock answer struct
+                }));
+
+                setQuestions(questionsData);
+            } catch (error) {
+                console.error(error);
+            }
             setLoading(false);
         };
 

@@ -17,19 +17,17 @@ export default function ForgotPasswordPage() {
 
         try {
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/auth/callback?next=/dashboard/profile/update-password`,
+                redirectTo: `${window.location.origin}/auth/callback?next=/settings`, // or update-password page
             });
 
-            if (error) {
-                setStatus("error");
-                setMessage(error.message);
-            } else {
-                setStatus("success");
-                setMessage("Check your email for the password reset link.");
-            }
+            if (error) throw error;
+
+            setStatus("success");
+            setMessage("Check your email for the password reset link.");
         } catch (err) {
+            console.error(err);
             setStatus("error");
-            setMessage("An unexpected error occurred.");
+            setMessage(err.message || "An unexpected error occurred.");
         }
     };
 

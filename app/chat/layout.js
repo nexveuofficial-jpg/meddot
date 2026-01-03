@@ -15,14 +15,21 @@ export default function ChatLayout({ children }) {
 
     useEffect(() => {
         const fetchRooms = async () => {
-            const { data, error } = await supabase
-                .from('chat_rooms')
-                .select('*')
-                .eq('is_active', true)
-                .order('name');
+            try {
+                const { data, error } = await supabase
+                    .from("chat_rooms")
+                    .select("*")
+                    .eq("is_active", true)
+                    .order("name", { ascending: true });
 
-            if (error) console.error(error);
-            else setRooms(data || []);
+                if (error) {
+                    console.error("Error fetching rooms:", error);
+                } else {
+                    setRooms(data || []);
+                }
+            } catch (error) {
+                console.error(error);
+            }
             setLoading(false);
         };
 

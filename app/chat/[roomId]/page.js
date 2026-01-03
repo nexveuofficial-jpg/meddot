@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
-import { Send, ArrowLeft, Loader2, MoreVertical, Trash2 } from "lucide-react";
+import { Send, ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 export default function ChatRoomPage(props) {
@@ -33,75 +33,68 @@ export default function ChatRoomPage(props) {
 
         const fetchData = async () => {
             // Fetch Room Details
-            const { data: roomData, error: roomError } = await supabase
-                .from('chat_rooms')
-                .select('*')
-                .eq('id', params.roomId)
-                .single();
+            try {
+                const { data: roomData, error: roomError } = await supabase
+                    .from("chat_rooms")
+                    .select("*")
+                    .eq("id", params.roomId)
+                    .single();
 
-            if (roomError) {
-                console.error(roomError);
-                return;
+                if (roomError) throw roomError;
+
+                if (roomData) {
+                    setRoom(roomData);
+                } else {
+                    console.error("Room not found");
+                    return;
+                }
+
+                // Initial Message Load
+                const { data: msgs, error: msgError } = await supabase
+                    .from("chat_messages")
+                    .select("*")
+                    .eq("room_id", params.roomId)
+                    .order("created_at", { ascending: true });
+
+                if (msgError) throw msgError;
+                setMessages(msgs || []);
+
+            } catch (error) {
+                console.error("Error fetching room data:", error);
             }
-            setRoom(roomData);
-
-            // Fetch Recent Messages
-            const { data: msgs, error: msgError } = await supabase
-                .from('chat_messages')
-                .select('*')
-                .eq('room_id', params.roomId)
-                .order('created_at', { ascending: true })
-                .limit(50);
-
-            if (msgError) console.error(msgError);
-            else setMessages(msgs || []);
-
             setLoading(false);
         };
 
         fetchData();
 
-        // Realtime Subscription
+        // Realtime Subscription for Messages
         const channel = supabase
-            .channel(`room_${params.roomId}`)
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'chat_messages',
-                filter: `room_id=eq.${params.roomId}`
-            }, (payload) => {
-                // Deduplicate: If we have an optimistic message with same content/user/timestamp-ish, replace it
-                // Or simpler: Just filter out the matching optimistic one if we used a temp ID strategy
-                // But since real ID is different, we might get specific duplicates.
-                // Strategy: The Optimistic one has 'is_optimistic'. The payload.new is real.
-                // We should remove any optimistic message that looks like this new one, or just append distinct.
+            .channel(`room:${params.roomId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'chat_messages',
+                    filter: `room_id=eq.${params.roomId}`
+                },
+                (payload) => {
+                    const newMsg = payload.new;
+                    const eventType = payload.eventType; // 'INSERT', 'UPDATE', 'DELETE'
 
-                setMessages(prev => {
-                    // Remove optimistic version of this message if it exists (heuristic matching)
-                    const filtered = prev.filter(m =>
-                        !(m.is_optimistic && m.content === payload.new.content && m.user_id === payload.new.user_id)
-                    );
-
-                    // Prevent duplicate insertion of the *same* real ID (just in case)
-                    if (filtered.some(m => m.id === payload.new.id)) return filtered;
-
-                    return [...filtered, payload.new];
-                });
-            })
-            .on('postgres_changes', {
-                event: 'DELETE',
-                schema: 'public',
-                table: 'chat_messages',
-                filter: `room_id=eq.${params.roomId}`
-            }, (payload) => {
-                setMessages(prev => prev.filter(m => m.id !== payload.old.id));
-            })
+                    if (eventType === 'INSERT') {
+                        setMessages(prev => [...prev, newMsg]);
+                    } else if (eventType === 'DELETE') {
+                        setMessages(prev => prev.filter(m => m.id !== payload.old.id));
+                    }
+                }
+            )
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [params]);
+    }, [params.roomId]);
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
@@ -110,41 +103,37 @@ export default function ChatRoomPage(props) {
         const content = newMessage.trim();
         setNewMessage(""); // Clear input immediately
 
-        // 1. Optimistic Update (Instant Feedback)
-        const tempId = Math.random().toString(36).substring(7);
-        const optimisticMsg = {
-            id: tempId,
-            room_id: params.roomId,
-            user_id: user.id,
-            user_name: user.full_name || 'Anonymous',
-            role: user.role || 'student',
-            content: content,
-            created_at: new Date().toISOString(),
-            is_optimistic: true
-        };
+        try {
+            const { error } = await supabase
+                .from("chat_messages")
+                .insert([{
+                    room_id: params.roomId,
+                    user_id: user.id,
+                    user_name: user.full_name || user.email || 'Anonymous',
+                    role: user.role || 'student',
+                    content: content,
+                    created_at: new Date().toISOString()
+                }]);
 
-        setMessages(prev => [...prev, optimisticMsg]);
-
-        // 2. Send to DB
-        const { error } = await supabase.from('chat_messages').insert({
-            room_id: params.roomId,
-            user_id: user.id,
-            user_name: user.full_name || 'Anonymous',
-            role: user.role || 'student',
-            content: content
-        });
-
-        if (error) {
+            if (error) throw error;
+        } catch (error) {
             console.error("Error sending message:", error);
-            // Revert on error
-            setMessages(prev => prev.filter(m => m.id !== tempId));
             alert("Failed to send message.");
         }
     };
 
     const handleDelete = async (msgId) => {
         if (!confirm("Delete this message?")) return;
-        await supabase.from('chat_messages').delete().eq('id', msgId);
+        try {
+            const { error } = await supabase
+                .from("chat_messages")
+                .delete()
+                .eq("id", msgId);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error("Error deleting message:", error);
+        }
     };
 
     if (loading) return <div className="flex justify-center h-screen items-center"><Loader2 className="animate-spin" /></div>;

@@ -39,18 +39,21 @@ export default function AskPage() {
         if (!title.trim() || !body.trim()) return;
         setLoading(true);
 
-        const { error } = await supabase.from('questions').insert({
-            title,
-            body,
-            subject,
-            asked_by: user.id,
-            author_name: user.full_name || 'Anonymous'
-        });
+        try {
+            const { error } = await supabase.from("questions").insert([{
+                title,
+                body,
+                topic: subject, // Mapping 'subject' to 'topic' as per schema likely
+                author_id: user.id,
+                author_name: user.full_name || user.email || 'Anonymous',
+                created_at: new Date().toISOString(),
+                answer_count: 0
+            }]);
 
-        if (error) {
-            alert("Error posting question: " + error.message);
-        } else {
+            if (error) throw error;
             router.push("/ask-senior");
+        } catch (error) {
+            alert("Error posting question: " + error.message);
         }
         setLoading(false);
     };

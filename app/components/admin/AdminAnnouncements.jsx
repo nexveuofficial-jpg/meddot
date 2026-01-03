@@ -12,11 +12,20 @@ export default function AdminAnnouncements() {
 
     const fetchData = async () => {
         setLoading(true);
-        const { data, error } = await supabase
-            .from('announcements')
-            .select('*')
-            .order('created_at', { ascending: false });
-        if (!error) setAnnouncements(data || []);
+        try {
+            const { data, error } = await supabase
+                .from("announcements")
+                .select("*")
+                .order("created_at", { ascending: false });
+
+            if (error) {
+                console.error("Error fetching announcements:", error);
+            } else {
+                setAnnouncements(data || []);
+            }
+        } catch (error) {
+            console.error(error);
+        }
         setLoading(false);
     };
 
@@ -30,27 +39,38 @@ export default function AdminAnnouncements() {
         e.preventDefault();
         if (!newContent.trim()) return;
 
-        const { error } = await supabase.from('announcements').insert({
-            content: newContent,
-            type: priority, // Using priority column logic mapping to type/priority
-            priority: priority,
-            is_active: true
-        });
+        try {
+            const { error } = await supabase.from("announcements").insert([{
+                content: newContent,
+                type: priority,
+                priority: priority,
+                is_active: true,
+                created_at: new Date().toISOString()
+            }]);
 
-        if (!error) {
+            if (error) throw error;
+
             setNewContent("");
             setPriority("normal");
             fetchData();
-        } else {
+        } catch (error) {
             alert("Failed to post announcement: " + error.message);
         }
     };
 
     const handleDelete = async (id) => {
         if (!confirm("Are you sure you want to delete this announcement?")) return;
-        const { error } = await supabase.from('announcements').delete().eq('id', id);
-        if (!error) fetchData();
-        else alert("Failed to delete: " + error.message);
+        try {
+            const { error } = await supabase
+                .from("announcements")
+                .delete()
+                .eq("id", id);
+
+            if (error) throw error;
+            fetchData();
+        } catch (error) {
+            alert("Failed to delete: " + error.message);
+        }
     };
 
     return (

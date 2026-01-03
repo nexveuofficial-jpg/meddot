@@ -12,50 +12,57 @@ export default function AdminNotes() {
 
     const fetchNotes = async () => {
         setLoading(true);
-        // Using author_name (denormalized) and uploader_id for now.
-        // If we want exact profile name join, we need foreign key set up correctly.
-        let query = supabase
-            .from('notes')
-            .select('*')
-            .order('created_at', { ascending: false });
+        try {
+            let query = supabase
+                .from("notes")
+                .select("*")
+                .order("created_at", { ascending: false });
 
-        if (filter !== 'all') {
-            query = query.eq('status', filter);
+            if (filter !== 'all') {
+                query = query.eq("status", filter);
+            }
+
+            const { data, error } = await query;
+
+            if (error) {
+                console.error("Error fetching notes:", error);
+            } else {
+                setNotes(data || []);
+            }
+        } catch (error) {
+            console.error("Crash fetching notes:", error);
         }
-
-        const { data, error } = await query;
-        if (error) console.error(error);
-        else setNotes(data || []);
         setLoading(false);
     };
 
     useEffect(() => {
         fetchNotes();
-
-        // Realtime subscription
-        const sub = supabase
-            .channel('admin_notes')
+        // Setup realtime listener for 'notes' table
+        const subscription = supabase
+            .channel('admin_notes_changes')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'notes' }, () => {
                 fetchNotes();
             })
             .subscribe();
 
-        return () => supabase.removeChannel(sub);
+        return () => {
+            subscription.unsubscribe();
+        };
     }, [filter]);
 
     const updateStatus = async (id, status) => {
         if (!confirm(`Are you sure you want to mark this note as ${status}?`)) return;
 
-        const { error } = await supabase
-            .from('notes')
-            .update({ status })
-            .eq('id', id);
+        try {
+            const { error } = await supabase
+                .from("notes")
+                .update({ status })
+                .eq("id", id);
 
-        if (error) {
+            if (error) throw error;
+            // Realtime listener will handle UI update
+        } catch (error) {
             alert("Error updating status: " + error.message);
-        } else {
-            // Success feedback
-            // Realtime subscription will handle refresh, but a toast would be nice
         }
     };
 

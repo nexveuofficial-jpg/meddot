@@ -9,7 +9,7 @@ import { UploadCloud, FileText, Loader2, ArrowLeft, AlertCircle } from "lucide-r
 import Link from "next/link";
 
 export default function UploadNotePage() {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const { isEnabled } = useFeature();
     const router = useRouter();
 
@@ -58,42 +58,46 @@ export default function UploadNotePage() {
             // 1. Upload to Supabase Storage
             const fileExt = file.name.split('.').pop();
             const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-            const filePath = `${user.id}/${fileName}`;
+            const filePath = `${user.id}/${fileName}`; // Folder structure: user_id/filename
 
-            const { data: storageData, error: storageError } = await supabase.storage
+            const { error: uploadError } = await supabase.storage
                 .from('notes_documents')
                 .upload(filePath, file);
 
-            if (storageError) throw storageError;
+            if (uploadError) throw uploadError;
 
-            // 2. Insert into Database
-            const { data: publicUrlData } = supabase.storage
+            // Get Public URL
+            const { data: { publicUrl } } = supabase.storage
                 .from('notes_documents')
                 .getPublicUrl(filePath);
 
-            const { error: dbError } = await supabase.from('notes').insert({
+            const userRole = profile?.role || 'student';
+            const status = userRole === 'admin' || userRole === 'senior' ? 'published' : 'pending';
+
+            // 2. Insert into Supabase DB
+            const { error: dbError } = await supabase.from("notes").insert([{
                 title: formData.title,
                 description: formData.description,
                 subject: formData.subject,
                 category: formData.category,
                 file_path: filePath,
-                file_url: publicUrlData.publicUrl,
+                file_url: publicUrl,
                 uploader_id: user.id,
-                author_name: user?.full_name || 'Anonymous',
-                author_name: user?.full_name || 'Anonymous',
-                status: user.role === 'admin' || user.email?.includes('admin') ? 'published' : 'pending', // Admins publish directly
-                author_role: user.role === 'admin' || user.email?.includes('admin') ? 'admin' : 'student'
-            });
+                author_name: profile?.full_name || user?.email || 'Anonymous',
+                status: status,
+                author_role: userRole,
+                created_at: new Date().toISOString()
+            }]);
 
             if (dbError) throw dbError;
 
             // Success
             alert("Note uploaded successfully!");
 
-            if (user.role === 'admin' || user.email?.includes('admin')) {
-                router.push("/admin");
-            } else {
+            if (status === 'published') {
                 router.push("/notes");
+            } else {
+                router.push("/notes"); // Or maybe dashboard saying pending
             }
 
         } catch (err) {

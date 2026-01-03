@@ -1,241 +1,178 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { Loader2, Camera, Save, ArrowLeft, User } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-
-import styles from "./settings.module.css";
+import { Loader2, Camera, Save, User, Mail, Shield } from "lucide-react";
 
 export default function SettingsPage() {
-    const { user } = useAuth();
-    const router = useRouter();
+    const { user, profile } = useAuth();
+    const [isLoading, setIsLoading] = useState(false);
+    const [avatarFile, setAvatarFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(profile?.avatar_url);
 
-    // Form States
-    const [fullName, setFullName] = useState("");
-    const [college, setCollege] = useState("");
-    const [year, setYear] = useState("");
-    const [bio, setBio] = useState("");
-    const [avatarUrl, setAvatarUrl] = useState("");
-
-    // UI States
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [uploading, setUploading] = useState(false);
+    const [formData, setFormData] = useState({
+        full_name: "",
+        bio: "",
+        college: "",
+        year_of_study: ""
+    });
 
     useEffect(() => {
-        if (user) {
-            fetchProfile();
+        if (profile) {
+            setFormData({
+                full_name: profile.full_name || "",
+                bio: profile.bio || "",
+                college: profile.college || "",
+                year_of_study: profile.year_of_study || ""
+            });
+            setPreviewUrl(profile.avatar_url);
         }
-    }, [user]);
+    }, [profile]);
 
-    const fetchProfile = async () => {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-        if (data) {
-            setFullName(data.full_name || "");
-            setCollege(data.college || "");
-            setYear(data.year_of_study || "");
-            setBio(data.bio || "");
-            setAvatarUrl(data.avatar_url || "");
-        }
-        setLoading(false);
-    };
-
-    const handleAvatarUpload = async (e) => {
-        try {
-            setUploading(true);
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-            const filePath = `${fileName}`;
-
-            // Upload
-            const { error: uploadError } = await supabase.storage
-                .from('avatars')
-                .upload(filePath, file);
-
-            if (uploadError) throw uploadError;
-
-            // Get URL
-            const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-            setAvatarUrl(data.publicUrl);
-        } catch (error) {
-            alert('Error uploading avatar: ' + error.message);
-        } finally {
-            setUploading(false);
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setAvatarFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
         }
     };
 
     const handleSave = async (e) => {
         e.preventDefault();
-        setSaving(true);
+        setIsLoading(true);
 
-        const updates = {
-            id: user.id,
-            full_name: fullName,
-            college,
-            year_of_study: year,
-            bio,
-            avatar_url: avatarUrl,
-            updated_at: new Date()
-        };
+        try {
+            let avatar_url = profile?.avatar_url;
 
-        const { error } = await supabase
-            .from('profiles')
-            .upsert(updates);
+            // 1. Upload Avatar if changed
+            if (avatarFile) {
+                const fileExt = avatarFile.name.split('.').pop();
+                const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+                const filePath = `${fileName}`;
 
-        if (error) {
-            alert('Error updating profile: ' + error.message);
-        } else {
-            alert('Profile updated successfully!');
-            router.refresh();
-            // Also force a re-fetch of the session to update the context immediately
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                // Trigger an update event manually or just let the router refresh handle it
+                const { error: uploadError } = await supabase.storage
+                    .from('avatars')
+                    .upload(filePath, avatarFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(filePath);
+
+                avatar_url = publicUrl;
             }
+
+            // 2. Update Profile
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({
+                    full_name: formData.full_name,
+                    bio: formData.bio,
+                    college: formData.college,
+                    year_of_study: formData.year_of_study,
+                    avatar_url: avatar_url,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id);
+
+            if (updateError) throw updateError;
+
+            alert("Settings updated successfully!");
+            window.location.reload();
+
+        } catch (error) {
+            console.error("Error updating settings:", error);
+            alert("Failed to update settings: " + error.message);
+        } finally {
+            setIsLoading(false);
         }
-        setSaving(false);
     };
 
-    if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin" /></div>;
-
     return (
-        <div className={styles.container}>
-            <Link href="/dashboard" className={styles.backLink}>
-                <ArrowLeft size={18} /> Back to Dashboard
-            </Link>
+        <div style={{ maxWidth: "800px", margin: "2rem auto", padding: "1rem" }}>
+            <h1 className="text-3xl font-bold mb-8">Settings</h1>
 
-            <div className={styles.grid}>
-
-                {/* Left: Preview Card */}
-                <div>
-                    <div className={`${styles.card} ${styles.profileCard}`}>
-                        <div style={{ position: "relative" }}>
-                            <div style={{
-                                width: "120px",
-                                height: "120px",
-                                borderRadius: "50%",
-                                background: "#f0f9ff",
-                                overflow: "hidden",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                border: "4px solid white",
-                                boxShadow: "var(--shadow-md)"
-                            }}>
-                                {avatarUrl ? (
-                                    <img src={avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                ) : (
-                                    <User size={48} color="var(--primary)" />
-                                )}
-                            </div>
-                            <label style={{
-                                position: "absolute",
-                                bottom: "0",
-                                right: "0",
-                                background: "var(--primary)",
-                                color: "white",
-                                padding: "0.5rem",
-                                borderRadius: "50%",
-                                cursor: "pointer",
-                                boxShadow: "var(--shadow-md)"
-                            }}>
-                                {uploading ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
-                                <input type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
+            <div className="glass p-8 rounded-xl">
+                <form onSubmit={handleSave} className="space-y-6">
+                    {/* Avatar Upload */}
+                    <div className="flex items-center gap-6">
+                        <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-primary/20 bg-muted">
+                            {previewUrl ? (
+                                <img src={previewUrl} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                    <User size={40} />
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <label className="btn-secondary flex items-center gap-2 cursor-pointer">
+                                <Camera size={16} /> Change Photo
+                                <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                             </label>
                         </div>
-
-                        <div>
-                            <h2 style={{ fontSize: "1.25rem", fontWeight: 700 }}>{fullName || "Your Name"}</h2>
-                            <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem" }}>{user?.role}</p>
-                        </div>
-
-                        {(college || year) && (
-                            <div style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", background: "var(--muted)", padding: "0.5rem 1rem", borderRadius: "0.5rem", width: "100%" }}>
-                                {year && <span>{year} • </span>}
-                                {college && <span>{college}</span>}
-                            </div>
-                        )}
                     </div>
-                </div>
 
-                {/* Right: Edit Form */}
-                <div className={styles.card}>
-                    <h1 className={styles.title}>Profile Settings</h1>
-
-                    <form onSubmit={handleSave} style={{ display: "grid", gap: "1.5rem" }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Full Name</label>
+                            <label className="block text-sm font-medium mb-2">Full Name</label>
                             <input
                                 type="text"
-                                value={fullName}
-                                onChange={e => setFullName(e.target.value)}
-                                className={styles.input}
-                                placeholder="Dr. Future One"
+                                value={formData.full_name}
+                                onChange={e => setFormData({ ...formData, full_name: e.target.value })}
+                                className="w-full p-2 rounded-lg bg-background border border-border"
                             />
                         </div>
-
-                        <div className={styles.formGrid}>
-                            <div>
-                                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Medical College</label>
-                                <input
-                                    type="text"
-                                    value={college}
-                                    onChange={e => setCollege(e.target.value)}
-                                    className={styles.input}
-                                    placeholder="AIIMS Delhi"
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Year of Study</label>
-                                <select
-                                    value={year}
-                                    onChange={e => setYear(e.target.value)}
-                                    className={styles.input}
-                                >
-                                    <option value="">Select Year</option>
-                                    <option value="1st Year">1st Year (MBBS)</option>
-                                    <option value="2nd Year">2nd Year (MBBS)</option>
-                                    <option value="3rd Year">3rd Year (MBBS)</option>
-                                    <option value="4th Year">4th Year (MBBS)</option>
-                                    <option value="Intern">Intern</option>
-                                    <option value="Post-Grad">Post-Grad</option>
-                                    <option value="Faculty">Faculty</option>
-                                </select>
-                            </div>
-                        </div>
-
                         <div>
-                            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Bio</label>
-                            <textarea
-                                value={bio}
-                                onChange={e => setBio(e.target.value)}
-                                className={styles.input}
-                                rows="3"
-                                placeholder="Tell us about your medical interests..."
+                            <label className="block text-sm font-medium mb-2">College</label>
+                            <input
+                                type="text"
+                                value={formData.college}
+                                onChange={e => setFormData({ ...formData, college: e.target.value })}
+                                className="w-full p-2 rounded-lg bg-background border border-border"
                             />
                         </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Year of Study</label>
+                            <input
+                                type="text"
+                                value={formData.year_of_study}
+                                onChange={e => setFormData({ ...formData, year_of_study: e.target.value })}
+                                className="w-full p-2 rounded-lg bg-background border border-border"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Role</label>
+                            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-muted-foreground">
+                                <Shield size={16} />
+                                <span className="capitalize">{profile?.role || 'User'}</span>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Bio</label>
+                        <textarea
+                            value={formData.bio}
+                            onChange={e => setFormData({ ...formData, bio: e.target.value })}
+                            className="w-full p-2 rounded-lg bg-background border border-border h-32 resize-none"
+                            placeholder="Tell us about yourself..."
+                        />
+                    </div>
+
+                    <div className="flex justify-end pt-4">
                         <button
                             type="submit"
-                            disabled={saving}
-                            className={styles.saveButton}
+                            disabled={isLoading}
+                            className="btn-primary flex items-center gap-2"
                         >
-                            {saving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
+                            {isLoading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                             Save Changes
                         </button>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     );

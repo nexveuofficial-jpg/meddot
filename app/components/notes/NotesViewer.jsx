@@ -15,13 +15,18 @@ export default function NotesViewer({ note }) {
     useEffect(() => {
         const checkBookmark = async () => {
             if (!user) return;
-            const { data } = await supabase
-                .from('bookmarks')
-                .select('id')
-                .eq('note_id', note.id)
-                .eq('user_id', user.id)
-                .single();
-            setIsBookmarked(!!data);
+            try {
+                const { data, error } = await supabase
+                    .from("bookmarks")
+                    .select("id")
+                    .eq("note_id", note.id)
+                    .eq("user_id", user.id);
+
+                if (error) console.error(error);
+                setIsBookmarked(data && data.length > 0);
+            } catch (error) {
+                console.error(error);
+            }
         };
         checkBookmark();
     }, [note.id, user]);
@@ -36,26 +41,29 @@ export default function NotesViewer({ note }) {
         const newState = !isBookmarked;
         setIsBookmarked(newState);
 
-        if (newState) {
-            // Add bookmark
-            const { error } = await supabase
-                .from('bookmarks')
-                .insert({ user_id: user.id, note_id: note.id });
-            if (error) {
-                console.error(error);
-                setIsBookmarked(!newState); // Revert on error
+        try {
+            if (newState) {
+                // Add bookmark
+                const { error } = await supabase
+                    .from("bookmarks")
+                    .insert([{
+                        user_id: user.id,
+                        note_id: note.id,
+                        created_at: new Date().toISOString()
+                    }]);
+                if (error) throw error;
+            } else {
+                // Remove bookmark
+                const { error } = await supabase
+                    .from("bookmarks")
+                    .delete()
+                    .eq("user_id", user.id)
+                    .eq("note_id", note.id);
+                if (error) throw error;
             }
-        } else {
-            // Remove bookmark
-            const { error } = await supabase
-                .from('bookmarks')
-                .delete()
-                .eq('user_id', user.id)
-                .eq('note_id', note.id);
-            if (error) {
-                console.error(error);
-                setIsBookmarked(!newState); // Revert on error
-            }
+        } catch (error) {
+            console.error(error);
+            setIsBookmarked(!newState); // Revert on error
         }
     };
 
@@ -122,13 +130,25 @@ export default function NotesViewer({ note }) {
                     <div className={styles.meta}>
                         <span>By {note.author}</span>
                         <span>•</span>
-                        <span>{note.date}</span>
+                        <span>{new Date(note.created_at).toLocaleDateString()}</span>
                         <span>•</span>
-                        <span>{note.readTime} read</span>
+                        <span>Original Note</span>
                     </div>
 
                     <div className={styles.content}>
-                        {note.content}
+                        {/* If note.file_url exists, we should probably render it as an iframe or similar in a real app, 
+                            but for now we just show content/description as user requested previously.
+                            If I recall, the previous Viewer rendered iframe for PDF if file_url existed. 
+                            Let's add that back just in case. */}
+                        {note.file_url ? (
+                            <iframe
+                                src={note.file_url}
+                                style={{ width: "100%", height: "800px", border: "none" }}
+                                title="Note PDF"
+                            />
+                        ) : (
+                            <div dangerouslySetInnerHTML={{ __html: note.description || '' }} />
+                        )}
                     </div>
                 </div>
             </div>
