@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
+import styles from "./AdminDashboard.module.css";
+import AdminFeatures from "../components/admin/AdminFeatures";
+import AdminUsers from "../components/admin/AdminUsers";
+import AdminNotes from "../components/admin/AdminNotes";
+import AdminAnnouncements from "../components/admin/AdminAnnouncements";
 import { Users, FileText, AlertCircle, TrendingUp } from "lucide-react";
 
 export default function AdminPage() {
