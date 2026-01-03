@@ -9,7 +9,7 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import Link from "next/link";
 
 export default function DashboardLayout({ children }) {
-    const { user, loading, initialized, logout } = useAuth();
+    const { user, loading, initialized, logout, isAdmin } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -92,6 +92,13 @@ export default function DashboardLayout({ children }) {
                     <NavLink href="/chat">Study Groups</NavLink>
                     <NavLink href="/focus">Focus Mode</NavLink>
                     <NavLink href="/profile">My Profile</NavLink>
+
+                    {/* Admin Access */}
+                    {isAdmin && (
+                        <NavLink href="/admin">
+                            <span style={{ color: 'var(--primary)', fontWeight: 600 }}>Admin Panel</span>
+                        </NavLink>
+                    )}
 
 
                     <button

@@ -24,14 +24,7 @@ export default function LoginPage() {
             const result = await login(email, password);
 
             if (result.success) {
-                // Check role from the returned user object
-                const isAdmin = result.user?.role === 'admin' || email.includes("admin");
-
-                if (isAdmin) {
-                    router.push("/admin");
-                } else {
-                    router.push("/dashboard");
-                }
+                router.push("/dashboard");
             } else {
                 setError(result.error || "Invalid credentials. Try student@meddot.com / password");
                 setIsLoading(false);

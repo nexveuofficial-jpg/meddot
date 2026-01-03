@@ -108,6 +108,7 @@ export default function AdminNotes() {
                                 <th>Subject</th>
                                 <th>Author</th>
                                 <th>Status</th>
+                                <th>Category</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -127,6 +128,11 @@ export default function AdminNotes() {
                                             border: `1px solid ${note.status === 'published' ? '#bbf7d0' : note.status === 'pending' ? '#fde047' : '#fecaca'}`
                                         }}>
                                             {note.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span style={{ fontSize: '0.85rem', background: '#f1f5f9', padding: '0.2rem 0.6rem', borderRadius: '0.4rem', color: '#475569' }}>
+                                            {note.category || 'Other'}
                                         </span>
                                     </td>
                                     <td style={{ display: 'flex', gap: '0.5rem' }}>
@@ -176,7 +182,8 @@ export default function AdminNotes() {
                         </tbody>
                     </table>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }

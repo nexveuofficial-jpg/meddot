@@ -1,15 +1,31 @@
 "use client";
 
-import { useAuth } from "@/app/context/AuthContext";
-import styles from "./AdminDashboard.module.css";
-import AdminFeatures from "../components/admin/AdminFeatures";
-import AdminUsers from "../components/admin/AdminUsers";
-import AdminNotes from "../components/admin/AdminNotes";
-import AdminAnnouncements from "../components/admin/AdminAnnouncements";
-// UploadForm logic will be moved to Student Dashboard or Admin "Add Note" modal later
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { Users, FileText, AlertCircle, TrendingUp } from "lucide-react";
 
 export default function AdminPage() {
     const { logout, user } = useAuth();
+    const [stats, setStats] = useState({
+        users: 0,
+        notes: 0,
+        pending: 0
+    });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+            const { count: noteCount } = await supabase.from('notes').select('*', { count: 'exact', head: true });
+            const { count: pendingCount } = await supabase.from('notes').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+
+            setStats({
+                users: userCount || 0,
+                notes: noteCount || 0,
+                pending: pendingCount || 0
+            });
+        };
+        fetchStats();
+    }, []);
 
     // Safety check if not admin (though layout handles this mostly)
     if (user?.role !== 'admin') {
@@ -17,13 +33,40 @@ export default function AdminPage() {
         // Allow for now since simulated role might lag, or handle better
     }
 
+    const StatCard = ({ icon: Icon, label, value, color }) => (
+        <div style={{
+            background: 'white',
+            padding: '1.5rem',
+            borderRadius: '1rem',
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--shadow-sm)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            minWidth: '240px'
+        }}>
+            <div style={{
+                background: `${color}20`,
+                padding: '1rem',
+                borderRadius: '0.75rem',
+                color: color
+            }}>
+                <Icon size={24} />
+            </div>
+            <div>
+                <div style={{ fontSize: '2rem', fontWeight: '800', lineHeight: 1 }}>{value}</div>
+                <div style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', fontWeight: 500 }}>{label}</div>
+            </div>
+        </div>
+    );
+
     return (
         <div style={{ maxWidth: "1600px", margin: "0 auto" }}>
             <header style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: "3rem",
+                marginBottom: "2rem",
                 paddingBottom: "1.5rem",
                 borderBottom: "1px solid var(--border)"
             }}>
@@ -48,6 +91,13 @@ export default function AdminPage() {
                     Logout
                 </button>
             </header>
+
+            {/* Stats Row */}
+            <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '3rem', flexWrap: 'wrap' }}>
+                <StatCard icon={Users} label="Total Users" value={stats.users} color="#3b82f6" />
+                <StatCard icon={FileText} label="Total Notes" value={stats.notes} color="#10b981" />
+                <StatCard icon={AlertCircle} label="Pending Review" value={stats.pending} color="#f59e0b" />
+            </div>
 
             <div className={styles.grid}>
                 {/* Left Column: Controls */}
