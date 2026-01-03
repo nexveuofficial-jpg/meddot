@@ -41,7 +41,7 @@ export default function SeniorQuestionsPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
                 <h1 style={{ fontSize: "1.8rem", fontWeight: 800 }}>Student Queries</h1>
 
-                <div style={{ background: "white", border: "1px solid var(--border)", borderRadius: "0.5rem", padding: "0.25rem", display: "flex" }}>
+                <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: "0.5rem", padding: "0.25rem", display: "flex" }}>
                     <button
                         onClick={() => setFilter("unanswered")}
                         style={{
@@ -79,10 +79,10 @@ export default function SeniorQuestionsPage() {
                         questions.map(q => (
                             <Link key={q.id} href={`/ask-senior/${q.id}`} style={{ textDecoration: "none", color: "inherit" }}>
                                 <div style={{
-                                    background: "white",
+                                    background: "var(--card-bg)",
                                     padding: "1.5rem",
                                     borderRadius: "1rem",
-                                    border: "1px solid var(--border)",
+                                    border: "1px solid var(--card-border)",
                                     transition: "all 0.2s",
                                     boxShadow: "var(--shadow-sm)"
                                 }} className="hover:shadow-md hover:border-blue-300">

@@ -75,7 +75,7 @@ export default function SeniorDashboard() {
             </div>
 
             {/* Recent Unanswered */}
-            <div style={{ background: "white", borderRadius: "1rem", border: "1px solid var(--border)", overflow: "hidden" }}>
+            <div style={{ background: "var(--card-bg)", borderRadius: "1rem", border: "1px solid var(--card-border)", overflow: "hidden" }}>
                 <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <h3 style={{ fontSize: "1.1rem", fontWeight: 700 }}>Recent Questions Needs Attention</h3>
                     <Link href="/senior/questions" style={{ fontSize: "0.9rem", color: "var(--primary)", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.25rem" }}>
@@ -121,7 +121,7 @@ export default function SeniorDashboard() {
 
 function StatCard({ title, value, icon, bg }) {
     return (
-        <div style={{ background: "white", padding: "1.5rem", borderRadius: "1rem", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "1rem" }}>
+        <div style={{ background: "var(--card-bg)", padding: "1.5rem", borderRadius: "1rem", border: "1px solid var(--card-border)", display: "flex", alignItems: "center", gap: "1rem" }}>
             <div style={{ width: 48, height: 48, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {icon}
             </div>

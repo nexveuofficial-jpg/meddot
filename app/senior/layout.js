@@ -50,18 +50,19 @@ export default function SeniorLayout({ children }) {
     }
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
+        <div style={{ display: "flex", minHeight: "100vh", background: "var(--background)" }}>
             {/* Senior Sidebar */}
             <aside style={{
                 width: "260px",
-                background: "white",
+                background: "#0f172a", // Dark Admin-like sidebar
                 borderRight: "1px solid var(--border)",
                 display: "flex",
                 flexDirection: "column",
                 position: "sticky",
                 top: 0,
                 height: "100vh",
-                zIndex: 10
+                zIndex: 10,
+                color: "white"
             }}>
                 <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--border)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
@@ -112,15 +113,15 @@ function NavItem({ href, icon, children }) {
             alignItems: "center",
             gap: "0.75rem",
             padding: "0.75rem 1rem",
-            color: "var(--foreground)",
+            color: "#e2e8f0", // Light gray for dark bg
             textDecoration: "none",
             fontSize: "0.95rem",
             fontWeight: 500,
             borderRadius: "0.5rem",
             transition: "all 0.2s",
-            background: "transparent" // Hover state should be handled by CSS if possible, but inline for now
+            background: "transparent"
         }}
-            className="hover:bg-slate-100"
+            className="hover:bg-slate-800 hover:text-white"
         >
             {icon}
             {children}
