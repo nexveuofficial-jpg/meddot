@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "../../context/AuthContext";
-import PDFViewerModal from "../ui/PDFViewerModal";
+import SecurePDFReader from "./SecurePDFReader";
 
 export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle }) {
     const { user } = useAuth();
@@ -12,7 +12,7 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
 
     // Viewer State
     const [viewerOpen, setViewerOpen] = useState(false);
-    const [pdfUrl, setPdfUrl] = useState(null);
+    const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
 
     // Initial check (if isBookmarked prop isn't fully reliable or need self-check)
     useEffect(() => {
@@ -61,38 +61,56 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
         setDownloading(true);
 
         try {
+            let signedUrl = null;
+
+            // 1. Get Signed URL
             // Priority 1: Try generating a Signed URL (Secure)
             if (note.file_path) {
                 console.log("Attempting Signed URL for:", note.file_path);
                 const { data, error } = await supabase
                     .storage
                     .from('notes_documents')
-                    .createSignedUrl(note.file_path, 300); // Valid for 5 minutes for reading
+                    .createSignedUrl(note.file_path, 60);
 
                 if (error) {
                     console.warn("Signed URL generation failed:", error.message);
                 } else if (data?.signedUrl) {
-                    setPdfUrl(data.signedUrl);
-                    setViewerOpen(true);
-                    return;
+                    signedUrl = data.signedUrl;
                 }
             }
 
             // Priority 2: Fallback to Public URL
-            if (note.file_url) {
+            if (!signedUrl && note.file_url) {
                 console.log("Falling back to Public URL:", note.file_url);
-                setPdfUrl(note.file_url);
-                setViewerOpen(true);
-                return;
+                signedUrl = note.file_url;
             }
 
-            throw new Error("Could not resolve a document link.");
+            if (!signedUrl) throw new Error("Could not resolve a document link.");
+
+            // 2. Fetch Content as Blob (Prevents direct URL access)
+            const response = await fetch(signedUrl);
+            if (!response.ok) throw new Error("Failed to fetch document content");
+
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+
+            setPdfBlobUrl(blobUrl);
+            setViewerOpen(true);
 
         } catch (error) {
             console.error("Viewer error:", error);
             alert(`Failed to open note: ${error.message}`);
         } finally {
             setDownloading(false);
+        }
+    };
+
+    const handleCloseViewer = () => {
+        setViewerOpen(false);
+        // Clean up blob URL to free memory
+        if (pdfBlobUrl) {
+            URL.revokeObjectURL(pdfBlobUrl);
+            setPdfBlobUrl(null);
         }
     };
 
@@ -154,7 +172,7 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
                             fontWeight: 600
                         }}>
                             <Loader2 className="animate-spin" size={24} />
-                            <span style={{ fontSize: '0.85rem' }}>Opening...</span>
+                            <span style={{ fontSize: '0.85rem' }}>Fetching Securely...</span>
                         </div>
                     )}
 
@@ -234,12 +252,13 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
                 </div>
             </div>
 
-            {/* PDF Viewer Modal */}
-            <PDFViewerModal
+            {/* Secure PDF Reader Modal */}
+            <SecurePDFReader
                 isOpen={viewerOpen}
-                onClose={() => setViewerOpen(false)}
-                fileUrl={pdfUrl}
+                onClose={handleCloseViewer}
+                fileUrl={pdfBlobUrl}
                 title={note.title}
+                userEmail={user?.email}
             />
         </>
     );
