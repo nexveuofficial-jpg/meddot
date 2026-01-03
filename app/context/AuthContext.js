@@ -163,6 +163,7 @@ export function AuthProvider({ children }) {
             user,
             profile,
             loading,
+            initialized: !loading, // Derived state for backward compatibility
             login,
             signup,
             logout,
