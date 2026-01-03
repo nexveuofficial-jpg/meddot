@@ -15,10 +15,10 @@ export default function QuestionCard({ question }) {
             style={{ textDecoration: 'none', color: 'inherit' }}
         >
             <div style={{
-                background: "white",
+                background: "var(--card-bg)",
                 padding: "1.5rem",
                 borderRadius: "1rem",
-                border: "1px solid var(--border)",
+                border: "1px solid var(--card-border)",
                 boxShadow: "var(--shadow-sm)",
                 transition: "all 0.2s",
                 display: "flex",

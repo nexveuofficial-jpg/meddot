@@ -65,7 +65,7 @@ export default function AskPage() {
                 <ArrowLeft size={18} /> Back to Q&A
             </Link>
 
-            <div style={{ background: "#fff", borderRadius: "1rem", padding: "2.5rem", boxShadow: "var(--shadow-lg)", border: "1px solid var(--border)" }}>
+            <div style={{ background: "var(--card-bg)", borderRadius: "1rem", padding: "2.5rem", boxShadow: "var(--shadow-lg)", border: "1px solid var(--card-border)" }}>
                 <div style={{ marginBottom: "2rem", textAlign: "center" }}>
                     <h1 style={{ fontSize: "2rem", fontWeight: "800", marginBottom: "0.5rem", background: "linear-gradient(135deg, var(--primary), var(--accent))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                         Ask a Senior

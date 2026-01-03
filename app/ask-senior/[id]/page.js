@@ -136,7 +136,7 @@ export default function QuestionDetailPage(props) {
             </Link>
 
             {/* Question Section */}
-            <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--border)', marginBottom: '2rem', boxShadow: 'var(--shadow-sm)' }}>
+            <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--card-border)', marginBottom: '2rem', boxShadow: 'var(--shadow-sm)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                     <span style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", color: "var(--primary)", background: "var(--accent)", padding: "0.25rem 0.75rem", borderRadius: "99px" }}>
                         {question.topic || 'General'}
@@ -159,10 +159,10 @@ export default function QuestionDetailPage(props) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {answers.map(answer => (
                         <div key={answer.id} style={{
-                            background: answer.author_id === user?.id ? '#f0f9ff' : 'white', // Highlight own answers
+                            background: answer.author_id === user?.id ? 'var(--accent)' : 'var(--card-bg)', // Highlight own answers
                             padding: '1.5rem',
                             borderRadius: '1rem',
-                            border: '1px solid var(--border)',
+                            border: '1px solid var(--card-border)',
                             position: 'relative'
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -182,10 +182,10 @@ export default function QuestionDetailPage(props) {
             {/* Post Answer Form */}
             {user ? (
                 <form onSubmit={handleAnswerSubmit} style={{
-                    background: 'white',
+                    background: 'var(--card-bg)',
                     padding: '1.5rem',
                     borderRadius: '1rem',
-                    border: '1px solid var(--border)',
+                    border: '1px solid var(--card-border)',
                     boxShadow: 'var(--shadow-lg)',
                     position: 'sticky',
                     bottom: '2rem'
