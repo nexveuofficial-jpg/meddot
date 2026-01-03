@@ -7,9 +7,10 @@ import styles from "./dashboard.module.css";
 import { Menu, X } from "lucide-react";
 import ErrorBoundary from "../components/ErrorBoundary";
 import Link from "next/link";
+import Loader from "../components/ui/Loader";
 
 export default function DashboardLayout({ children }) {
-    const { user, loading, initialized, logout, isAdmin } = useAuth();
+    const { user, loading, initialized, logout, isAdmin, profile } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -59,11 +60,7 @@ export default function DashboardLayout({ children }) {
 
     // Show loading spinner until we know auth state
     if (!initialized || loading) {
-        return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--background)' }}>
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-        );
+        return <Loader fullScreen />;
     }
 
     if (!user) {
@@ -93,6 +90,19 @@ export default function DashboardLayout({ children }) {
 
             <aside className={`${styles.sidebar} ${isMobileMenuOpen ? styles.open : ''}`}>
                 <div className={styles.header}>
+                    {profile?.avatar_url ? (
+                        <div style={{
+                            width: '60px',
+                            height: '60px',
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            border: '3px solid white',
+                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                            marginBottom: '1rem'
+                        }}>
+                            <img src={profile.avatar_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                    ) : null}
                     <h2 className={styles.title}>Meddot.</h2>
                     <p className={styles.subtitle}>Student Portal</p>
                 </div>
