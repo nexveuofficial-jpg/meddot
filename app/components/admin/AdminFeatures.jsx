@@ -40,13 +40,13 @@ export default function AdminFeatures() {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         padding: '1rem',
-                        background: 'var(--muted)',
+                        background: 'white', // Ensure white bg
                         borderRadius: '0.5rem',
                         border: '1px solid var(--border)'
                     }}>
                         <div>
-                            <div style={{ fontWeight: 600 }}>{feat.label}</div>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{feat.desc}</div>
+                            <div style={{ fontWeight: 600, color: '#1e293b' }}>{feat.label}</div>
+                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{feat.desc}</div>
                         </div>
                         <label className="switch">
                             <input

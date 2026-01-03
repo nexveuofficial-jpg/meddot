@@ -21,11 +21,11 @@ export function FeatureFlagProvider({ children }) {
                 }
             });
 
-            // FORCE ENABLE FEATURES (Persist override)
-            flagMap['enable_chat'] = true;
-            flagMap['enable_uploads'] = true;
-            flagMap['enable_ask_senior'] = true;
-            flagMap['doctor_companion_enabled'] = true;
+            // FORCE ENABLE FEATURES (Persist override) - REMOVED to allow Admin Toggle
+            // flagMap['enable_chat'] = true;
+            // flagMap['enable_uploads'] = true;
+            // flagMap['enable_ask_senior'] = true;
+            // flagMap['doctor_companion_enabled'] = true;
 
             setFlags(flagMap);
         } catch (error) {
