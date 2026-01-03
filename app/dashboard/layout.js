@@ -92,7 +92,7 @@ export default function DashboardLayout({ children }) {
                     <NavLink href="/chat">Study Groups</NavLink>
                     <NavLink href="/focus">Focus Mode</NavLink>
                     <NavLink href="/profile">My Profile</NavLink>
-                    <NavLink href="/settings">Settings</NavLink>
+
 
                     <button
                         onClick={() => logout()}
