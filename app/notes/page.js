@@ -207,12 +207,37 @@ export default function NotesPage() {
                         }}
                     >
                         <option>All Subjects</option>
-                        <option>Anatomy</option>
-                        <option>Physiology</option>
-                        <option>Biochemistry</option>
-                        <option>Pharmacology</option>
-                        <option>Pathology</option>
-                        <option>Microbiology</option>
+
+                        <optgroup label="First Year (Pre-Clinical)">
+                            <option>Anatomy</option>
+                            <option>Physiology</option>
+                            <option>Biochemistry</option>
+                        </optgroup>
+
+                        <optgroup label="Second Year (Para-Clinical)">
+                            <option>Pathology</option>
+                            <option>Pharmacology</option>
+                            <option>Microbiology</option>
+                            <option>Forensic Medicine</option>
+                        </optgroup>
+
+                        <optgroup label="Third Year">
+                            <option>Community Medicine</option>
+                            <option>Ophthalmology</option>
+                            <option>ENT</option>
+                        </optgroup>
+
+                        <optgroup label="Final Year (Clinical)">
+                            <option>General Medicine</option>
+                            <option>General Surgery</option>
+                            <option>Obstetrics & Gynecology</option>
+                            <option>Pediatrics</option>
+                            <option>Orthopedics</option>
+                            <option>Psychiatry</option>
+                            <option>Dermatology</option>
+                            <option>Anesthesiology</option>
+                            <option>Radiology</option>
+                        </optgroup>
                     </select>
                 </div>
 
