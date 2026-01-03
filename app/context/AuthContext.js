@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
                 .single();
 
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("Profile fetch timeout")), 4000)
+                setTimeout(() => reject(new Error("Profile fetch timeout")), 10000) // Increased to 10s
             );
 
             // Race against timeout
@@ -36,7 +36,8 @@ export function AuthProvider({ children }) {
             }
         } catch (err) {
             console.error("Profile fetch crash/timeout:", err);
-            // Non-blocking: allow app to load even if profile fails
+            // Fallback: If profile fetch fails, try to use metadata temporarily to avoid locking user out
+            // We don't set 'profile' fully, but we can rely on isAdmin check falling back to metadata if we update the isAdmin logic below.
         }
     };
 
@@ -181,8 +182,8 @@ export function AuthProvider({ children }) {
             signup,
             logout,
             debugStatus, // Expose status
-            isAdmin: profile?.role === 'admin',
-            isSenior: profile?.role === 'senior'
+            isAdmin: profile?.role === 'admin' || user?.user_metadata?.role === 'admin',
+            isSenior: profile?.role === 'senior' || user?.user_metadata?.role === 'senior'
         }}>
             {children}
         </AuthContext.Provider>

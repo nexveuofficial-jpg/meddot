@@ -7,7 +7,7 @@ import { useFeature } from "@/app/context/FeatureFlagContext";
 import styles from "./AdminDashboard.module.css";
 
 export default function AdminLayout({ children }) {
-    const { user, loading, initialized } = useAuth();
+    const { user, loading, initialized, isAdmin } = useAuth();
     const router = useRouter();
     const [isAuthorized, setIsAuthorized] = useState(null); // null = unknown, false = denied, true = allowed
 
@@ -20,13 +20,15 @@ export default function AdminLayout({ children }) {
             return;
         }
 
-        if (user.role !== 'admin' && !user.email?.includes('admin')) {
-            // Fallback check on email if role missing but strictly admin area
-            setIsAuthorized(false);
-        } else {
+        // Use the robust isAdmin check from context (checks profile.role)
+        console.log("AdminLayout Check:", { isAdmin, role: user.role, meta: user.user_metadata });
+        if (isAdmin) {
             setIsAuthorized(true);
+        } else {
+            console.warn("Access Denied: User is not admin. Role:", user.role, "Meta:", user.user_metadata);
+            setIsAuthorized(false);
         }
-    }, [user, loading, initialized, router]);
+    }, [user, loading, initialized, isAdmin, router]);
 
     if (!initialized || loading || isAuthorized === null) {
         return (
@@ -57,6 +59,9 @@ export default function AdminLayout({ children }) {
             }}>
                 <h1 style={{ fontSize: "2rem", color: "#ef4444" }}>Access Denied</h1>
                 <p style={{ color: "#94a3b8" }}>You do not have permission to view this page.</p>
+                <p style={{ color: "orange", fontSize: "0.8rem" }}>
+                    Debug: Role={user?.role} | MetaRole={user?.user_metadata?.role} | IsAdmin={String(isAdmin)}
+                </p>
                 <div style={{ display: "flex", gap: "1rem" }}>
                     <button
                         onClick={() => router.push("/dashboard")}
