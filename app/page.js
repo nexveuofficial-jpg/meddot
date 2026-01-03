@@ -15,7 +15,13 @@ export default function Home() {
     }
   }, [user, loading, router]);
 
-  if (loading) return null; // Or a spinner
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}>
+        <p style={{ color: '#64748b', fontSize: '1.2rem', fontWeight: 500 }}>Loading Meddot...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{
