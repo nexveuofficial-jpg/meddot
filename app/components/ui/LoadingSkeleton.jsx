@@ -4,24 +4,24 @@ export function NoteCardSkeleton() {
     return (
         <div className={styles.cardSkeleton}>
             {/* Top Accent */}
-            <div style={{ height: "4px", background: "#e2e8f0", borderRadius: "2px" }} />
+            <div className={styles.skeleton} style={{ height: "4px", borderRadius: "2px", width: "100%", marginBottom: "0.5rem" }} />
 
             {/* Header: Badge & Bookmark */}
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: "center" }}>
                 <div className={`${styles.skeleton} ${styles.badge}`} />
-                <div className={`${styles.skeleton}`} style={{ width: 18, height: 18, borderRadius: '50%' }} />
+                <div className={`${styles.skeleton}`} style={{ width: 28, height: 28, borderRadius: '50%' }} />
             </div>
 
             {/* Title */}
-            <div>
+            <div style={{ margin: "0.5rem 0" }}>
                 <div className={`${styles.skeleton} ${styles.title}`} />
                 <div className={`${styles.skeleton} ${styles.title}`} style={{ width: '60%' }} />
             </div>
 
             {/* Description */}
-            <div>
+            <div style={{ marginBottom: "1rem" }}>
                 <div className={`${styles.skeleton} ${styles.desc}`} />
-                <div className={`${styles.skeleton} ${styles.desc}`} />
+                <div className={`${styles.skeleton} ${styles.desc}`} style={{ width: '80%' }} />
             </div>
 
             {/* Footer */}

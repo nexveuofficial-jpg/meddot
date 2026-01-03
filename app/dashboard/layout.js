@@ -10,7 +10,7 @@ import Link from "next/link";
 import Loader from "../components/ui/Loader";
 
 export default function DashboardLayout({ children }) {
-    const { user, loading, initialized, logout, isAdmin, profile } = useAuth();
+    const { user, loading, initialized, logout, isAdmin, isSenior, profile } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -119,6 +119,13 @@ export default function DashboardLayout({ children }) {
                     {isAdmin && (
                         <NavLink href="/admin">
                             <span style={{ color: 'var(--primary)', fontWeight: 600 }}>Admin Panel</span>
+                        </NavLink>
+                    )}
+
+                    {/* Senior Panel */}
+                    {(isSenior || isAdmin) && (
+                        <NavLink href="/senior">
+                            <span style={{ color: 'var(--primary)', fontWeight: 600 }}>Senior Panel</span>
                         </NavLink>
                     )}
 
