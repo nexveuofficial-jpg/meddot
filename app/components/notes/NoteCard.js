@@ -56,28 +56,36 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
         setDownloading(true);
 
         try {
-            if (!note.file_path) {
-                throw new Error("File path not found for this note.");
+            // Priority 1: Try generating a Signed URL (Secure)
+            if (note.file_path) {
+                console.log("Attempting Signed URL for:", note.file_path);
+                const { data, error } = await supabase
+                    .storage
+                    .from('notes_documents')
+                    .createSignedUrl(note.file_path, 60);
+
+                if (error) {
+                    console.warn("Signed URL generation failed:", error.message);
+                    // Don't throw yet, try fallback
+                } else if (data?.signedUrl) {
+                    window.open(data.signedUrl, '_blank');
+                    return; // Success
+                }
             }
 
-            console.log("Fetching signed URL for:", note.file_path);
-
-            const { data, error } = await supabase
-                .storage
-                .from('notes_documents')
-                .createSignedUrl(note.file_path, 60); // Valid for 60 seconds
-
-            if (error) throw error;
-
-            if (data?.signedUrl) {
-                window.open(data.signedUrl, '_blank');
-            } else {
-                throw new Error("Could not generate download link.");
+            // Priority 2: Fallback to Public URL if Signed Failed or Path Missing
+            if (note.file_url) {
+                console.log("Falling back to Public URL:", note.file_url);
+                window.open(note.file_url, '_blank');
+                return;
             }
+
+            // If we get here, both methods failed
+            throw new Error("Could not resolve a download link. File path or URL missing.");
 
         } catch (error) {
             console.error("Download error:", error);
-            alert("Failed to download note. Please try again.");
+            alert(`Failed to download note: ${error.message}`);
         } finally {
             setDownloading(false);
         }
