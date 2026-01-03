@@ -118,7 +118,13 @@ export default function DashboardPage() {
         return {}; // Default handled by CSS class
     };
 
-    if (loading) return null;
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#94a3b8' }}>
+                <p>Loading Dashboard...</p>
+            </div>
+        );
+    }
 
     return (
         <div>
