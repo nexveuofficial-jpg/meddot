@@ -63,14 +63,16 @@ export function AuthProvider({ children }) {
                         setDebugStatus("Profile Fetched. Finalizing...");
                     } else {
                         setDebugStatus("No Session Found.");
-                        setLoading(false);
                     }
                 }
             } catch (error) {
                 console.error("Auth init error:", error);
                 if (mounted) setDebugStatus(`Error: ${error.message}`);
             } finally {
-                if (mounted) setLoading(false);
+                if (mounted) {
+                    setLoading(false);
+                    setDebugStatus((prev) => prev + " (Done)");
+                }
             }
         };
 
@@ -83,6 +85,7 @@ export function AuthProvider({ children }) {
 
             if (session?.user) {
                 setUser(session.user);
+                // Optimistic update to prevent flicker, but fetch profile
                 await fetchProfile(session.user.id);
             } else {
                 setUser(null);

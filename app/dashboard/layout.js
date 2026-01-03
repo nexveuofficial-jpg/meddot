@@ -45,6 +45,18 @@ export default function DashboardLayout({ children }) {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Lock body scroll when mobile menu is open
+    useEffect(() => {
+        if (isMobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isMobileMenuOpen]);
+
     // Show loading spinner until we know auth state
     if (!initialized || loading) {
         return (

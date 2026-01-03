@@ -146,7 +146,7 @@ export default function ChatRoomPage(props) {
             id: optimisticId, // Temp ID
             room_id: params.roomId,
             user_id: user.id,
-            user_name: user.full_name || user.email || 'You',
+            user_name: user.user_metadata?.full_name || user.email || 'You',
             role: user.role || 'student',
             content: content,
             created_at: new Date().toISOString()
@@ -159,7 +159,7 @@ export default function ChatRoomPage(props) {
                 .insert([{
                     room_id: params.roomId,
                     user_id: user.id,
-                    user_name: user.full_name || user.email || 'Anonymous',
+                    user_name: user.user_metadata?.full_name || user.email || 'Anonymous',
                     role: user.role || 'student',
                     content: content,
                     created_at: new Date().toISOString()
@@ -205,12 +205,15 @@ export default function ChatRoomPage(props) {
         }
 
         try {
-            const { error } = await supabase
+            const { error, count } = await supabase
                 .from("chat_messages")
-                .delete()
+                .delete({ count: 'exact' }) // Ensure we get count
                 .eq("id", msgId);
 
             if (error) throw error;
+
+            // If server delete worked but count is 0, it might have been already deleted or ID mismatch.
+            // But usually if no error, we assume success.
         } catch (error) {
             console.error("Error deleting message:", error);
             addToast("Failed to delete message from server.", "error"); // Fallback
