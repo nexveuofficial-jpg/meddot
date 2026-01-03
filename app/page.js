@@ -27,7 +27,7 @@ export default function Home() {
   if (loading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc', padding: '2rem', textAlign: 'center' }}>
-        <p style={{ color: '#64748b', fontSize: '1.2rem', fontWeight: 500, marginBottom: '1rem' }}>Loading Meddot...</p>
+        <p style={{ color: '#64748b', fontSize: '1.2rem', fontWeight: 500, marginBottom: '1rem' }}>Loading Meddot (v2.1)...</p>
 
         {showLongLoadingMessage && (
           <div style={{ maxWidth: '400px', animation: 'fadeIn 0.5s', color: '#dc2626', background: '#fef2f2', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #fee2e2' }}>
