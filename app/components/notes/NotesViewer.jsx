@@ -4,11 +4,21 @@ import { useState, useEffect } from "react";
 import styles from "./NotesViewer.module.css";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
+import { Document, Page, pdfjs } from 'react-pdf';
+import { Loader2, Plus, Minus, RotateCcw, Bookmark } from "lucide-react";
+
+// Import styles for react-pdf
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+
+// Set worker from CDN
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 export default function NotesViewer({ note }) {
-    const [zoomLevel, setZoomLevel] = useState(1);
+    const [zoomLevel, setZoomLevel] = useState(1.0); // Start at 100%
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [readingProgress, setReadingProgress] = useState(0);
+    const [numPages, setNumPages] = useState(null);
     const { user } = useAuth();
 
     // Check initial bookmark status
@@ -79,9 +89,13 @@ export default function NotesViewer({ note }) {
     }, []);
 
 
-    const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.1, 1.5));
+    const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.1, 2.0));
     const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.1, 0.5));
-    const handleReset = () => setZoomLevel(1);
+    const handleReset = () => setZoomLevel(1.0);
+
+    function onDocumentLoadSuccess({ numPages }) {
+        setNumPages(numPages);
+    }
 
     return (
         <div className={styles.container}>
@@ -93,59 +107,64 @@ export default function NotesViewer({ note }) {
             {/* Toolbar - Glass Effect */}
             <div className={`${styles.toolbar} glass-clean`}>
                 <button onClick={handleZoomOut} className={styles.button} title="Zoom Out">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <Minus size={20} />
                 </button>
 
-                <span style={{ fontSize: "0.875rem", fontVariantNumeric: "tabular-nums", minWidth: "3ch", textAlign: "center" }}>
+                <span style={{ fontSize: "0.875rem", fontVariantNumeric: "tabular-nums", minWidth: "3ch", textAlign: "center", color: '#475569' }}>
                     {Math.round(zoomLevel * 100)}%
                 </span>
 
                 <button onClick={handleZoomIn} className={styles.button} title="Zoom In">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <Plus size={20} />
                 </button>
 
-                <div style={{ width: "1px", height: "1.5rem", background: "var(--border)" }}></div>
+                <div style={{ width: "1px", height: "1.5rem", background: "#cbd5e1" }}></div>
 
                 <button onClick={handleReset} className={styles.button} title="Reset View">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                    <RotateCcw size={20} />
                 </button>
 
                 <button
                     onClick={toggleBookmark}
                     className={`${styles.button} ${isBookmarked ? styles.active : ''} `}
                     title="Bookmark"
-                    style={{ color: isBookmarked ? "#fbbf24" : "currentColor" }}
+                    style={{ color: isBookmarked ? "#fbbf24" : "var(--muted-foreground)" }}
                 >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <Bookmark size={20} fill={isBookmarked ? "currentColor" : "none"} />
                 </button>
             </div>
 
             {/* Canvas */}
             <div className={styles.canvasWrapper}>
-                <div
-                    className={styles.paper}
-                    style={{ transform: `scale(${zoomLevel})`, transition: "transform 0.2s ease-out" }}
-                >
+                <div className={styles.paper} style={{ background: 'transparent', boxShadow: 'none' }}>
                     <h1 className={styles.title}>{note.title}</h1>
                     <div className={styles.meta}>
                         <span>By {note.author}</span>
                         <span>•</span>
                         <span>{new Date(note.created_at).toLocaleDateString()}</span>
                         <span>•</span>
-                        <span>Original Note</span>
+                        <span>{numPages ? `${numPages} Pages` : 'Loading...'}</span>
                     </div>
 
                     <div className={styles.content}>
-                        {/* If note.file_url exists, we should probably render it as an iframe or similar in a real app, 
-                            but for now we just show content/description as user requested previously.
-                            If I recall, the previous Viewer rendered iframe for PDF if file_url existed. 
-                            Let's add that back just in case. */}
                         {note.file_url ? (
-                            <iframe
-                                src={note.file_url}
-                                style={{ width: "100%", height: "800px", border: "none" }}
-                                title="Note PDF"
-                            />
+                            <Document
+                                file={note.file_url}
+                                onLoadSuccess={onDocumentLoadSuccess}
+                                loading={<div className="flex justify-center p-10"><Loader2 className="animate-spin text-primary" size={40} /></div>}
+                                error={<div className="text-red-500 p-4">Failed to load PDF.</div>}
+                            >
+                                {numPages && Array.from(new Array(numPages), (el, index) => (
+                                    <Page
+                                        key={`page_${index + 1}`}
+                                        pageNumber={index + 1}
+                                        scale={zoomLevel}
+                                        className="mb-8 shadow-md rounded-md overflow-hidden"
+                                        renderAnnotationLayer={true}
+                                        renderTextLayer={true}
+                                    />
+                                ))}
+                            </Document>
                         ) : (
                             <div dangerouslySetInnerHTML={{ __html: note.description || '' }} />
                         )}
