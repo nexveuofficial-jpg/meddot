@@ -107,177 +107,198 @@ export default function ProfilePage() {
             maxWidth: '1000px',
             margin: '2rem auto',
             padding: '2rem',
-            display: 'grid',
-            gridTemplateColumns: 'minmax(300px, 1fr) 2fr', // Creative Responsive Grid
-            gap: '2rem',
-            alignItems: 'start'
         }}>
-            {/* Left Column: Identity Card */}
-            <div style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '24px',
-                padding: '2rem',
-                textAlign: 'center',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+            {/* Navigation */}
+            <a href="/dashboard" style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '2rem',
+                color: '#e2e8f0',
+                textDecoration: 'none',
+                fontSize: '1rem',
+                fontWeight: 600,
+                padding: '0.5rem 1rem',
+                borderRadius: '0.75rem',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(5px)',
+                transition: 'background 0.2s'
             }}>
+                ← Back to Dashboard
+            </a>
+
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'minmax(300px, 1fr) 2fr', // Creative Responsive Grid
+                gap: '2rem',
+                alignItems: 'start'
+            }}>
+                {/* Left Column: Identity Card */}
                 <div style={{
-                    width: '150px',
-                    height: '150px',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    border: '4px solid white',
-                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                    background: '#e2e8f0',
-                    margin: '0 auto 1.5rem auto'
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: '24px',
+                    padding: '2rem',
+                    textAlign: 'center',
+                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
                 }}>
-                    {previewUrl ? (
-                        <img src={previewUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', color: '#94a3b8' }}>
-                            {formData.full_name?.[0] || 'U'}
-                        </div>
-                    )}
+                    <div style={{
+                        width: '150px',
+                        height: '150px',
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        border: '4px solid white',
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                        background: '#e2e8f0',
+                        margin: '0 auto 1.5rem auto'
+                    }}>
+                        {previewUrl ? (
+                            <img src={previewUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', color: '#94a3b8' }}>
+                                {formData.full_name?.[0] || 'U'}
+                            </div>
+                        )}
+                    </div>
+
+                    <label style={{
+                        cursor: 'pointer',
+                        display: 'inline-block',
+                        padding: '0.5rem 1rem',
+                        background: '#f1f5f9',
+                        borderRadius: '20px',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        color: '#475569',
+                        marginBottom: '1.5rem',
+                        transition: 'background 0.2s'
+                    }}>
+                        Change Photo
+                        <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+                    </label>
+
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>{formData.full_name || 'Your Name'}</h2>
+                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>{profile.role || 'Member'} • {formData.college || 'College'}</p>
+
+                    <div style={{ textAlign: 'left', marginTop: '1.5rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
+                        <p style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>About Me</p>
+                        <p style={{ fontSize: '0.9rem', color: '#334155', lineHeight: '1.5' }}>
+                            {formData.bio || "No bio yet. Tell the world about yourself!"}
+                        </p>
+                    </div>
                 </div>
 
-                <label style={{
-                    cursor: 'pointer',
-                    display: 'inline-block',
-                    padding: '0.5rem 1rem',
-                    background: '#f1f5f9',
-                    borderRadius: '20px',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    color: '#475569',
-                    marginBottom: '1.5rem',
-                    transition: 'background 0.2s'
+                {/* Right Column: Edit Form */}
+                <div style={{
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: '24px',
+                    padding: '2.5rem',
+                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
                 }}>
-                    Change Photo
-                    <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
-                </label>
+                    <h1 style={{
+                        fontSize: '2rem',
+                        fontWeight: 800,
+                        marginBottom: '2rem',
+                        background: 'linear-gradient(to right, #2563eb, #7c3aed)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent'
+                    }}>Edit Profile</h1>
 
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>{formData.full_name || 'Your Name'}</h2>
-                <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>{profile.role || 'Member'} • {formData.college || 'College'}</p>
+                    <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
-                <div style={{ textAlign: 'left', marginTop: '1.5rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
-                    <p style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>About Me</p>
-                    <p style={{ fontSize: '0.9rem', color: '#334155', lineHeight: '1.5' }}>
-                        {formData.bio || "No bio yet. Tell the world about yourself!"}
-                    </p>
-                </div>
-            </div>
+                        {/* Section: Academic */}
+                        <section>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                📚 Academic Info
+                            </h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Full Name</label>
+                                    <input type="text" value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Specialty / Interest</label>
+                                    <input type="text" placeholder="e.g. Cardiology" value={formData.specialty} onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>College</label>
+                                    <input type="text" value={formData.college} onChange={(e) => setFormData({ ...formData, college: e.target.value })}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Year of Study</label>
+                                    <input type="text" value={formData.year_of_study} onChange={(e) => setFormData({ ...formData, year_of_study: e.target.value })}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
+                                </div>
+                            </div>
+                        </section>
 
-            {/* Right Column: Edit Form */}
-            <div style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '24px',
-                padding: '2.5rem',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-            }}>
-                <h1 style={{
-                    fontSize: '2rem',
-                    fontWeight: 800,
-                    marginBottom: '2rem',
-                    background: 'linear-gradient(to right, #2563eb, #7c3aed)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
-                }}>Edit Profile</h1>
+                        {/* Section: Contact & Social */}
+                        <section style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                🌐 Social & Contact
+                            </h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Phone (Optional)</label>
+                                    <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>LinkedIn URL</label>
+                                    <input type="url" placeholder="https://linkedin.com/in/..." value={formData.linkedin} onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
+                                </div>
+                                <div style={{ gridColumn: 'span 2' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Website / Portfolio</label>
+                                    <input type="url" placeholder="https://..." value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
+                                </div>
+                            </div>
+                        </section>
 
-                <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                        <section style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Bio</label>
+                            <textarea
+                                value={formData.bio}
+                                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                                placeholder="Tell us a bit about yourself..."
+                                rows={4}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    borderRadius: '0.5rem',
+                                    border: '1px solid #cbd5e1',
+                                    background: '#f8fafc',
+                                    resize: 'vertical'
+                                }}
+                            />
+                        </section>
 
-                    {/* Section: Academic */}
-                    <section>
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            📚 Academic Info
-                        </h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Full Name</label>
-                                <input type="text" value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Specialty / Interest</label>
-                                <input type="text" placeholder="e.g. Cardiology" value={formData.specialty} onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>College</label>
-                                <input type="text" value={formData.college} onChange={(e) => setFormData({ ...formData, college: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Year of Study</label>
-                                <input type="text" value={formData.year_of_study} onChange={(e) => setFormData({ ...formData, year_of_study: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Section: Contact & Social */}
-                    <section style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            🌐 Social & Contact
-                        </h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Phone (Optional)</label>
-                                <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>LinkedIn URL</label>
-                                <input type="url" placeholder="https://linkedin.com/in/..." value={formData.linkedin} onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
-                            </div>
-                            <div style={{ gridColumn: 'span 2' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Website / Portfolio</label>
-                                <input type="url" placeholder="https://..." value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
-                            </div>
-                        </div>
-                    </section>
-
-                    <section style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Bio</label>
-                        <textarea
-                            value={formData.bio}
-                            onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                            placeholder="Tell us a bit about yourself..."
-                            rows={4}
+                        <button
+                            type="submit"
+                            disabled={loading}
                             style={{
-                                width: '100%',
-                                padding: '0.75rem',
-                                borderRadius: '0.5rem',
-                                border: '1px solid #cbd5e1',
-                                background: '#f8fafc',
-                                resize: 'vertical'
+                                padding: '1rem 2rem',
+                                background: 'linear-gradient(to right, #2563eb, #6366f1)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '1rem',
+                                fontSize: '1.1rem',
+                                fontWeight: 700,
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                opacity: loading ? 0.7 : 1,
+                                marginTop: '0.5rem',
+                                boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)'
                             }}
-                        />
-                    </section>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        style={{
-                            padding: '1rem 2rem',
-                            background: 'linear-gradient(to right, #2563eb, #6366f1)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '1rem',
-                            fontSize: '1.1rem',
-                            fontWeight: 700,
-                            cursor: loading ? 'not-allowed' : 'pointer',
-                            opacity: loading ? 0.7 : 1,
-                            marginTop: '0.5rem',
-                            boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)'
-                        }}
-                    >
-                        {loading ? "Saving Changes..." : "Save Profile"}
-                    </button>
-                </form>
+                        >
+                            {loading ? "Saving Changes..." : "Save Profile"}
+                        </button>
+                    </form>
+                </div>
             </div>
-        </div>
-    );
+            );
 }
