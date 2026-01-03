@@ -97,6 +97,18 @@ export function AuthProvider({ children }) {
         };
     }, []);
 
+    // Safety Valve: Force loading to false after 7 seconds max to prevent infinite "Initializing..." screen
+    useEffect(() => {
+        const safetyTimer = setTimeout(() => {
+            if (loading) {
+                console.warn("Auth loading took too long. Forcing completion.");
+                setLoading(false);
+                setDebugStatus("Timed Out. Forcing Load.");
+            }
+        }, 7000);
+        return () => clearTimeout(safetyTimer);
+    }, [loading]);
+
     // Login
     const login = async (email, password) => {
         try {
