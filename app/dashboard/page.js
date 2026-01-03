@@ -177,6 +177,14 @@ export default function DashboardPage() {
             </div>
 
             <DoctorCompanion mood="idle" context="dashboard" />
+
+            {/* Debug Overlay - Temporary */}
+            <div style={{ position: 'fixed', bottom: '10px', left: '10px', background: 'rgba(0,0,0,0.8)', color: 'lime', padding: '10px', zIndex: 9999, fontSize: '10px', pointerEvents: 'none' }}>
+                <p>Status: {loading ? "LOADING" : "LOADED"}</p>
+                <p>User: {user ? user.email : "NO USER"}</p>
+                <p>Announcements: {announcements.length}</p>
+                <p>Cards: {cards.length}</p>
+            </div>
         </div>
     );
 }
