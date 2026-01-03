@@ -119,10 +119,7 @@ export default function DashboardLayout({ children }) {
                 </div>
             </main>
 
-            {/* TEMP DEBUG STRIP */}
-            <div style={{ position: 'fixed', bottom: 0, right: 0, padding: '5px', background: 'black', color: 'lime', fontSize: '10px', zIndex: 9999 }}>
-                Role: {user?.user_metadata?.role || 'N/A'} | ProfileRole: {isAdmin ? 'ADMIN' : 'STUDENT'}
-            </div>
+
         </div>
     );
 }

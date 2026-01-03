@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
 import { Send, ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
+import UserProfileModal from "@/app/components/UserProfileModal";
+import ToastContainer from "@/app/components/ui/Toast";
 
 export default function ChatRoomPage(props) {
     const params = use(props.params);
@@ -17,6 +19,18 @@ export default function ChatRoomPage(props) {
     const [newMessage, setNewMessage] = useState("");
     const [loading, setLoading] = useState(true);
     const messagesEndRef = useRef(null);
+    const lastMessageTime = useRef(0);
+    const [toasts, setToasts] = useState([]);
+    const [selectedUserId, setSelectedUserId] = useState(null);
+
+    const addToast = (message, type = 'info', duration = 3000) => {
+        const id = Date.now();
+        setToasts(prev => [...prev, { id, message, type, duration }]);
+    };
+
+    const removeToast = (id) => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+    };
 
     // Scroll to bottom helper
     const scrollToBottom = () => {
@@ -105,6 +119,24 @@ export default function ChatRoomPage(props) {
         e.preventDefault();
         if (!newMessage.trim() || !user) return;
 
+        // Rate Limiting for Students
+        const isStudent = !user.role || user.role === 'student'; // Assuming 'student' is default/null
+        const isStaff = user.role === 'admin' || user.role === 'senior';
+
+        // Strictly check for student role (if role is missing, we assume student for safety, or check inverted logic)
+        // User metadata role or profile role should be checked. 
+        // Logic: If NOT admin AND NOT senior, apply limit.
+        if (!isStaff) {
+            const now = Date.now();
+            const timeSinceLast = now - lastMessageTime.current;
+            if (timeSinceLast < 9000) {
+                const remaining = Math.ceil((9000 - timeSinceLast) / 1000);
+                addToast(`Please wait ${remaining} seconds before sending another message.`, 'warning');
+                return;
+            }
+            lastMessageTime.current = now;
+        }
+
         const content = newMessage.trim();
         const optimisticId = Date.now().toString(); // temporary ID
         setNewMessage(""); // Clear input immediately
@@ -144,7 +176,7 @@ export default function ChatRoomPage(props) {
 
         } catch (error) {
             console.error("Error sending message:", error);
-            alert("Failed to send message.");
+            addToast("Failed to send message.", "error");
             // Rollback on error
             setMessages(prev => prev.filter(m => m.id !== optimisticId));
         }
@@ -181,7 +213,7 @@ export default function ChatRoomPage(props) {
             if (error) throw error;
         } catch (error) {
             console.error("Error deleting message:", error);
-            alert("Failed to delete message from server."); // Fallback
+            addToast("Failed to delete message from server.", "error"); // Fallback
         }
     };
 
@@ -236,7 +268,10 @@ export default function ChatRoomPage(props) {
                             alignSelf: isOwn ? "flex-end" : "flex-start"
                         }}>
                             {!isOwn && (
-                                <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "0.25rem", marginLeft: "0.5rem" }}>
+                                <span
+                                    style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "0.25rem", marginLeft: "0.5rem", cursor: "pointer" }}
+                                    onClick={() => setSelectedUserId(msg.user_id)}
+                                >
                                     {msg.user_name}
                                     {isAdmin && <span style={{ marginLeft: "4px", color: "#dc2626", fontWeight: 600 }}>[ADMIN]</span>}
                                     {isSenior && <span style={{ marginLeft: "4px", color: "#2563eb", fontWeight: 600 }}>[SENIOR]</span>}
@@ -364,6 +399,10 @@ export default function ChatRoomPage(props) {
                     </div>
                 )
             }
+
+            {/* Enhancements: Profile Modal & Toasts */}
+            <UserProfileModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
         </div >
     );
 }
