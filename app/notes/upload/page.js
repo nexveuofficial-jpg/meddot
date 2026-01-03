@@ -13,6 +13,7 @@ export default function UploadNotePage() {
     const { isEnabled } = useFeature();
     const router = useRouter();
 
+    const fileInputRef = useRef(null);
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [formData, setFormData] = useState({
@@ -49,7 +50,7 @@ export default function UploadNotePage() {
         console.log("Handle Upload Triggered", formData);
 
         if (!file || !formData.title || !formData.subject) {
-            const msg = "Please fill in current fields (Title, Subject) and select a PDF file.";
+            const msg = "Please fill in all required fields (Title, Subject) and select a PDF file.";
             setError(msg);
             alert(msg);
             return;
@@ -86,7 +87,7 @@ export default function UploadNotePage() {
                 category: formData.category,
                 file_path: filePath,
                 file_url: publicUrl,
-                author_id: user.id, // Fixed: DB expects author_id, not uploader_id
+                author_id: user.id, // Fixed: DB expects author_id
                 author_name: profile?.full_name || user?.email || 'Anonymous',
                 status: status,
                 author_role: userRole,
@@ -134,23 +135,6 @@ export default function UploadNotePage() {
                 )}
 
                 <form onSubmit={handleUpload} style={{ display: "grid", gap: "1.5rem" }}>
-                    const fileInputRef = useRef(null); // Add ref
-
-    // ... (inside handleUpload)
-    const handleUpload = async (e) => {
-                        e.preventDefault();
-                    console.log("Submit clicked");
-
-                    if (!file || !formData.title || !formData.subject) {
-            const msg = "Please fill in all required fields and select a PDF.";
-                    setError(msg);
-                    alert(msg); // Immediate feedback
-                    return;
-        }
-        // ...
-    }
-
-                    // ... (inside return)
                     {/* File Upload Zone */}
                     <div style={{
                         border: "2px dashed var(--border)",
