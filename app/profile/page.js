@@ -41,43 +41,97 @@ export default function ProfilePage() {
         setLoading(false);
     };
 
-    if (!user || !profile) return <div>Loading profile...</div>;
+    if (!user || !profile) return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>
+            Loading profile...
+        </div>
+    );
 
     return (
-        <div className="max-w-2xl mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">My Profile</h1>
-            <form onSubmit={handleUpdate} className="space-y-4">
+        <div style={{
+            maxWidth: '800px',
+            margin: '2rem auto',
+            padding: '2rem',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '16px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        }}>
+            <h1 style={{
+                fontSize: '2rem',
+                fontWeight: 800,
+                marginBottom: '1.5rem',
+                background: 'linear-gradient(to right, #2563eb, #7c3aed)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+            }}>My Profile</h1>
+
+            <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div>
-                    <label className="block mb-1">Full Name</label>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#475569' }}>Full Name</label>
                     <input
                         type="text"
                         value={formData.full_name}
                         onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                        className="w-full p-2 border rounded"
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem 1rem',
+                            borderRadius: '0.5rem',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '1rem',
+                            outline: 'none',
+                            transition: 'border-color 0.2s'
+                        }}
                     />
                 </div>
                 <div>
-                    <label className="block mb-1">College</label>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#475569' }}>College</label>
                     <input
                         type="text"
                         value={formData.college}
                         onChange={(e) => setFormData({ ...formData, college: e.target.value })}
-                        className="w-full p-2 border rounded"
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem 1rem',
+                            borderRadius: '0.5rem',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '1rem',
+                            outline: 'none'
+                        }}
                     />
                 </div>
                 <div>
-                    <label className="block mb-1">Year</label>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#475569' }}>Year</label>
                     <input
                         type="text"
                         value={formData.year}
                         onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                        className="w-full p-2 border rounded"
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem 1rem',
+                            borderRadius: '0.5rem',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '1rem',
+                            outline: 'none'
+                        }}
                     />
                 </div>
                 <button
                     type="submit"
                     disabled={loading}
-                    className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                    style={{
+                        padding: '0.75rem 1.5rem',
+                        background: 'linear-gradient(to right, #2563eb, #6366f1)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '0.75rem',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        opacity: loading ? 0.7 : 1,
+                        marginTop: '1rem',
+                        transition: 'opacity 0.2s'
+                    }}
                 >
                     {loading ? "Saving..." : "Save Changes"}
                 </button>

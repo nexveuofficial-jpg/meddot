@@ -150,11 +150,27 @@ export default function ChatRoomPage(props) {
         }
     };
 
-    const handleDelete = async (msgId) => {
-        if (!confirm("Delete this message?")) return;
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(null); // ID of msg to delete
+
+    // ... (rest of code) ...
+
+    const handleDeleteClick = (msgId) => {
+        setShowDeleteConfirm(msgId);
+    };
+
+    const confirmDelete = async () => {
+        if (!showDeleteConfirm) return;
+        const msgId = showDeleteConfirm;
+        setShowDeleteConfirm(null);
 
         // Optimistic Delete
         setMessages(prev => prev.filter(m => m.id !== msgId));
+
+        // If ID is numeric (optimistic), don't call server
+        if (!isNaN(msgId) && !msgId.includes('-')) {
+            console.log("Deleted optimistic message locally:", msgId);
+            return;
+        }
 
         try {
             const { error } = await supabase
@@ -162,15 +178,14 @@ export default function ChatRoomPage(props) {
                 .delete()
                 .eq("id", msgId);
 
-            if (error) {
-                // Rollback if failed (fetch again or alert)
-                throw error;
-            }
+            if (error) throw error;
         } catch (error) {
             console.error("Error deleting message:", error);
-            alert("Delete failed.");
+            alert("Failed to delete message from server."); // Fallback
         }
     };
+
+    const cancelDelete = () => setShowDeleteConfirm(null);
 
     if (loading) return <div className="flex justify-center h-screen items-center"><Loader2 className="animate-spin" /></div>;
     if (!room) return <div className="p-10 text-center">Room not found</div>;
@@ -242,7 +257,7 @@ export default function ChatRoomPage(props) {
                             </div>
                             {isOwn && (
                                 <button
-                                    onClick={() => handleDelete(msg.id)}
+                                    onClick={() => handleDeleteClick(msg.id)}
                                     style={{
                                         fontSize: "0.7rem",
                                         color: "var(--muted-foreground)",
@@ -308,6 +323,47 @@ export default function ChatRoomPage(props) {
                     </div>
                 )}
             </div>
-        </div>
+
+
+            {/* Custom Delete Confirmation Modal */}
+            {
+                showDeleteConfirm && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+                        background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        zIndex: 100
+                    }}>
+                        <div style={{
+                            background: 'white', padding: '1.5rem', borderRadius: '1rem',
+                            maxWidth: '300px', width: '90%', boxShadow: 'var(--shadow-xl)',
+                            textAlign: 'center'
+                        }}>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#1e293b' }}>Delete Message?</h3>
+                            <p style={{ color: '#64748b', marginBottom: '1.5rem', fontSize: '0.9rem' }}>This action cannot be undone.</p>
+                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                                <button
+                                    onClick={cancelDelete}
+                                    style={{
+                                        padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0',
+                                        background: 'white', color: '#64748b', cursor: 'pointer', fontWeight: 500
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    style={{
+                                        padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none',
+                                        background: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 500
+                                    }}
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }
