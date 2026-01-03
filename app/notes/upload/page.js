@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { useFeature } from "@/app/context/FeatureFlagContext";
@@ -46,8 +46,12 @@ export default function UploadNotePage() {
 
     const handleUpload = async (e) => {
         e.preventDefault();
+        console.log("Handle Upload Triggered", formData);
+
         if (!file || !formData.title || !formData.subject) {
-            setError("Please fill in all required fields and select a PDF.");
+            const msg = "Please fill in current fields (Title, Subject) and select a PDF file.";
+            setError(msg);
+            alert(msg);
             return;
         }
 
@@ -130,6 +134,23 @@ export default function UploadNotePage() {
                 )}
 
                 <form onSubmit={handleUpload} style={{ display: "grid", gap: "1.5rem" }}>
+                    const fileInputRef = useRef(null); // Add ref
+
+    // ... (inside handleUpload)
+    const handleUpload = async (e) => {
+                        e.preventDefault();
+                    console.log("Submit clicked");
+
+                    if (!file || !formData.title || !formData.subject) {
+            const msg = "Please fill in all required fields and select a PDF.";
+                    setError(msg);
+                    alert(msg); // Immediate feedback
+                    return;
+        }
+        // ...
+    }
+
+                    // ... (inside return)
                     {/* File Upload Zone */}
                     <div style={{
                         border: "2px dashed var(--border)",
@@ -140,9 +161,9 @@ export default function UploadNotePage() {
                         background: file ? "#f0fdf4" : "transparent",
                         borderColor: file ? "#22c55e" : "var(--border)",
                         transition: "all 0.2s"
-                    }} onClick={() => document.getElementById('fileInput').click()}>
+                    }} onClick={() => fileInputRef.current?.click()}>
                         <input
-                            id="fileInput"
+                            ref={fileInputRef}
                             type="file"
                             accept="application/pdf"
                             onChange={handleFileChange}
