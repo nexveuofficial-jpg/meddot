@@ -2,6 +2,7 @@
 
 import { Search, Filter, Plus, Loader2 } from "lucide-react";
 import NoteCard from "../components/notes/NoteCard";
+import { SkeletonGrid } from "../components/ui/LoadingSkeleton";
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
@@ -307,7 +308,7 @@ export default function NotesPage() {
             {/* Note Grid */}
             {
                 loading && notes.length === 0 ? (
-                    <div className="flex justify-center p-20"><Loader2 className="animate-spin" size={40} color="var(--primary)" /></div>
+                    <SkeletonGrid count={8} />
                 ) : notes.length === 0 ? (
                     <div style={{
                         gridColumn: "1 / -1",
