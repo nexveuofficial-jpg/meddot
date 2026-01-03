@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/app/context/AuthContext";
 import { Users, FileText, AlertCircle, TrendingUp } from "lucide-react";
 
 export default function AdminPage() {
