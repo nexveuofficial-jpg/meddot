@@ -112,6 +112,7 @@ export default function DashboardLayout({ children }) {
                     <NavLink href="/notes">Notes Library</NavLink>
                     <NavLink href="/ask-senior">Ask Senior</NavLink>
                     <NavLink href="/chat">Study Groups</NavLink>
+                    <NavLink href="/messages">Messages</NavLink>
                     <NavLink href="/focus">Focus Mode</NavLink>
                     <NavLink href="/profile">My Profile</NavLink>
 

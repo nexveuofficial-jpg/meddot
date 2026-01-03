@@ -42,11 +42,14 @@ export default function ChatRoomPage(props) {
         scrollToBottom();
     }, [messages]);
 
+    const [onlineCount, setOnlineCount] = useState(0);
+
     // Initial Fetch & Subscription
     useEffect(() => {
         if (!params?.roomId) return;
 
         const fetchData = async () => {
+            // ... existing fetch logic ...
             // Fetch Room Details
             try {
                 const { data: roomData, error: roomError } = await supabase
@@ -82,25 +85,18 @@ export default function ChatRoomPage(props) {
 
         fetchData();
 
-        // Realtime Subscription for Messages
+        // Realtime Subscription (Messages + Presence)
         const channel = supabase
             .channel(`room:${params.roomId}`)
             .on(
                 'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'chat_messages',
-                    filter: `room_id=eq.${params.roomId}`
-                },
+                { event: '*', schema: 'public', table: 'chat_messages', filter: `room_id=eq.${params.roomId}` },
                 (payload) => {
                     const newMsg = payload.new;
                     const eventType = payload.eventType;
 
                     if (eventType === 'INSERT') {
                         setMessages(prev => {
-                            // Avoid duplicates if optimistic update already added it (check content/user or better yet, handling logic in send)
-                            // Since we replace the optimistic ID in handleSendMessage, we just need to avoid adding if ID exists.
                             if (prev.find(m => m.id === newMsg.id)) return prev;
                             return [...prev, newMsg];
                         });
@@ -109,12 +105,24 @@ export default function ChatRoomPage(props) {
                     }
                 }
             )
-            .subscribe();
+            .on('presence', { event: 'sync' }, () => {
+                const newState = channel.presenceState();
+                const users = Object.keys(newState).length;
+                setOnlineCount(users);
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED' && user) {
+                    await channel.track({
+                        user_id: user.id,
+                        online_at: new Date().toISOString(),
+                    });
+                }
+            });
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [params.roomId]);
+    }, [params.roomId, user]);
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
@@ -245,7 +253,13 @@ export default function ChatRoomPage(props) {
                 </Link>
                 <div>
                     <h1 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#0f172a" }}>{room.name}</h1> {/* Fixed Color */}
-                    <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{room.subject} • Live</span> {/* Fixed Color */}
+                    <span style={{ fontSize: "0.8rem", color: "#64748b", display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {room.subject} •
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#16a34a', fontWeight: 600 }}>
+                            <span style={{ width: '8px', height: '8px', background: '#16a34a', borderRadius: '50%', display: 'inline-block' }}></span>
+                            {onlineCount} Online
+                        </span>
+                    </span>
                 </div>
             </header>
 
