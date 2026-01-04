@@ -64,7 +64,11 @@ export default function SecurePDFReader({ isOpen, onClose, fileUrl, title, userE
                 backdropFilter: 'blur(8px)',
                 display: 'flex',
                 flexDirection: 'column',
-                animation: 'fadeIn 0.2s ease-out'
+                animation: 'fadeIn 0.2s ease-out',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                MozUserSelect: 'none',
+                msUserSelect: 'none'
             }}
             onContextMenu={(e) => e.preventDefault()} // Disable Right Click
         >
@@ -143,20 +147,29 @@ export default function SecurePDFReader({ isOpen, onClose, fileUrl, title, userE
                         position: 'absolute',
                         inset: 0,
                         pointerEvents: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        opacity: 0.1,
-                        transform: 'rotate(-45deg)',
-                        fontSize: '3rem',
-                        fontWeight: 'bold',
-                        color: 'var(--primary, blue)', /* Changed to primary or safe color, keeping existing red if preferred but usually branding is subtle. existing was red. let's stick to existing style but change text */
-                        color: 'red',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gridTemplateRows: 'repeat(3, 1fr)',
+                        gap: '2rem',
+                        opacity: 0.15,
                         zIndex: 10,
                         overflow: 'hidden',
-                        whiteSpace: 'nowrap'
                     }}>
-                        {Array(5).fill("Meddot.online").join('      ')}
+                        {Array(6).fill(0).map((_, i) => (
+                            <div key={i} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transform: 'rotate(-45deg)',
+                                fontSize: '2rem',
+                                fontWeight: 'bold',
+                                color: 'var(--primary, #0ea5e9)',
+                                textAlign: 'center',
+                                whiteSpace: 'pre-wrap'
+                            }}>
+                                {userEmail || 'Meddot User'}{'\n'}Meddot.online
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -196,6 +209,11 @@ export default function SecurePDFReader({ isOpen, onClose, fileUrl, title, userE
                     display: block;
                     max-width: 100%;
                     height: auto !important;
+                }
+                @media print {
+                    body { display: none !important; }
+                    html { display: none !important; }
+                    * { display: none !important; }
                 }
             `}</style>
         </div>
