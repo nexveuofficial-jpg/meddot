@@ -1,4 +1,6 @@
 
+import { CheckCheck } from 'lucide-react';
+
 export default function MessageBubble({ message, isOwn, onContextMenu, onReplyClick, style }) {
     let time = "";
     try {

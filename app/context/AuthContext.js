@@ -45,6 +45,13 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         let mounted = true;
 
+        if (!supabase) {
+            console.warn("AuthContext: Supabase client missing");
+            setLoading(false);
+            setDebugStatus("Supabase Client Missing");
+            return;
+        }
+
         const initializeAuth = async () => {
             try {
                 setDebugStatus("Contacting Supabase Auth...");
