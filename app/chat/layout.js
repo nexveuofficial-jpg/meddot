@@ -54,17 +54,12 @@ export default function ChatLayout({ children }) {
         );
     }
 
+    const isChatActive = pathname && pathname.includes('/chat/') && pathname !== '/chat';
+
     return (
         <div style={{ display: "flex", height: "100vh", maxHeight: "100vh", overflow: "hidden" }}>
             {/* Sidebar */}
-            <aside style={{
-                width: "300px",
-                borderRight: "1px solid var(--border)",
-                background: "var(--background)",
-                display: "flex",
-                flexDirection: "column",
-                flexShrink: 0
-            }}>
+            <aside className={`chat-sidebar ${isChatActive ? 'hidden-mobile' : ''}`}>
                 <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--border)" }}>
                     <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--muted-foreground)', textDecoration: 'none', marginBottom: '1rem' }}>
                         <ArrowLeft size={16} /> Back
@@ -107,7 +102,7 @@ export default function ChatLayout({ children }) {
             </aside>
 
             {/* Main Chat Area */}
-            <main style={{ flex: 1, display: "flex", flexDirection: "column", background: "white" }}>
+            <main className={`chat-main ${!isChatActive ? 'hidden-mobile' : ''}`}>
                 {children}
             </main>
         </div>

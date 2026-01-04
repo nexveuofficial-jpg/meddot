@@ -113,11 +113,14 @@
 /* Input Area */
 .chat-input-area {
     background: var(--background);
-    padding: 0.5rem;
+    padding: 0.75rem 0.5rem;
+    /* Larger padding */
     display: flex;
     align-items: flex-end;
     gap: 0.5rem;
     border-top: 1px solid var(--border);
+    /* Ensure sticking to bottom safely on iOS */
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
 
 .chat-input-wrapper {
@@ -126,8 +129,10 @@
     border-radius: 1.5rem;
     display: flex;
     align-items: center;
-    padding: 0.25rem 1rem;
+    padding: 0.5rem 1rem;
     color: var(--foreground);
+    min-height: 48px;
+    /* Touch target size */
 }
 
 .chat-textarea {
@@ -135,13 +140,14 @@
     background: transparent;
     border: none;
     outline: none;
-    padding: 0.5rem 0;
+    padding: 0;
     resize: none;
     max-height: 120px;
     min-height: 24px;
-    line-height: 1.4;
+    line-height: 1.5;
     font-family: inherit;
-    font-size: 1rem;
+    font-size: 16px;
+    /* Prevent iOS zoom */
 }
 
 /* Context Menu */
@@ -264,7 +270,52 @@
     color: currentColor;
 }
 
-.other .msg-reply-snippet {
-    border-color: var(--primary);
-    color: var(--primary);
+/* Mobile Responsiveness */
+.chat-sidebar {
+    width: 300px;
+    border-right: 1px solid var(--border);
+    background: var(--background);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--background);
+    /* Changed from white to match theme */
+    position: relative;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .chat-sidebar {
+        width: 100%;
+        height: 100dvh;
+        /* use Dynamic Viewport Height */
+    }
+
+    .chat-sidebar.hidden-mobile {
+        display: none;
+    }
+
+    .chat-main.hidden-mobile {
+        display: none;
+    }
+
+    .telegram-container {
+        height: 100dvh;
+        /* Mobile full height */
+    }
+
+    .telegram-header {
+        padding: 0.5rem;
+    }
+
+    /* Adjust message bubbles max width on mobile */
+    .msg-bubble {
+        max-width: 85%;
+    }
 }

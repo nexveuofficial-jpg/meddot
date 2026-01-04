@@ -52,3 +52,11 @@ CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING ( bucket_id = 
 
 -- Allow authenticated upload
 CREATE POLICY "Authenticated Upload" ON storage.objects FOR INSERT WITH CHECK ( bucket_id = 'chat-uploads' AND auth.role() = 'authenticated' );
+
+    -- MAINTENANCE: Clear all chat history
+    -- Run this to delete all messages
+    -- TRUNCATE TABLE chat_messages;
+
+    -- MAINTENANCE: Clear all chat history
+    -- Run this to delete all messages
+    -- TRUNCATE TABLE chat_messages;

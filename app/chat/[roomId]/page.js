@@ -366,7 +366,7 @@ export default function ChatRoomPage(props) {
         <div className="telegram-container">
             {/* Header */}
             <header className="telegram-header glass">
-                <Link href="/chat" style={{ color: "#000" }}>
+                <Link href="/chat" style={{ color: "var(--foreground)", marginRight: '10px' }}>
                     <ArrowLeft size={22} />
                 </Link>
                 <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setSelectedUserId(room.created_by || null)}>
