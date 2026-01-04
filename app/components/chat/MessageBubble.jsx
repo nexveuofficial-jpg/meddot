@@ -2,7 +2,7 @@
 import { useRef } from 'react';
 import { CheckCheck } from 'lucide-react';
 
-export default function MessageBubble({ message, isOwn, onContextMenu, onReplyClick, style }) {
+export default function MessageBubble({ message, isOwn, onContextMenu, onReplyClick, onImageClick, style }) {
     let time = "";
     try {
         time = new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -117,7 +117,7 @@ export default function MessageBubble({ message, isOwn, onContextMenu, onReplyCl
                                 objectFit: 'cover',
                                 cursor: 'pointer'
                             }}
-                            onClick={() => window.open(message.image_url, '_blank')}
+                            onClick={() => onImageClick && onImageClick(message.image_url)}
                         />
                     </div>
                 )}

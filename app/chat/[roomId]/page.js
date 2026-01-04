@@ -38,6 +38,7 @@ export default function ChatRoomPage(props) {
     // Reply & Edit State
     const [replyTo, setReplyTo] = useState(null); // Message object
     const [editingMessage, setEditingMessage] = useState(null); // Message object to edit
+    const [viewedImage, setViewedImage] = useState(null); // Image Modal URL
 
     const addToast = (message, type = 'info', duration = 3000) => {
         const id = Date.now();
@@ -268,7 +269,7 @@ export default function ChatRoomPage(props) {
 
         } catch (error) {
             console.error("Send Error:", error);
-            addToast("Failed to send.", "error");
+            addToast(`Failed to send: ${error.message || error.error_description || "Unknown error"}`, "error");
             setMessages(prev => prev.filter(m => m.id !== optimisticId));
         }
     };
@@ -378,6 +379,11 @@ export default function ChatRoomPage(props) {
                 <MoreVertical size={22} color="#555" />
             </header>
 
+    // Image Modal State
+            const [viewedImage, setViewedImage] = useState(null);
+
+            // ... existing render logic ...
+
             {/* Chat Area */}
             <div className="chat-scroll-area">
                 {groupedMessages.map(item => {
@@ -399,13 +405,14 @@ export default function ChatRoomPage(props) {
                                 const target = document.getElementById(`msg-${replyId}`); // Need to add id to bubble
                                 if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }}
+                            onImageClick={(url) => setViewedImage(url)}
                         />
                     );
                 })}
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
+            {/* ... Input ... */}
             {/* Input */}
             <ChatInput
                 onSend={handleSendMessage}
@@ -424,6 +431,28 @@ export default function ChatRoomPage(props) {
                     options={getMenuOptions()}
                     onClose={() => setContextMenu(null)}
                 />
+            )}
+
+            {/* Image Modal */}
+            {viewedImage && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 100,
+                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    flexDirection: 'column'
+                }} onClick={() => setViewedImage(null)}>
+                    <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 101 }}>
+                        <button onClick={() => setViewedImage(null)} style={{ color: 'white', padding: '10px' }}>
+                            {/* Close Icon manually or lucide */}
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
+                    <img
+                        src={viewedImage}
+                        style={{ maxWidth: '95%', maxHeight: '95%', objectFit: 'contain', borderRadius: '4px' }}
+                        onClick={(e) => e.stopPropagation()} // Click image shouldn't close? Actually clicking anywhere should likely close for ease roughly
+                    />
+                </div>
             )}
 
             {/* Modals */}
