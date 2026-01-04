@@ -35,13 +35,40 @@ export default function ChatInput({ onSend, replyTo, onCancelReply, editingMessa
         }
     };
 
+    const fileInputRef = useRef(null);
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Pass file to parent
+        if (onSend) onSend(null, file); // sending text as null to indicate file
+
+        // Reset
+        e.target.value = '';
+        if (onCancelReply) onCancelReply();
+    };
+
     return (
         <div className="chat-input-area">
             {/* Attachments (Visual Only) - Restricted to Admin/Senior */}
             {allowImages && (
-                <button style={{ color: '#64748b', padding: '8px' }} title="Send Image">
-                    <Paperclip size={22} />
-                </button>
+                <>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        accept="image/*"
+                        onChange={handleFileChange}
+                    />
+                    <button
+                        style={{ color: '#64748b', padding: '8px' }}
+                        title="Send Image"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <Paperclip size={22} />
+                    </button>
+                </>
             )}
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -60,7 +87,7 @@ export default function ChatInput({ onSend, replyTo, onCancelReply, editingMessa
                             </button>
                         </div>
                         <div className="reply-preview-content">
-                            {editingMessage ? editingMessage.content : replyTo.content}
+                            {editingMessage ? editingMessage.content : (replyTo.content || 'Photo')}
                         </div>
                     </div>
                 )}

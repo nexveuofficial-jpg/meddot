@@ -34,3 +34,21 @@ CREATE POLICY "Users can edit own messages"
 ON chat_messages FOR UPDATE
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
+
+-- 4. Add 'image_url' (if not exists)
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'chat_messages' AND column_name = 'image_url') THEN 
+        ALTER TABLE chat_messages ADD COLUMN image_url text; 
+    END IF; 
+END $$;
+
+-- 5. Storage Policies (chat-uploads)
+-- Note: Bucket creation must be done via Dashboard or Storage API usually, but policies can be SQL if bucket exists.
+-- We assume user creates bucket 'chat-uploads' public.
+
+-- Allow public read
+-- CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING ( bucket_id = 'chat-uploads' );
+
+-- Allow authenticated upload
+-- CREATE POLICY "Authenticated Upload" ON storage.objects FOR INSERT WITH CHECK ( bucket_id = 'chat-uploads' AND auth.role() = 'authenticated' );

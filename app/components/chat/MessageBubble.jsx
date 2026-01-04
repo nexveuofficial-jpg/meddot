@@ -104,6 +104,24 @@ export default function MessageBubble({ message, isOwn, onContextMenu, onReplyCl
                     {message.content}
                 </div>
 
+                {/* Image Attachment */}
+                {message.image_url && (
+                    <div style={{ marginTop: '8px', marginBottom: '4px' }}>
+                        <img
+                            src={message.image_url}
+                            alt="attachment"
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '300px',
+                                borderRadius: '8px',
+                                objectFit: 'cover',
+                                cursor: 'pointer'
+                            }}
+                            onClick={() => window.open(message.image_url, '_blank')}
+                        />
+                    </div>
+                )}
+
                 {/* Meta (Time + Status) */}
                 <div className="msg-meta">
                     {message.is_edited && <span style={{ marginRight: '2px' }}>edited</span>}

@@ -157,7 +157,7 @@ export default function ChatRoomPage(props) {
     }, [params.roomId, user]);
 
     // Send Message
-    const handleSendMessage = async (text) => {
+    const handleSendMessage = async (text, file = null) => {
         if (!user) return;
 
         // Rate Limit (Student)
@@ -178,8 +178,8 @@ export default function ChatRoomPage(props) {
 
         const optimisticId = Date.now().toString();
 
-        if (editingMessage) {
-            // Handle Edit
+        if (editingMessage && !file) {
+            // Handle Edit (Text only)
             const updatedContent = text;
             setMessages(prev => prev.map(m => m.id === editingMessage.id ? { ...m, content: updatedContent, is_edited: true } : m));
             setEditingMessage(null); // Exit edit mode
@@ -194,36 +194,64 @@ export default function ChatRoomPage(props) {
             } catch (error) {
                 console.error("Edit Error:", error);
                 addToast("Failed to edit.", "error");
-                // Revert (optimistic rollback tricky without history, but okay for now)
             }
             return;
         }
 
+        // Prepare Optimistic Message
         const newMessageObj = {
             id: optimisticId,
             room_id: params.roomId,
             user_id: user.id,
             user_name: user.user_metadata?.full_name || user.email || 'You',
             role: user.role || 'student',
-            content: text,
+            content: text || (file ? ' Sent an image' : ''),
+            image_url: file ? URL.createObjectURL(file) : null, // Optimistic preview
             created_at: new Date().toISOString(),
             reply_to_id: replyTo ? replyTo.id : null,
-            // Optimistic reply object for display
             reply_to: replyTo ? { id: replyTo.id, user_name: replyTo.user_name, content: replyTo.content } : null
         };
 
         setMessages(prev => [...prev, newMessageObj]);
-        setReplyTo(null); // Clear reply
+        setReplyTo(null);
 
         try {
-            // We need to persist only DB columns. 'reply_to' object is ignored by supabase if not in schema usually, 
-            // but best to filter.
+            let publicUrl = null;
+
+            if (file) {
+                // Upload Image
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                const filePath = `${params.roomId}/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('chat-uploads')
+                    .upload(filePath, file);
+
+                if (uploadError) {
+                    console.error("Upload error:", uploadError);
+                    // Create bucket if it doesn't exist (Handling missing bucket error gracefully-ish)
+                    if (uploadError.message.includes("Bucket not found")) {
+                        addToast("Image upload failed: System storage not ready.", "error");
+                        throw uploadError;
+                    }
+                    throw uploadError;
+                }
+
+                const { data: urlData } = supabase.storage
+                    .from('chat-uploads')
+                    .getPublicUrl(filePath);
+
+                publicUrl = urlData.publicUrl;
+            }
+
             const insertPayload = {
                 room_id: params.roomId,
                 user_id: user.id,
                 user_name: user.user_metadata?.full_name || user.email || 'Anonymous',
                 role: user.role || 'student',
-                content: text,
+                content: text || (file ? 'Image' : ''),
+                image_url: publicUrl,
                 reply_to_id: replyTo ? replyTo.id : null
             };
 
