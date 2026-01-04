@@ -182,7 +182,7 @@ export default function ChatRoomPage(props) {
 
         // Rate Limit (Student)
         const isStaff = user.role === 'admin' || user.role === 'senior';
-        if (!isStaff) {
+        if (!isStaff && room?.type !== 'dm') {
             const now = Date.now();
             if (now - lastMessageTime.current < 9000) {
                 addToast(`Please wait few seconds.`, 'warning');
@@ -314,6 +314,27 @@ export default function ChatRoomPage(props) {
         }
     };
 
+    // Direct Message Logic (from Context Menu)
+    const handleDirectMessage = async (targetUserId) => {
+        try {
+            if (!user) return addToast("Please login first", "error");
+
+            // Call our RPC function
+            const { data: roomId, error } = await supabase.rpc('get_or_create_dm_room', {
+                other_user_id: targetUserId
+            });
+
+            if (error) throw error;
+
+            if (roomId) {
+                router.push(`/chat/${roomId}`);
+            }
+        } catch (error) {
+            console.error("DM Error:", error);
+            addToast("Failed to start chat: " + (error.message || "Unknown error"), "error");
+        }
+    };
+
     // Prepare Context Menu Options
     const getMenuOptions = () => {
         if (!contextMenu) return [];
@@ -333,6 +354,14 @@ export default function ChatRoomPage(props) {
                 action: () => navigator.clipboard.writeText(message.content)
             }
         ];
+
+        if (!isOwn) {
+            options.push({
+                label: 'Message',
+                icon: <div style={{ color: '#3b82f6' }}>💬</div>,
+                action: () => handleDirectMessage(message.user_id)
+            });
+        }
 
         if (isOwn) {
             options.push({
