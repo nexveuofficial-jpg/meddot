@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
+// Trigger Vercel Rebuild - Verified HTML nesting fixes
 import { AuthProvider } from "./context/AuthContext";
 
 const geistSans = Geist({
