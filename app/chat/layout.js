@@ -16,6 +16,7 @@ export default function ChatLayout({ children }) {
     const { isEnabled, loading: flagsLoading } = useFeature();
     const { user } = useAuth(); // Need user to fetch DMs
     const pathname = usePathname();
+    const isChatActive = pathname && pathname !== '/chat';
 
     useEffect(() => {
         const fetchData = async () => {
