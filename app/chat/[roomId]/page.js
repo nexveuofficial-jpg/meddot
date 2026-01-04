@@ -4,11 +4,19 @@ import { useEffect, useState, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
-import { Send, ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, MoreVertical, Search, Volume2 } from "lucide-react"; // Added MoreVertical, Search, Volume2 for header visuals
 import Loader from "../../components/ui/Loader";
 import Link from "next/link";
 import UserProfileModal from "@/app/components/UserProfileModal";
 import ToastContainer from "@/app/components/ui/Toast";
+
+// New Components
+import MessageBubble from "@/app/components/chat/MessageBubble";
+import ChatInput from "@/app/components/chat/ChatInput";
+import ContextMenu from "@/app/components/chat/ContextMenu";
+
+// Styles
+import "@/app/chat/telegram.css";
 
 export default function ChatRoomPage(props) {
     const params = use(props.params);
@@ -17,12 +25,19 @@ export default function ChatRoomPage(props) {
 
     const [room, setRoom] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState("");
     const [loading, setLoading] = useState(true);
     const messagesEndRef = useRef(null);
     const lastMessageTime = useRef(0);
     const [toasts, setToasts] = useState([]);
     const [selectedUserId, setSelectedUserId] = useState(null);
+    const [onlineCount, setOnlineCount] = useState(0);
+
+    // Context Menu State
+    const [contextMenu, setContextMenu] = useState(null); // { x, y, message }
+
+    // Reply & Edit State
+    const [replyTo, setReplyTo] = useState(null); // Message object
+    const [editingMessage, setEditingMessage] = useState(null); // Message object to edit
 
     const addToast = (message, type = 'info', duration = 3000) => {
         const id = Date.now();
@@ -33,25 +48,22 @@ export default function ChatRoomPage(props) {
         setToasts(prev => prev.filter(t => t.id !== id));
     };
 
-    // Scroll to bottom helper
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Scroll helpers
+    const scrollToBottom = (behavior = "smooth") => {
+        messagesEndRef.current?.scrollIntoView({ behavior });
     };
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        if (messages.length > 0) scrollToBottom("smooth");
+    }, [messages.length]); // Scroll on new count
 
-    const [onlineCount, setOnlineCount] = useState(0);
-
-    // Initial Fetch & Subscription
+    // Fetch Data
     useEffect(() => {
         if (!params?.roomId) return;
 
         const fetchData = async () => {
-            // ... existing fetch logic ...
-            // Fetch Room Details
             try {
+                // Room
                 const { data: roomData, error: roomError } = await supabase
                     .from("chat_rooms")
                     .select("*")
@@ -59,15 +71,9 @@ export default function ChatRoomPage(props) {
                     .single();
 
                 if (roomError) throw roomError;
+                setRoom(roomData);
 
-                if (roomData) {
-                    setRoom(roomData);
-                } else {
-                    console.error("Room not found");
-                    return;
-                }
-
-                // Initial Message Load
+                // Messages
                 const { data: msgs, error: msgError } = await supabase
                     .from("chat_messages")
                     .select("*")
@@ -78,37 +84,36 @@ export default function ChatRoomPage(props) {
                 setMessages(msgs || []);
 
             } catch (error) {
-                console.error("Error fetching room data:", error);
+                console.error("Error fetching room/messages:", error);
             }
             setLoading(false);
         };
 
         fetchData();
 
-        // Realtime Subscription (Messages + Presence)
+        // Realtime
         const channel = supabase
             .channel(`room:${params.roomId}`)
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'chat_messages', filter: `room_id=eq.${params.roomId}` },
                 (payload) => {
-                    const newMsg = payload.new;
                     const eventType = payload.eventType;
-
                     if (eventType === 'INSERT') {
                         setMessages(prev => {
-                            if (prev.find(m => m.id === newMsg.id)) return prev;
-                            return [...prev, newMsg];
+                            if (prev.find(m => m.id === payload.new.id)) return prev;
+                            return [...prev, payload.new];
                         });
                     } else if (eventType === 'DELETE') {
                         setMessages(prev => prev.filter(m => m.id !== payload.old.id));
+                    } else if (eventType === 'UPDATE') {
+                        setMessages(prev => prev.map(m => m.id === payload.new.id ? payload.new : m));
                     }
                 }
             )
             .on('presence', { event: 'sync' }, () => {
                 const newState = channel.presenceState();
-                const users = Object.keys(newState).length;
-                setOnlineCount(users);
+                setOnlineCount(Object.keys(newState).length);
             })
             .subscribe(async (status) => {
                 if (status === 'SUBSCRIBED' && user) {
@@ -124,303 +129,243 @@ export default function ChatRoomPage(props) {
         };
     }, [params.roomId, user]);
 
-    const handleSendMessage = async (e) => {
-        e.preventDefault();
-        if (!newMessage.trim() || !user) return;
+    // Send Message
+    const handleSendMessage = async (text) => {
+        if (!user) return;
 
-        // Rate Limiting for Students
-        const isStudent = !user.role || user.role === 'student'; // Assuming 'student' is default/null
+        // Rate Limit (Student)
         const isStaff = user.role === 'admin' || user.role === 'senior';
-
-        // Strictly check for student role (if role is missing, we assume student for safety, or check inverted logic)
-        // User metadata role or profile role should be checked. 
-        // Logic: If NOT admin AND NOT senior, apply limit.
         if (!isStaff) {
             const now = Date.now();
-            const timeSinceLast = now - lastMessageTime.current;
-            if (timeSinceLast < 9000) {
-                const remaining = Math.ceil((9000 - timeSinceLast) / 1000);
-                addToast(`Please wait ${remaining} seconds before sending another message.`, 'warning');
+            if (now - lastMessageTime.current < 9000) {
+                addToast(`Please wait few seconds.`, 'warning');
                 return;
             }
             lastMessageTime.current = now;
         }
 
-        const content = newMessage.trim();
-        const optimisticId = Date.now().toString(); // temporary ID
-        setNewMessage(""); // Clear input immediately
+        const optimisticId = Date.now().toString();
 
-        // 1. Optimistic Update (Show immediately)
-        const optimisticMsg = {
-            id: optimisticId, // Temp ID
+        if (editingMessage) {
+            // Handle Edit
+            const updatedContent = text;
+            setMessages(prev => prev.map(m => m.id === editingMessage.id ? { ...m, content: updatedContent, is_edited: true } : m));
+            setEditingMessage(null); // Exit edit mode
+
+            try {
+                const { error } = await supabase
+                    .from("chat_messages")
+                    .update({ content: updatedContent, is_edited: true })
+                    .eq("id", editingMessage.id);
+
+                if (error) throw error;
+            } catch (error) {
+                console.error("Edit Error:", error);
+                addToast("Failed to edit.", "error");
+                // Revert (optimistic rollback tricky without history, but okay for now)
+            }
+            return;
+        }
+
+        const newMessageObj = {
+            id: optimisticId,
             room_id: params.roomId,
             user_id: user.id,
             user_name: user.user_metadata?.full_name || user.email || 'You',
             role: user.role || 'student',
-            content: content,
-            created_at: new Date().toISOString()
+            content: text,
+            created_at: new Date().toISOString(),
+            reply_to_id: replyTo ? replyTo.id : null,
+            // Optimistic reply object for display
+            reply_to: replyTo ? { id: replyTo.id, user_name: replyTo.user_name, content: replyTo.content } : null
         };
-        setMessages(prev => [...prev, optimisticMsg]);
+
+        setMessages(prev => [...prev, newMessageObj]);
+        setReplyTo(null); // Clear reply
 
         try {
+            // We need to persist only DB columns. 'reply_to' object is ignored by supabase if not in schema usually, 
+            // but best to filter.
+            const insertPayload = {
+                room_id: params.roomId,
+                user_id: user.id,
+                user_name: user.user_metadata?.full_name || user.email || 'Anonymous',
+                role: user.role || 'student',
+                content: text,
+                reply_to_id: replyTo ? replyTo.id : null
+            };
+
             const { data, error } = await supabase
                 .from("chat_messages")
-                .insert([{
-                    room_id: params.roomId,
-                    user_id: user.id,
-                    user_name: user.user_metadata?.full_name || user.email || 'Anonymous',
-                    role: user.role || 'student',
-                    content: content,
-                    created_at: new Date().toISOString()
-                }])
+                .insert([insertPayload])
                 .select()
                 .single();
 
             if (error) throw error;
 
-            // Replace optimistic message with real one (if needed, but subscription handles 'INSERT' usually)
-            // We just let the subscription or next fetch normalize it. 
-            // Ideally, we replace the temp ID with the real ID to allow deletion.
+            // Update optimistic with real data
             setMessages(prev => prev.map(m => m.id === optimisticId ? data : m));
 
         } catch (error) {
-            console.error("Error sending message:", error);
-            addToast("Failed to send message.", "error");
-            // Rollback on error
+            console.error("Send Error:", error);
+            addToast("Failed to send.", "error");
             setMessages(prev => prev.filter(m => m.id !== optimisticId));
         }
     };
 
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(null); // ID of msg to delete
-
-    // ... (rest of code) ...
-
-    const handleDeleteClick = (msgId) => {
-        setShowDeleteConfirm(msgId);
+    // Actions
+    const handleContextMenu = (e, msg) => {
+        e.preventDefault();
+        setContextMenu({
+            x: e.pageX,
+            y: e.pageY,
+            message: msg
+        });
     };
 
-    const confirmDelete = async () => {
-        if (!showDeleteConfirm) return;
-        const msgId = showDeleteConfirm;
-        setShowDeleteConfirm(null);
-
-        // Optimistic Delete
-        setMessages(prev => prev.filter(m => m.id !== msgId));
-
-        // If ID is numeric (optimistic), don't call server
-        if (!isNaN(msgId) && !msgId.includes('-')) {
-            console.log("Deleted optimistic message locally:", msgId);
-            return;
-        }
-
+    const deleteMessage = async (msgId) => {
+        setMessages(prev => prev.filter(m => m.id !== msgId)); // Optimistic
         try {
-            const { error, count } = await supabase
-                .from("chat_messages")
-                .delete({ count: 'exact' }) // Ensure we get count
-                .eq("id", msgId);
-
-            if (error) throw error;
-
-            // If server delete worked but count is 0, it might have been already deleted or ID mismatch.
-            // But usually if no error, we assume success.
-        } catch (error) {
-            console.error("Error deleting message:", error);
-            addToast("Failed to delete message from server.", "error"); // Fallback
+            await supabase.from("chat_messages").delete().eq("id", msgId);
+        } catch (err) {
+            console.error("Delete failed", err);
+            addToast("Delete failed", "error");
         }
     };
 
-    const cancelDelete = () => setShowDeleteConfirm(null);
+    // Prepare Context Menu Options
+    const getMenuOptions = () => {
+        if (!contextMenu) return [];
+        const { message } = contextMenu;
+        const isOwn = message.user_id === user?.id;
+        const isAdmin = user?.role === 'admin' || user?.role === 'senior';
+
+        const options = [
+            {
+                label: 'Reply',
+                icon: <Search size={16} />, // Search icon as placeholder for reply or just Reply icon if available in imports
+                action: () => setReplyTo(message)
+            },
+            {
+                label: 'Copy',
+                icon: <ArrowLeft size={16} style={{ transform: 'rotate(180deg)' }} />, // Placeholder
+                action: () => navigator.clipboard.writeText(message.content)
+            }
+        ];
+
+        if (isOwn) {
+            options.push({
+                label: 'Edit',
+                icon: <div style={{ color: '#0f172a' }}>✎</div>,
+                action: () => setEditingMessage(message)
+            });
+        }
+
+        if (isOwn || isAdmin) {
+            options.push({
+                label: 'Delete',
+                icon: <div style={{ color: '#ef4444' }}>🗑️</div>,
+                danger: true,
+                action: () => deleteMessage(message.id)
+            });
+        }
+
+        return options;
+    };
+
+    // Render helpers
+    // Enhance messages with 'reply_to' object if missing (client-side join)
+    const processedMessages = messages.map(m => {
+        if (m.reply_to) return m; // Already has it (fetched or optimistic)
+        if (m.reply_to_id) {
+            const parent = messages.find(p => p.id === m.reply_to_id);
+            if (parent) return { ...m, reply_to: parent };
+        }
+        return m;
+    });
+
+    // Grouping by Date
+    const groupedMessages = [];
+    let lastDate = null;
+    processedMessages.forEach(msg => {
+        const date = new Date(msg.created_at).toLocaleDateString();
+        if (date !== lastDate) {
+            groupedMessages.push({ type: 'date', date, id: `date-${date}` });
+            lastDate = date;
+        }
+        groupedMessages.push({ type: 'msg', data: msg });
+    });
+
 
     if (loading) return <div className="flex justify-center h-screen items-center"><Loader /></div>;
     if (!room) return <div className="p-10 text-center">Room not found</div>;
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#f8fafc" }}>
+        <div className="telegram-container">
             {/* Header */}
-            <header style={{
-                padding: "1rem 2rem",
-                background: "white",
-                borderBottom: "1px solid var(--border)",
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                position: "sticky",
-                top: 0,
-                zIndex: 10
-            }}>
-                <Link href="/chat" style={{ color: "#0f172a" }}> {/* Fixed Color */}
-                    <ArrowLeft size={20} />
+            <header className="telegram-header glass">
+                <Link href="/chat" style={{ color: "#000" }}>
+                    <ArrowLeft size={22} />
                 </Link>
-                <div>
-                    <h1 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#0f172a" }}>{room.name}</h1> {/* Fixed Color */}
-                    <span style={{ fontSize: "0.8rem", color: "#64748b", display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {room.subject} •
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#16a34a', fontWeight: 600 }}>
-                            <span style={{ width: '8px', height: '8px', background: '#16a34a', borderRadius: '50%', display: 'inline-block' }}></span>
-                            {onlineCount} Online
-                        </span>
+                <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setSelectedUserId(room.created_by || null)}>
+                    <h1 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#000" }}>{room.name}</h1>
+                    <span style={{ fontSize: "0.85rem", color: "#0ea5e9", fontWeight: 500 }}>
+                        {onlineCount} members online
                     </span>
                 </div>
+                <Search size={22} color="#555" />
+                <MoreVertical size={22} color="#555" />
             </header>
 
             {/* Chat Area */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-                {messages.length === 0 && (
-                    <div style={{ textAlign: "center", color: "var(--muted-foreground)", marginTop: "auto", marginBottom: "auto" }}>
-                        <p>Welcome to {room.name}!</p>
-                        <p style={{ fontSize: "0.9rem" }}>Start the conversation...</p>
-                    </div>
-                )}
-
-                {messages.map((msg) => {
-                    const isOwn = msg.user_id === user?.id;
-                    const isAdmin = msg.role === 'admin';
-                    const isSenior = msg.role === 'senior';
-
-                    return (
-                        <div key={msg.id} style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: isOwn ? "flex-end" : "flex-start",
-                            maxWidth: "70%",
-                            alignSelf: isOwn ? "flex-end" : "flex-start"
-                        }}>
-                            {!isOwn && (
-                                <span
-                                    style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "0.25rem", marginLeft: "0.5rem", cursor: "pointer" }}
-                                    onClick={() => setSelectedUserId(msg.user_id)}
-                                >
-                                    {msg.user_name}
-                                    {isAdmin && <span style={{ marginLeft: "4px", color: "#dc2626", fontWeight: 600 }}>[ADMIN]</span>}
-                                    {isSenior && <span style={{ marginLeft: "4px", color: "#2563eb", fontWeight: 600 }}>[SENIOR]</span>}
-                                </span>
-                            )}
-                            <div style={{
-                                padding: "0.75rem 1rem",
-                                borderRadius: isOwn ? "1rem 1rem 0 1rem" : "1rem 1rem 1rem 0",
-                                background: isOwn ? "var(--primary)" : "var(--card-bg)",
-                                color: isOwn ? "var(--primary-foreground)" : "var(--text-primary)",
-                                boxShadow: isOwn ? "var(--shadow-md)" : "var(--shadow-sm)",
-                                border: isOwn ? "none" : "1px solid var(--border)",
-                                position: "relative",
-                                wordBreak: "break-word",
-                                fontWeight: 500
-                            }}>
-                                {msg.content}
+            <div className="chat-scroll-area">
+                {groupedMessages.map(item => {
+                    if (item.type === 'date') {
+                        return (
+                            <div key={item.id} style={{ display: 'flex', justifyContent: 'center' }}>
+                                <div className="date-header">{item.date}</div>
                             </div>
-                            {isOwn && (
-                                <button
-                                    onClick={() => handleDeleteClick(msg.id)}
-                                    style={{
-                                        fontSize: "0.7rem",
-                                        color: "var(--muted-foreground)",
-                                        border: "none",
-                                        background: "none",
-                                        cursor: "pointer",
-                                        marginTop: "0.25rem",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "0.25rem"
-                                    }}
-                                >
-                                    <Trash2 size={10} /> Delete
-                                </button>
-                            )}
-                        </div>
+                        );
+                    }
+                    const msg = item.data;
+                    return (
+                        <MessageBubble
+                            key={msg.id}
+                            message={msg}
+                            isOwn={user && msg.user_id === user.id}
+                            onContextMenu={handleContextMenu}
+                            onReplyClick={(replyId) => {
+                                const target = document.getElementById(`msg-${replyId}`); // Need to add id to bubble
+                                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }}
+                        />
                     );
                 })}
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            <div style={{ padding: "1.5rem", background: "white", borderTop: "1px solid var(--border)" }}>
-                {user ? (
-                    <form onSubmit={handleSendMessage} style={{ display: "flex", gap: "1rem", maxWidth: "1200px", margin: "0 auto" }}>
-                        <input
-                            type="text"
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder={`Message #${room.name}...`}
-                            style={{
-                                flex: 1,
-                                padding: "0.75rem 1rem",
-                                borderRadius: "0.75rem",
-                                border: "1px solid var(--border)",
-                                fontSize: "1rem",
-                                background: "var(--background)",
-                                color: "var(--foreground)"
-                            }}
-                        />
-                        <button
-                            type="submit"
-                            style={{
-                                width: "3.5rem",
-                                height: "3.5rem",
-                                borderRadius: "50%",
-                                background: "var(--primary)",
-                                color: "white",
-                                border: "none",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                cursor: "pointer",
-                                boxShadow: "var(--shadow-md)"
-                            }}
-                        >
-                            <Send size={20} />
-                        </button>
-                    </form>
-                ) : (
-                    <div style={{ textAlign: "center" }}>
-                        <Link href="/login" style={{ color: "var(--primary)", fontWeight: 600 }}>Login</Link> to join the chat.
-                    </div>
-                )}
-            </div>
+            {/* Input */}
+            <ChatInput
+                onSend={handleSendMessage}
+                replyTo={replyTo}
+                onCancelReply={() => setReplyTo(null)}
+                editingMessage={editingMessage}
+                onCancelEdit={() => setEditingMessage(null)}
+            />
 
+            {/* Context Menu Overlay */}
+            {contextMenu && (
+                <ContextMenu
+                    x={contextMenu.x}
+                    y={contextMenu.y}
+                    options={getMenuOptions()}
+                    onClose={() => setContextMenu(null)}
+                />
+            )}
 
-            {/* Custom Delete Confirmation Modal */}
-            {
-                showDeleteConfirm && (
-                    <div style={{
-                        position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-                        background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                        zIndex: 100
-                    }}>
-                        <div style={{
-                            background: 'white', padding: '1.5rem', borderRadius: '1rem',
-                            maxWidth: '300px', width: '90%', boxShadow: 'var(--shadow-xl)',
-                            textAlign: 'center'
-                        }}>
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#1e293b' }}>Delete Message?</h3>
-                            <p style={{ color: '#64748b', marginBottom: '1.5rem', fontSize: '0.9rem' }}>This action cannot be undone.</p>
-                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                                <button
-                                    onClick={cancelDelete}
-                                    style={{
-                                        padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0',
-                                        background: 'white', color: '#64748b', cursor: 'pointer', fontWeight: 500
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={confirmDelete}
-                                    style={{
-                                        padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none',
-                                        background: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 500
-                                    }}
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-            {/* Enhancements: Profile Modal & Toasts */}
+            {/* Modals */}
             <UserProfileModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
             <ToastContainer toasts={toasts} removeToast={removeToast} />
-        </div >
+        </div>
     );
 }
