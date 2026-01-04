@@ -162,7 +162,7 @@ export default function UserProfileModal({ userId, isOpen, onClose }) {
                         </div>
 
                         {/* Name & Role */}
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: '#1e293b' }}>
                             {profile.full_name || 'User'}
                             {(profile.role === 'admin' || profile.role === 'senior') && (
                                 <span style={{
