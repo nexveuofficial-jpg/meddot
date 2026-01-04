@@ -115,12 +115,15 @@ export default function ChatRoomPage(props) {
                 const newState = channel.presenceState();
                 setOnlineCount(Object.keys(newState).length);
             })
-            .subscribe(async (status) => {
+            .subscribe(async (status, err) => {
                 if (status === 'SUBSCRIBED' && user) {
                     await channel.track({
                         user_id: user.id,
                         online_at: new Date().toISOString(),
                     });
+                } else if (status === 'CHANNEL_ERROR') {
+                    console.error('Realtime connection error:', err);
+                    addToast("Could not connect to chat server.", "error");
                 }
             });
 

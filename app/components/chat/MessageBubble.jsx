@@ -18,9 +18,10 @@ export default function MessageBubble({ message, isOwn, onContextMenu, onReplyCl
 
     return (
         <div
+            id={`msg-${message.id}`}
             className={`msg-row ${isOwn ? 'own' : 'other'}`}
             onContextMenu={(e) => onContextMenu(e, message)}
-            style={{ paddingLeft: isOwn ? '20%' : '0', paddingRight: isOwn ? '0' : '20%' }}
+            style={{ paddingLeft: isOwn ? '20%' : '0', paddingRight: isOwn ? '0' : '20%', ...style }}
         >
             <div className={`msg-bubble ${isOwn ? 'own' : 'other'}`}>
 
