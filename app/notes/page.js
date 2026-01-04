@@ -54,7 +54,7 @@ export default function NotesPage() {
 
             let query = supabase
                 .from("notes")
-                .select("*")
+                .select("*, profiles(username, full_name)")
                 .eq("status", "published")
                 .order("created_at", { ascending: false })
                 .range(from, to);

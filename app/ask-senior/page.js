@@ -23,14 +23,15 @@ export default function AskSeniorPage() {
             try {
                 const { data, error } = await supabase
                     .from("questions")
-                    .select("*")
+                    .select("*, profiles(username, full_name)")
                     .order("created_at", { ascending: false });
 
                 if (error) throw error;
 
                 const questionsData = data.map(doc => ({
                     ...doc,
-                    profiles: { full_name: doc.author_name || 'Anonymous' }, // Mock profile struct
+                    // profile is now an object or array depending on relation (usually object)
+                    profiles: Array.isArray(doc.profiles) ? doc.profiles[0] : doc.profiles,
                     answers: [{ count: doc.answer_count || 0 }] // Mock answer struct
                 }));
 

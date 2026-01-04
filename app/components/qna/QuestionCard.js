@@ -62,7 +62,7 @@ export default function QuestionCard({ question }) {
 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <span>{question.profiles?.full_name || question.author_name || 'Anonymous Student'}</span>
+                        <span>{question.profiles?.username || question.profiles?.full_name || question.author_name || 'Anonymous Student'}</span>
                     </div>
                     <div style={{ display: "flex", gap: "1rem" }}>
                         <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>

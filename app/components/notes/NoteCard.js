@@ -205,7 +205,7 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
                                 padding: "0.25rem 0.6rem",
                                 borderRadius: "99px"
                             }}>
-                                {note.subject}
+                                {note.subject} | {note.profiles?.username || note.author || 'Unknown'}
                             </span>
 
                             <button

@@ -78,3 +78,18 @@ BEGIN
   WHERE id = note_id;
 END;
 $$;
+
+-- 7. Username Feature
+-- Add username column to profiles
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'username') THEN 
+        ALTER TABLE profiles ADD COLUMN username text; 
+        ALTER TABLE profiles ADD CONSTRAINT profiles_username_unique UNIQUE (username);
+    END IF; 
+END $$;
+
+-- Populate existing usernames from full_name or email
+UPDATE profiles 
+SET username = COALESCE(full_name, split_part(email, '@', 1))
+WHERE username IS NULL;

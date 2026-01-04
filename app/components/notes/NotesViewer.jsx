@@ -140,7 +140,7 @@ export default function NotesViewer({ note }) {
                 <div className={styles.paper} style={{ background: 'transparent', boxShadow: 'none' }}>
                     <h1 className={styles.title}>{note.title}</h1>
                     <div className={styles.meta}>
-                        <span>By {note.author}</span>
+                        <span>By {note.profiles?.username || note.profiles?.full_name || note.author || 'Anonymous'}</span>
                         <span>•</span>
                         <span>{new Date(note.created_at).toLocaleDateString()}</span>
                         <span>•</span>

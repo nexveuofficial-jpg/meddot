@@ -23,7 +23,7 @@ export default function AdminNotes() {
         try {
             let query = supabase
                 .from("notes")
-                .select("*")
+                .select("*, profiles(username, full_name)")
                 .order("created_at", { ascending: false });
 
             if (filter !== 'all') {
@@ -177,7 +177,7 @@ export default function AdminNotes() {
                                         <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{new Date(note.created_at).toLocaleDateString()}</div>
                                     </td>
                                     <td>{note.subject}</td>
-                                    <td>{note.author_name || 'Anonymous'}</td>
+                                    <td>{note.profiles?.username || note.profiles?.full_name || note.author_name || 'Anonymous'}</td>
                                     <td>
                                         <span className={styles.badge} style={{
                                             background: note.status === 'published' ? '#dcfce7' : note.status === 'pending' ? '#fef9c3' : '#fee2e2',
