@@ -16,8 +16,8 @@ export default function ChatError({ error, reset }) {
             <h2 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1rem", color: "#1f2937" }}>
                 Chat unavailable
             </h2>
-            <p style={{ marginBottom: "2rem", color: "#6b7280", maxWidth: '400px', wordBreak: 'break-word' }}>
-                {error.message || "We couldn't connect to the chat server."}
+            <p style={{ marginBottom: "2rem", color: "#6b7280" }}>
+                We couldn't connect to the chat server.
             </p>
             <button
                 onClick={() => reset()}
