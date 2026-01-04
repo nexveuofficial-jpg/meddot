@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
-import { ArrowLeft, MoreVertical, Search, Volume2 } from "lucide-react"; // Added MoreVertical, Search, Volume2 for header visuals
+import { ArrowLeft, MoreVertical, Search } from "lucide-react"; // Added MoreVertical, Search for header visuals
 import Loader from "../../components/ui/Loader";
 import Link from "next/link";
 import UserProfileModal from "@/app/components/UserProfileModal";

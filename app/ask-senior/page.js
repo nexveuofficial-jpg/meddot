@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import QuestionCard from "@/app/components/qna/QuestionCard";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import Loader from "../components/ui/Loader";
 import { useAuth } from "@/app/context/AuthContext";
 import { useFeature } from "@/app/context/FeatureFlagContext";
