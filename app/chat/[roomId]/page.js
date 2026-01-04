@@ -377,80 +377,82 @@ export default function ChatRoomPage(props) {
                 </div>
                 <Search size={22} color="#555" />
                 <MoreVertical size={22} color="#555" />
-                {/* Chat Area */}
-                <div className="chat-scroll-area">
-                    {groupedMessages.map(item => {
-                        if (item.type === 'date') {
-                            return (
-                                <div key={item.id} style={{ display: 'flex', justifyContent: 'center' }}>
-                                    <div className="date-header">{item.date}</div>
-                                </div>
-                            );
-                        }
-                        const msg = item.data;
+            </header>
+
+            {/* Chat Area */}
+            <div className="chat-scroll-area">
+                {groupedMessages.map(item => {
+                    if (item.type === 'date') {
                         return (
-                            <MessageBubble
-                                key={msg.id}
-                                message={msg}
-                                isOwn={user && msg.user_id === user.id}
-                                onContextMenu={handleContextMenu}
-                                onReplyClick={(replyId) => {
-                                    const target = document.getElementById(`msg-${replyId}`); // Need to add id to bubble
-                                    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                }}
-                                onImageClick={(url) => setViewedImage(url)}
-                            />
+                            <div key={item.id} style={{ display: 'flex', justifyContent: 'center' }}>
+                                <div className="date-header">{item.date}</div>
+                            </div>
                         );
-                    })}
-                    <div ref={messagesEndRef} />
-                </div>
-
-                {/* ... Input ... */}
-                {/* Input */}
-                <ChatInput
-                    onSend={handleSendMessage}
-                    replyTo={replyTo}
-                    onCancelReply={() => setReplyTo(null)}
-                    editingMessage={editingMessage}
-                    onCancelEdit={() => setEditingMessage(null)}
-                    allowImages={isAdmin || isSenior}
-                />
-
-                {/* Context Menu Overlay */}
-                {contextMenu && (
-                    <ContextMenu
-                        x={contextMenu.x}
-                        y={contextMenu.y}
-                        options={getMenuOptions()}
-                        onClose={() => setContextMenu(null)}
-                    />
-                )}
-
-                {/* Image Modal */}
-                {viewedImage && (
-                    <div style={{
-                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                        backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 100,
-                        display: 'flex', justifyContent: 'center', alignItems: 'center',
-                        flexDirection: 'column'
-                    }} onClick={() => setViewedImage(null)}>
-                        <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 101 }}>
-                            <button onClick={() => setViewedImage(null)} style={{ color: 'white', padding: '10px' }}>
-                                {/* Close Icon manually or lucide */}
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                            </button>
-                        </div>
-                        <img
-                            src={viewedImage}
-                            style={{ maxWidth: '95%', maxHeight: '95%', objectFit: 'contain', borderRadius: '4px' }}
-                            onClick={(e) => e.stopPropagation()} // Click image shouldn't close? Actually clicking anywhere should likely close for ease roughly
+                    }
+                    const msg = item.data;
+                    return (
+                        <MessageBubble
+                            key={msg.id}
+                            message={msg}
+                            isOwn={user && msg.user_id === user.id}
+                            onContextMenu={handleContextMenu}
+                            onReplyClick={(replyId) => {
+                                const target = document.getElementById(`msg-${replyId}`); // Need to add id to bubble
+                                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }}
+                            onImageClick={(url) => setViewedImage(url)}
                         />
-                    </div>
-                )}
+                    );
+                })}
+                <div ref={messagesEndRef} />
+            </div>
 
-                {/* Modals */}
-                <UserProfileModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
-                <ToastContainer toasts={toasts} removeToast={removeToast} />
+            {/* ... Input ... */}
+            {/* Input */}
+            <ChatInput
+                onSend={handleSendMessage}
+                replyTo={replyTo}
+                onCancelReply={() => setReplyTo(null)}
+                editingMessage={editingMessage}
+                onCancelEdit={() => setEditingMessage(null)}
+                allowImages={isAdmin || isSenior}
+            />
+
+            {/* Context Menu Overlay */}
+            {contextMenu && (
+                <ContextMenu
+                    x={contextMenu.x}
+                    y={contextMenu.y}
+                    options={getMenuOptions()}
+                    onClose={() => setContextMenu(null)}
+                />
+            )}
+
+            {/* Image Modal */}
+            {viewedImage && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 100,
+                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    flexDirection: 'column'
+                }} onClick={() => setViewedImage(null)}>
+                    <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 101 }}>
+                        <button onClick={() => setViewedImage(null)} style={{ color: 'white', padding: '10px' }}>
+                            {/* Close Icon manually or lucide */}
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
+                    <img
+                        src={viewedImage}
+                        style={{ maxWidth: '95%', maxHeight: '95%', objectFit: 'contain', borderRadius: '4px' }}
+                        onClick={(e) => e.stopPropagation()} // Click image shouldn't close? Actually clicking anywhere should likely close for ease roughly
+                    />
+                </div>
+            )}
+
+            {/* Modals */}
+            <UserProfileModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
         </div>
     );
 }

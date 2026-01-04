@@ -47,8 +47,8 @@ END $$;
 -- Note: Bucket creation must be done via Dashboard or Storage API usually, but policies can be SQL if bucket exists.
 -- We assume user creates bucket 'chat-uploads' public.
 
--- Allow public read
--- CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING ( bucket_id = 'chat-uploads' );
+-- Allow public read (Optional if bucket is public, but good for safety)
+CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING ( bucket_id = 'chat-uploads' );
 
 -- Allow authenticated upload
--- CREATE POLICY "Authenticated Upload" ON storage.objects FOR INSERT WITH CHECK ( bucket_id = 'chat-uploads' AND auth.role() = 'authenticated' );
+CREATE POLICY "Authenticated Upload" ON storage.objects FOR INSERT WITH CHECK ( bucket_id = 'chat-uploads' AND auth.role() = 'authenticated' );
