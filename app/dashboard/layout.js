@@ -15,8 +15,6 @@ export default function DashboardLayout({ children }) {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-
-
     useEffect(() => {
         // Only redirect if auth is fully initialized and we definitely have no user
         if (initialized && !loading && !user) {
@@ -140,5 +138,18 @@ export default function DashboardLayout({ children }) {
 
 
         </div>
+    );
+}
+
+function NavLink({ href, children, pathname, setIsMobileMenuOpen }) {
+    const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+    return (
+        <Link
+            href={href}
+            className={isActive ? styles.activeNav : styles.navItem}
+            onClick={() => setIsMobileMenuOpen(false)}
+        >
+            {children}
+        </Link>
     );
 }
