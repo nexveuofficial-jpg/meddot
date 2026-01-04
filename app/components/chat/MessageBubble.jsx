@@ -1,4 +1,5 @@
 
+import { useRef } from 'react';
 import { CheckCheck } from 'lucide-react';
 
 export default function MessageBubble({ message, isOwn, onContextMenu, onReplyClick, style }) {
@@ -23,14 +24,56 @@ export default function MessageBubble({ message, isOwn, onContextMenu, onReplyCl
         return colors[Math.abs(hash) % colors.length];
     };
 
+    const touchStart = useRef(0);
+    const bubbleRef = useRef(null);
+
+    const handleTouchStart = (e) => {
+        touchStart.current = e.targetTouches[0].clientX;
+    };
+
+    const handleTouchMove = (e) => {
+        if (!touchStart.current || !bubbleRef.current) return;
+        const current = e.targetTouches[0].clientX;
+        const diff = current - touchStart.current;
+
+        // Limit swipe to right side only (positive diff) for reply
+        if (diff > 0 && diff < 100) {
+            bubbleRef.current.style.transform = `translateX(${diff}px)`;
+        }
+    };
+
+    const handleTouchEnd = (e) => {
+        if (!touchStart.current || !bubbleRef.current) return;
+        const end = e.changedTouches[0].clientX;
+        const distance = end - touchStart.current;
+
+        // Reset transform
+        bubbleRef.current.style.transform = 'translateX(0)';
+        bubbleRef.current.style.transition = 'transform 0.2s ease-out';
+        setTimeout(() => {
+            if (bubbleRef.current) bubbleRef.current.style.transition = '';
+        }, 200);
+
+        // Threshold for reply
+        if (distance > 50) { // Swipe Right
+            onReplyClick(message.id);
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        touchStart.current = 0;
+    };
+
     return (
         <div
             id={`msg-${message.id}`}
             className={`msg-row ${isOwn ? 'own' : 'other'}`}
             onContextMenu={(e) => onContextMenu(e, message)}
             style={{ paddingLeft: isOwn ? '20%' : '0', paddingRight: isOwn ? '0' : '20%', ...style }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
         >
-            <div className={`msg-bubble ${isOwn ? 'own' : 'other'}`}>
+            <div ref={bubbleRef} className={`msg-bubble ${isOwn ? 'own' : 'other'}`}>
 
                 {/* Reply Snippet */}
                 {message.reply_to && (

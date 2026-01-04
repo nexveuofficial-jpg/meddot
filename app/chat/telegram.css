@@ -1,26 +1,23 @@
 /* Telegram Chat Styles */
 
 .telegram-container {
-    background-color: #8EBAE3;
-    /* Fallback */
-    background-image: url("https://web.telegram.org/img/bg_0.png");
-    /* Standard Telegram Pattern if available, else fallback */
-    background-size: cover;
-    background-attachment: fixed;
+    background-color: var(--background);
+    /* Remove fixed heavy backgrounds to blend with UI */
     height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
 .telegram-header {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
     padding: 0.5rem 1rem;
     display: flex;
     align-items: center;
     gap: 1rem;
     z-index: 20;
+    color: var(--foreground);
 }
 
 .chat-scroll-area {
@@ -85,89 +82,52 @@
 .msg-bubble.own {
     border-bottom-right-radius: 0;
     /* Tail spot */
-    background: #EEFFDE;
-    /* Telegram Light Green */
-    color: #000;
+    background: var(--primary);
+    color: var(--primary-foreground);
 }
 
 .dark .msg-bubble.own {
-    background: #2B5278;
-    /* Telegram Dark Blue */
-    color: #fff;
+    background: var(--primary);
+    color: var(--primary-foreground);
 }
 
 .msg-bubble.other {
     border-bottom-left-radius: 0;
-    background: #FFFFFF;
-    color: #000;
+    background: var(--card-bg);
+    color: var(--foreground);
+    border: 1px solid var(--border);
 }
 
 .dark .msg-bubble.other {
-    background: #182533;
-    color: #fff;
+    background: var(--card-bg);
+    color: var(--foreground);
+    border: 1px solid var(--border);
 }
 
 /* Tails */
 .tail-own {
-    position: absolute;
-    bottom: 0;
-    right: -6px;
-    width: 12px;
-    height: 16px;
-    background: radial-gradient(circle at top left, transparent 10px, #EEFFDE 11px);
-    /* Complex tail logic simplified */
-    clip-path: polygon(0 0, 100% 100%, 0 100%);
-}
-
-/* Using SVG for better tails if possible, or simpler CSS borders */
-.bubble-tail {
-    position: absolute;
-    bottom: 0px;
-    width: 12px;
-    height: 20px;
-    overflow: hidden;
-}
-
-.own .bubble-tail {
-    right: -9px;
-    transform: scaleX(-1);
-    /* Flip for right side */
-}
-
-.other .bubble-tail {
-    left: -9px;
-}
-
-.tail-fill {
-    width: 20px;
-    height: 20px;
-    background: inherit;
-    /* Matches bubble */
-    border-bottom-right-radius: 50%;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    box-shadow: 10px 0 0 0 #fff;
-    /* Masking hack */
+    /* Simplified tail for clean UI */
+    display: none;
 }
 
 /* Input Area */
 .chat-input-area {
-    background: white;
+    background: var(--background);
     padding: 0.5rem;
     display: flex;
     align-items: flex-end;
     gap: 0.5rem;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--border);
 }
 
 .chat-input-wrapper {
     flex: 1;
-    background: #f1f5f9;
+    background: var(--muted);
     border-radius: 1.5rem;
     display: flex;
     align-items: center;
     padding: 0.25rem 1rem;
+    color: var(--foreground);
 }
 
 .chat-textarea {
@@ -277,15 +237,15 @@
     margin-left: 6px;
     margin-top: 6px;
     font-size: 0.7rem;
-    color: #a3bba3;
-    /* Greenish gray on green */
+    color: var(--primary-foreground);
+    opacity: 0.8;
     display: flex;
     align-items: center;
     gap: 2px;
 }
 
 .other .msg-meta {
-    color: #a0a0a0;
+    color: var(--muted-foreground);
 }
 
 /* Reply inside message */
@@ -294,14 +254,14 @@
     border-radius: 2px;
     padding-left: 6px;
     margin-bottom: 4px;
-    opacity: 0.8;
+    opacity: 0.9;
     font-size: 0.85rem;
     cursor: pointer;
 }
 
 .own .msg-reply-snippet {
-    border-color: #fff;
-    color: #2b5278;
+    border-color: currentColor;
+    color: currentColor;
 }
 
 .other .msg-reply-snippet {

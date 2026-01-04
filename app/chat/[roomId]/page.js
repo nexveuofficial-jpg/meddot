@@ -110,7 +110,22 @@ export default function ChatRoomPage(props) {
                     const eventType = payload.eventType;
                     if (eventType === 'INSERT') {
                         setMessages(prev => {
+                            // Deduplicate: Check if message exists
                             if (prev.find(m => m.id === payload.new.id)) return prev;
+
+                            // Optimistic Replacement for Own Messages
+                            // If we find a message with same content from same user that has a timestamp-like ID, replace it.
+                            if (payload.new.user_id === user.id) {
+                                const optimisticMatch = prev.find(m =>
+                                    m.user_id === user.id &&
+                                    m.content === payload.new.content &&
+                                    (m.id.length < 20) // Heuristic: Timestamp (13 chars) vs UUID (36 chars)
+                                );
+                                if (optimisticMatch) {
+                                    return prev.map(m => m.id === optimisticMatch.id ? payload.new : m);
+                                }
+                            }
+
                             return [...prev, payload.new];
                         });
                     } else if (eventType === 'DELETE') {
