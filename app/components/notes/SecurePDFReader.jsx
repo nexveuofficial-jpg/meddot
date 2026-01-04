@@ -23,11 +23,13 @@ export default function SecurePDFReader({ isOpen, onClose, fileUrl, title, userE
     }, []);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (isOpen) {
             document.body.style.overflow = 'hidden';
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setPageNumber(1);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setScale(1.0);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setLoading(true);
         } else {
             document.body.style.overflow = '';
