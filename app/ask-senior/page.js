@@ -23,7 +23,7 @@ export default function AskSeniorPage() {
             try {
                 const { data, error } = await supabase
                     .from("questions")
-                    .select("*, profiles(username, full_name)")
+                    .select("*, profiles(username, full_name, role)")
                     .order("created_at", { ascending: false });
 
                 if (error) throw error;

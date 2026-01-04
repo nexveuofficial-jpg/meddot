@@ -23,7 +23,7 @@ export default function AdminNotes() {
         try {
             let query = supabase
                 .from("notes")
-                .select("*, profiles(username, full_name)")
+                .select("*, profiles(username, full_name, role)")
                 .order("created_at", { ascending: false });
 
             if (filter !== 'all') {

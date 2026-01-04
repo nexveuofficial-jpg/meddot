@@ -63,6 +63,20 @@ export default function QuestionCard({ question }) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         <span>{question.profiles?.username || question.profiles?.full_name || question.author_name || 'Anonymous Student'}</span>
+                        {(question.profiles?.role === 'admin' || question.profiles?.role === 'senior') && (
+                            <span style={{
+                                fontSize: '0.65rem',
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                padding: '0.1rem 0.4rem',
+                                borderRadius: '4px',
+                                background: question.profiles?.role === 'admin' ? '#fef3c7' : '#dbeafe',
+                                color: question.profiles?.role === 'admin' ? '#b45309' : '#1e40af',
+                                marginLeft: '0.25rem'
+                            }}>
+                                {question.profiles?.role}
+                            </span>
+                        )}
                     </div>
                     <div style={{ display: "flex", gap: "1rem" }}>
                         <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>

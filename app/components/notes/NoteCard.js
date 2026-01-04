@@ -206,6 +206,16 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
                                 borderRadius: "99px"
                             }}>
                                 {note.subject} | {note.profiles?.username || note.author || 'Unknown'}
+                                {(note.profiles?.role === 'admin' || note.profiles?.role === 'senior') && (
+                                    <span style={{
+                                        marginLeft: '0.5rem',
+                                        background: 'rgba(255,255,255,0.3)',
+                                        padding: '0 0.4rem',
+                                        borderRadius: '4px'
+                                    }}>
+                                        {note.profiles?.role === 'admin' ? '🛡️' : '🎓'}
+                                    </span>
+                                )}
                             </span>
 
                             <button

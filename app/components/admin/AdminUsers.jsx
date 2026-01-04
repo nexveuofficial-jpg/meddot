@@ -68,6 +68,7 @@ export default function AdminUsers() {
                     <thead>
                         <tr>
                             <th>User</th>
+                            <th>Username</th>
                             <th>Role</th>
                             <th>Actions</th>
                         </tr>
@@ -83,6 +84,9 @@ export default function AdminUsers() {
                                 <td>
                                     <div style={{ fontWeight: 600 }}>{u.full_name || 'Unknown'}</div>
                                     <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{u.email}</div>
+                                </td>
+                                <td>
+                                    <div style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>@{u.username || '-'}</div>
                                 </td>
                                 <td>
                                     <span className={styles.badge} style={{

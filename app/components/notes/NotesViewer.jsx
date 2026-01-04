@@ -141,6 +141,21 @@ export default function NotesViewer({ note }) {
                     <h1 className={styles.title}>{note.title}</h1>
                     <div className={styles.meta}>
                         <span>By {note.profiles?.username || note.profiles?.full_name || note.author || 'Anonymous'}</span>
+                        {(note.profiles?.role === 'admin' || note.profiles?.role === 'senior') && (
+                            <span style={{
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                padding: '0.1rem 0.4rem',
+                                borderRadius: '4px',
+                                background: note.profiles?.role === 'admin' ? '#fef3c7' : '#dbeafe',
+                                color: note.profiles?.role === 'admin' ? '#b45309' : '#1e40af',
+                                marginLeft: '0.25rem',
+                                verticalAlign: 'middle'
+                            }}>
+                                {note.profiles?.role}
+                            </span>
+                        )}
                         <span>•</span>
                         <span>{new Date(note.created_at).toLocaleDateString()}</span>
                         <span>•</span>
