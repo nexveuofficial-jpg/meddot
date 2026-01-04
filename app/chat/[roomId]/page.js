@@ -471,7 +471,7 @@ export default function ChatRoomPage(props) {
             )}
 
             {/* Modals */}
-            <UserProfileModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
+            <UserProfileModal userId={selectedUserId} isOpen={!!selectedUserId} onClose={() => setSelectedUserId(null)} />
             <ToastContainer toasts={toasts} removeToast={removeToast} />
         </div>
     );
