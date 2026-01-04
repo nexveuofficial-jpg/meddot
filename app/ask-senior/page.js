@@ -8,6 +8,7 @@ import { Plus, Search } from "lucide-react";
 import Loader from "../components/ui/Loader";
 import { useAuth } from "@/app/context/AuthContext";
 import { useFeature } from "@/app/context/FeatureFlagContext";
+import UserProfileModal from "@/app/components/UserProfileModal";
 
 import styles from "./ask-senior.module.css";
 
@@ -16,6 +17,7 @@ export default function AskSeniorPage() {
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
     const { isEnabled } = useFeature();
+    const [selectedUserId, setSelectedUserId] = useState(null);
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -88,9 +90,25 @@ export default function AskSeniorPage() {
                 </div>
             ) : (
                 <div className={styles.grid}>
-                    {questions.map(q => <QuestionCard key={q.id} question={q} />)}
+                    {questions.map(q => (
+                        <QuestionCard
+                            key={q.id}
+                            question={q}
+                            onUserClick={(uid) => {
+                                // We need the user's ID. 
+                                // questions.profiles might be the profile object, but we need ID.
+                                // Actually, joins typically return 'id' if selected.
+                                // Wait, the join "*, profiles(...)" might not return profiles.id if not explicit.
+                                // But "profiles(username...)" does not include id by default if not asked.
+                                // Let's ensure we fetch profile ID in the parent fetch.
+                                setSelectedUserId(q.author_id);
+                            }}
+                        />
+                    ))}
                 </div>
             )}
+
+            <UserProfileModal userId={selectedUserId} isOpen={!!selectedUserId} onClose={() => setSelectedUserId(null)} />
         </div>
     );
 }

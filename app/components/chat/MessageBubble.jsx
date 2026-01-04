@@ -2,7 +2,7 @@
 import { useRef } from 'react';
 import { CheckCheck } from 'lucide-react';
 
-export default function MessageBubble({ message, isOwn, onContextMenu, onReplyClick, onImageClick, style }) {
+export default function MessageBubble({ message, isOwn, onContextMenu, onReplyClick, onImageClick, onUserClick, style }) {
     let time = "";
     try {
         time = new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -93,7 +93,8 @@ export default function MessageBubble({ message, isOwn, onContextMenu, onReplyCl
                         fontSize: '0.8rem',
                         marginBottom: '2px',
                         cursor: 'pointer'
-                    }}>
+                    }}
+                        onClick={() => onUserClick && onUserClick(message.user_id)}>
                         {message.user_name}
                         {message.role === 'admin' && <span title="Admin" style={{ marginLeft: '4px' }}>★</span>}
                     </div>

@@ -1,168 +1,250 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { X, User, Shield, GraduationCap } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { X, MessageCircle, UserPlus, Check, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
-export default function UserProfileModal({ userId, onClose }) {
+export default function UserProfileModal({ userId, isOpen, onClose }) {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [friendStatus, setFriendStatus] = useState(null); // 'none', 'pending', 'accepted', 'received'
+    const { user: currentUser } = useAuth();
+    const router = useRouter();
 
     useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                // First try fetching from profiles table
-                let { data, error } = await supabase
-                    .from("profiles")
-                    .select("*")
-                    .eq("id", userId)
-                    .single();
-
-                if (error && error.code !== 'PGRST116') { // Ignore "not found" error for now
-                    console.error("Error fetching profile:", error);
-                }
-
-                if (!data) {
-                    // Fallback to minimal info if we can't get full profile (or if profiles table row doesn't exist)
-                    // We might not be able to get email/metadata easily without admin rights depending on RLS,
-                    // but usually we rely on the 'profiles' public table.
-                    setProfile({ full_name: "Unknown User", role: "student" });
-                } else {
-                    setProfile(data);
-                }
-            } catch (err) {
-                console.error(err);
-                setProfile({ full_name: "Error loading user", role: "student" });
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (userId) {
+        if (isOpen && userId) {
             fetchProfile();
+            if (currentUser) fetchFriendStatus();
         }
-    }, [userId]);
+    }, [isOpen, userId]);
 
-    if (!userId) return null;
+    const fetchProfile = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", userId)
+            .single();
+
+        if (error) console.error("Error fetching profile:", error);
+        else setProfile(data);
+        setLoading(false);
+    };
+
+    const fetchFriendStatus = async () => {
+        // Check if I sent request
+        const { data: sent } = await supabase
+            .from("friendships")
+            .select("*")
+            .eq("user_id", currentUser.id)
+            .eq("friend_id", userId)
+            .single();
+
+        if (sent) {
+            setFriendStatus(sent.status === 'accepted' ? 'accepted' : 'pending');
+            return;
+        }
+
+        // Check if they sent request
+        const { data: received } = await supabase
+            .from("friendships")
+            .select("*")
+            .eq("user_id", userId)
+            .eq("friend_id", currentUser.id)
+            .single();
+
+        if (received) {
+            setFriendStatus(received.status === 'accepted' ? 'accepted' : 'received');
+            return;
+        }
+
+        setFriendStatus('none');
+    };
+
+    const handleAddFriend = async () => {
+        try {
+            const { error } = await supabase
+                .from("friendships")
+                .insert([{ user_id: currentUser.id, friend_id: userId, status: 'pending' }]);
+
+            if (error) throw error;
+            setFriendStatus('pending');
+            toast.success("Friend request sent!");
+        } catch (error) {
+            toast.error("Failed to add friend: " + error.message);
+        }
+    };
+
+    const handleAcceptFriend = async () => {
+        try {
+            // We need to update the row where THEY are user_id and WE are friend_id
+            const { error } = await supabase
+                .from("friendships")
+                .update({ status: 'accepted' })
+                .eq("user_id", userId)
+                .eq("friend_id", currentUser.id);
+
+            if (error) throw error;
+            setFriendStatus('accepted');
+            toast.success("Friend request accepted!");
+        } catch (error) {
+            toast.error("Failed to accept: " + error.message);
+        }
+    };
+
+    const handleMessage = async () => {
+        try {
+            if (!currentUser) return alert("Please login first");
+
+            // Call our RPC function
+            const { data: roomId, error } = await supabase.rpc('get_or_create_dm_room', {
+                other_user_id: userId
+            });
+
+            if (error) throw error;
+
+            if (roomId) {
+                onClose();
+                router.push(`/chat/${roomId}`);
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to start chat");
+        }
+    };
+
+    if (!isOpen) return null;
 
     return (
         <div style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
-            zIndex: 1000, backdropFilter: 'blur(4px)'
+            position: 'fixed', inset: 0, zIndex: 100,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)'
         }} onClick={onClose}>
             <div style={{
-                background: 'white',
-                borderRadius: '16px',
-                width: '90%',
-                maxWidth: '400px',
-                boxShadow: 'var(--shadow-xl)',
-                overflow: 'hidden',
-                animation: 'scaleIn 0.2s ease-out'
+                background: 'white', borderRadius: '24px', width: '100%', maxWidth: '400px',
+                padding: '2rem', position: 'relative', margin: '1rem',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                animation: 'modalSlideIn 0.3s ease-out'
             }} onClick={e => e.stopPropagation()}>
 
-                {/* Header / Banner */}
-                <div style={{
-                    height: '100px',
-                    background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)',
-                    position: 'relative'
+                <button onClick={onClose} style={{
+                    position: 'absolute', top: '1.5rem', right: '1.5rem',
+                    background: '#f1f5f9', border: 'none', borderRadius: '50%',
+                    width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', color: '#64748b'
                 }}>
-                    <button
-                        onClick={onClose}
-                        style={{
-                            position: 'absolute', top: '10px', right: '10px',
-                            background: 'rgba(0,0,0,0.2)', border: 'none', color: 'white',
-                            borderRadius: '50%', width: '30px', height: '30px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        <X size={18} />
-                    </button>
-                </div>
+                    <X size={18} />
+                </button>
 
-                <div style={{ padding: '0 1.5rem 1.5rem', marginTop: '-50px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    {/* Avatar */}
-                    <div style={{
-                        width: '100px', height: '100px', borderRadius: '50%',
-                        background: 'white', padding: '4px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                    }}>
-                        <div style={{
-                            width: '100%', height: '100%', borderRadius: '50%',
-                            background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: '#94a3b8'
-                        }}>
-                            {/* Placeholder Avatar if no image */}
-                            <User size={48} />
-                        </div>
+                {loading ? (
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+                        <Loader2 className="animate-spin" />
                     </div>
-
-                    {/* Content */}
-                    <div style={{ textAlign: 'center', marginTop: '1rem', width: '100%' }}>
-                        {loading ? (
-                            <div className="animate-pulse">
-                                <div style={{ height: '24px', background: '#e2e8f0', borderRadius: '4px', width: '60%', margin: '0 auto 8px' }}></div>
-                                <div style={{ height: '16px', background: '#e2e8f0', borderRadius: '4px', width: '40%', margin: '0 auto' }}></div>
-                            </div>
-                        ) : (
-                            <>
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', margin: '0 0 0.25rem' }}>
-                                    {profile?.full_name || "Anonymous User"}
-                                </h2>
-
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                                    {profile?.role === 'admin' && (
-                                        <span style={{
-                                            background: '#fee2e2', color: '#dc2626', padding: '2px 8px',
-                                            borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600,
-                                            display: 'flex', alignItems: 'center', gap: '4px'
-                                        }}>
-                                            <Shield size={12} /> Admin
-                                        </span>
-                                    )}
-                                    {profile?.role === 'senior' && (
-                                        <span style={{
-                                            background: '#dbeafe', color: '#2563eb', padding: '2px 8px',
-                                            borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600,
-                                            display: 'flex', alignItems: 'center', gap: '4px'
-                                        }}>
-                                            <GraduationCap size={12} /> Senior
-                                        </span>
-                                    )}
-                                    {(!profile?.role || profile.role === 'student') && (
-                                        <span style={{
-                                            background: '#f1f5f9', color: '#64748b', padding: '2px 8px',
-                                            borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600
-                                        }}>
-                                            Student
-                                        </span>
-                                    )}
+                ) : profile ? (
+                    <div style={{ textAlign: 'center' }}>
+                        {/* Avatar */}
+                        <div style={{
+                            width: '96px', height: '96px', borderRadius: '50%', margin: '0 auto 1.5rem',
+                            background: '#e2e8f0', overflow: 'hidden', border: '4px solid white',
+                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                        }}>
+                            {profile.avatar_url ? (
+                                <img src={profile.avatar_url} alt={profile.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: '#94a3b8' }}>
+                                    {profile.full_name?.[0] || 'U'}
                                 </div>
+                            )}
+                        </div>
 
-                                <div style={{ textAlign: 'left', background: '#f8fafc', padding: '1rem', borderRadius: '12px' }}>
-                                    <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem' }}>About</h4>
-                                    <p style={{ fontSize: '0.9rem', color: '#334155', margin: 0 }}>
-                                        {profile?.bio || "No bio available."}
-                                    </p>
-                                </div>
+                        {/* Name & Role */}
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                            {profile.full_name || 'User'}
+                            {(profile.role === 'admin' || profile.role === 'senior') && (
+                                <span style={{
+                                    fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase',
+                                    padding: '0.1rem 0.5rem', borderRadius: '99px',
+                                    background: profile.role === 'admin' ? '#fef3c7' : '#dbeafe',
+                                    color: profile.role === 'admin' ? '#b45309' : '#1e40af'
+                                }}>
+                                    {profile.role}
+                                </span>
+                            )}
+                        </h2>
+                        <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>@{profile.username}</p>
 
-                                {profile?.joined_at && (
-                                    <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '1rem' }}>
-                                        Joined {new Date(profile.joined_at).toLocaleDateString()}
-                                    </p>
+                        {/* Bio */}
+                        {profile.bio && (
+                            <p style={{ background: '#f8fafc', padding: '1rem', borderRadius: '1rem', color: '#334155', fontSize: '0.95rem', marginBottom: '2rem' }}>
+                                {profile.bio}
+                            </p>
+                        )}
+
+                        {/* Actions */}
+                        {currentUser && currentUser.id !== userId && (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <button
+                                    onClick={handleMessage}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                        padding: '0.75rem', borderRadius: '12px', border: 'none',
+                                        background: '#3b82f6', color: 'white', fontWeight: 600, cursor: 'pointer'
+                                    }}
+                                >
+                                    <MessageCircle size={18} />
+                                    Message
+                                </button>
+
+                                {friendStatus === 'none' && (
+                                    <button onClick={handleAddFriend} style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                        padding: '0.75rem', borderRadius: '12px', border: '1px solid #e2e8f0',
+                                        background: 'white', color: '#0f172a', fontWeight: 600, cursor: 'pointer'
+                                    }}>
+                                        <UserPlus size={18} />
+                                        Add Friend
+                                    </button>
                                 )}
-                            </>
+                                {friendStatus === 'pending' && (
+                                    <button disabled style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                        padding: '0.75rem', borderRadius: '12px', border: '1px solid #e2e8f0',
+                                        background: '#f1f5f9', color: '#64748b', fontWeight: 600, cursor: 'not-allowed'
+                                    }}>
+                                        Pending...
+                                    </button>
+                                )}
+                                {friendStatus === 'received' && (
+                                    <button onClick={handleAcceptFriend} style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                        padding: '0.75rem', borderRadius: '12px', border: 'none',
+                                        background: '#22c55e', color: 'white', fontWeight: 600, cursor: 'pointer'
+                                    }}>
+                                        <Check size={18} />
+                                        Accept
+                                    </button>
+                                )}
+                                {friendStatus === 'accepted' && (
+                                    <button disabled style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                        padding: '0.75rem', borderRadius: '12px', border: '1px solid #e2e8f0',
+                                        background: '#f0fdf4', color: '#16a34a', fontWeight: 600
+                                    }}>
+                                        <Check size={18} />
+                                        Friends
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
-                </div>
+                ) : (
+                    <p>User not found</p>
+                )}
             </div>
-            <style jsx global>{`
-                @keyframes scaleIn {
-                    from { opacity: 0; transform: scale(0.95); }
-                    to { opacity: 1; transform: scale(1); }
-                }
-            `}</style>
         </div>
     );
 }

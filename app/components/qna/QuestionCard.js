@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { MessageCircle, Clock, CheckCircle } from "lucide-react";
 
-export default function QuestionCard({ question }) {
+export default function QuestionCard({ question, onUserClick }) {
     // Handle answers count structure depending on how it's fetched (array or count object)
     const answerCount = Array.isArray(question.answers)
         ? question.answers.length
@@ -60,34 +60,45 @@ export default function QuestionCard({ question }) {
                     {question.body}
                 </p>
 
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <span>{question.profiles?.username || question.profiles?.full_name || question.author_name || 'Anonymous Student'}</span>
-                        {(question.profiles?.role === 'admin' || question.profiles?.role === 'senior') && (
-                            <span style={{
-                                fontSize: '0.65rem',
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                padding: '0.1rem 0.4rem',
-                                borderRadius: '4px',
-                                background: question.profiles?.role === 'admin' ? '#fef3c7' : '#dbeafe',
-                                color: question.profiles?.role === 'admin' ? '#b45309' : '#1e40af',
-                                marginLeft: '0.25rem'
-                            }}>
-                                {question.profiles?.role}
-                            </span>
-                        )}
-                    </div>
-                    <div style={{ display: "flex", gap: "1rem" }}>
-                        <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                            <MessageCircle size={14} /> {answerCount} answers
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
+                <div
+                    style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: 'pointer', zIndex: 10 }}
+                    onClick={(e) => {
+                        e.preventDefault(); // Prevent Link navigation
+                        e.stopPropagation();
+                        onUserClick && onUserClick(question.author_id);
+                    }}
+                >
+                    <span style={{ textDecoration: 'underline' }}>
+                        {question.profiles?.username || question.profiles?.full_name || question.author_name || 'Anonymous Student'}
+                    </span>
+                    {(question.profiles?.role === 'admin' || question.profiles?.role === 'senior') && (
+                        <span style={{
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            padding: '0.1rem 0.4rem',
+                            borderRadius: '4px',
+                            background: question.profiles?.role === 'admin' ? '#fef3c7' : '#dbeafe',
+                            color: question.profiles?.role === 'admin' ? '#b45309' : '#1e40af',
+                            marginLeft: '0.25rem'
+                        }}>
+                            {question.profiles?.role}
                         </span>
-                        <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                            <Clock size={14} /> {new Date(question.created_at).toLocaleDateString()}
-                        </span>
-                    </div>
+                    )}
+                </div>
+                <div style={{ display: "flex", gap: "1rem" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                        <MessageCircle size={14} /> {answerCount} answers
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                        <Clock size={14} /> {new Date(question.created_at).toLocaleDateString()}
+                    </span>
                 </div>
             </div>
-        </Link>
+        </div>
+        </Link >
     );
 }

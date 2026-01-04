@@ -93,3 +93,77 @@ END $$;
 UPDATE profiles 
 SET username = COALESCE(full_name, split_part(email, '@', 1))
 WHERE username IS NULL;
+
+-- 8. Social Features: Friendships & DMs
+
+-- Friendships Table
+CREATE TABLE IF NOT EXISTS friendships (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+    friend_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+    status text DEFAULT 'pending', -- 'pending', 'accepted'
+    created_at timestamptz DEFAULT now(),
+    UNIQUE(user_id, friend_id)
+);
+
+-- Policies for friendships
+ALTER TABLE friendships ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own friendships" 
+ON friendships FOR SELECT 
+USING (auth.uid() = user_id OR auth.uid() = friend_id);
+
+CREATE POLICY "Users can insert friendship requests" 
+ON friendships FOR INSERT 
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own friendships" 
+ON friendships FOR UPDATE 
+USING (auth.uid() = user_id OR auth.uid() = friend_id);
+
+-- Update Chat Rooms for DMs
+-- Add 'type' and 'participants' to chat_rooms if not exists
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'chat_rooms' AND column_name = 'type') THEN 
+        ALTER TABLE chat_rooms ADD COLUMN type text DEFAULT 'public'; 
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'chat_rooms' AND column_name = 'participants') THEN 
+        ALTER TABLE chat_rooms ADD COLUMN participants uuid[]; 
+    END IF;
+END $$;
+
+-- RPC to Create or Get DM Room
+CREATE OR REPLACE FUNCTION get_or_create_dm_room(other_user_id uuid)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  room_id uuid;
+  current_user_id uuid;
+BEGIN
+  current_user_id := auth.uid();
+  
+  -- Check if a DM room already exists between these two
+  SELECT id INTO room_id
+  FROM chat_rooms
+  WHERE type = 'dm' 
+  AND participants @> ARRAY[current_user_id, other_user_id]
+  AND participants @> ARRAY[other_user_id, current_user_id]
+  LIMIT 1;
+
+  -- If found, return it
+  IF room_id IS NOT NULL THEN
+    RETURN room_id;
+  END IF;
+
+  -- Else create new
+  INSERT INTO chat_rooms (name, type, participants, is_active)
+  VALUES ('DM', 'dm', ARRAY[current_user_id, other_user_id], true)
+  RETURNING id INTO room_id;
+
+  RETURN room_id;
+END;
+$$;

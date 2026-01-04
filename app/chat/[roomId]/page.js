@@ -79,6 +79,25 @@ export default function ChatRoomPage(props) {
                     .single();
 
                 if (roomError) throw roomError;
+
+                // If DM, fetch friend's name
+                if (roomData.type === 'dm' && user) {
+                    const friendId = roomData.participants.find(id => id !== user.id);
+                    if (friendId) {
+                        const { data: friendProfile } = await supabase
+                            .from('profiles')
+                            .select('username, full_name, avatar_url')
+                            .eq('id', friendId)
+                            .single();
+
+                        if (friendProfile) {
+                            roomData.name = friendProfile.full_name || friendProfile.username;
+                            roomData.image = friendProfile.avatar_url;
+                            roomData.friendId = friendId; // Store for profile click
+                        }
+                    }
+                }
+
                 setRoom(roomData);
 
                 // Messages
@@ -369,10 +388,10 @@ export default function ChatRoomPage(props) {
                 <Link href="/chat" style={{ color: "var(--foreground)", marginRight: '10px' }}>
                     <ArrowLeft size={22} />
                 </Link>
-                <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setSelectedUserId(room.created_by || null)}>
+                <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setSelectedUserId(room.friendId || room.created_by || null)}>
                     <h1 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#000" }}>{room.name}</h1>
                     <span style={{ fontSize: "0.85rem", color: "#0ea5e9", fontWeight: 500 }}>
-                        {onlineCount} members online
+                        {room.type === 'dm' ? 'Direct Message' : `${onlineCount} members online`}
                     </span>
                 </div>
                 <Search size={22} color="#555" />
@@ -401,6 +420,7 @@ export default function ChatRoomPage(props) {
                                 if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }}
                             onImageClick={(url) => setViewedImage(url)}
+                            onUserClick={(uid) => setSelectedUserId(uid)}
                         />
                     );
                 })}
