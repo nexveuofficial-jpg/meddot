@@ -60,8 +60,6 @@ export default function QuestionCard({ question, onUserClick }) {
                     {question.body}
                 </p>
 
-
-
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
                     <div
                         style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: 'pointer', zIndex: 10 }}
@@ -99,6 +97,6 @@ export default function QuestionCard({ question, onUserClick }) {
                     </div>
                 </div>
             </div>
-        </Link >
+        </Link>
     );
 }
