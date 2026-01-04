@@ -1,6 +1,11 @@
 
 export default function MessageBubble({ message, isOwn, onContextMenu, onReplyClick, style }) {
-    const time = new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    let time = "";
+    try {
+        time = new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+        time = "Invalid Time";
+    }
 
 
     // Determine colors for names (simple hash function for consistency)

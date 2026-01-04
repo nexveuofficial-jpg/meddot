@@ -62,6 +62,13 @@ export default function ChatRoomPage(props) {
         if (!params?.roomId) return;
 
         const fetchData = async () => {
+            if (!supabase) {
+                console.error("Supabase client not initialized (missing env vars)");
+                addToast("Database connection missing", "error");
+                setLoading(false);
+                return;
+            }
+
             try {
                 // Room
                 const { data: roomData, error: roomError } = await supabase
@@ -92,6 +99,8 @@ export default function ChatRoomPage(props) {
         fetchData();
 
         // Realtime
+        if (!supabase) return;
+
         const channel = supabase
             .channel(`room:${params.roomId}`)
             .on(
@@ -145,6 +154,11 @@ export default function ChatRoomPage(props) {
                 return;
             }
             lastMessageTime.current = now;
+        }
+
+        if (!supabase) {
+            addToast("Chat unavailable (Database error)", "error");
+            return;
         }
 
         const optimisticId = Date.now().toString();
@@ -228,6 +242,7 @@ export default function ChatRoomPage(props) {
 
     const deleteMessage = async (msgId) => {
         setMessages(prev => prev.filter(m => m.id !== msgId)); // Optimistic
+        if (!supabase) return;
         try {
             await supabase.from("chat_messages").delete().eq("id", msgId);
         } catch (err) {
