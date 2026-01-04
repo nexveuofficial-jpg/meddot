@@ -16,6 +16,7 @@ export default function FocusTimer() {
                 setTimeLeft((prev) => prev - 1);
             }, 1000);
         } else if (timeLeft === 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsActive(false);
             new Audio('/sounds/bell.mp3').play().catch(e => console.log("Audio play failed", e));
         }
