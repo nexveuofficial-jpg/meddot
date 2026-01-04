@@ -20,7 +20,7 @@ import "@/app/chat/telegram.css";
 
 export default function ChatRoomPage(props) {
     const params = use(props.params);
-    const { user } = useAuth();
+    const { user, isAdmin, isSenior } = useAuth();
     const router = useRouter();
 
     const [room, setRoom] = useState(null);
@@ -378,12 +378,14 @@ export default function ChatRoomPage(props) {
             </div>
 
             {/* Input */}
+            {/* Input */}
             <ChatInput
                 onSend={handleSendMessage}
                 replyTo={replyTo}
                 onCancelReply={() => setReplyTo(null)}
                 editingMessage={editingMessage}
                 onCancelEdit={() => setEditingMessage(null)}
+                allowImages={isAdmin || isSenior}
             />
 
             {/* Context Menu Overlay */}

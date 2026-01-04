@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, X, Paperclip, Mic } from 'lucide-react';
 
-export default function ChatInput({ onSend, replyTo, onCancelReply, editingMessage, onCancelEdit }) {
+export default function ChatInput({ onSend, replyTo, onCancelReply, editingMessage, onCancelEdit, allowImages }) {
     const [text, setText] = useState("");
     const textareaRef = useRef(null);
 
@@ -37,10 +37,12 @@ export default function ChatInput({ onSend, replyTo, onCancelReply, editingMessa
 
     return (
         <div className="chat-input-area">
-            {/* Attachments (Visual Only) */}
-            <button style={{ color: '#64748b', padding: '8px' }}>
-                <Paperclip size={22} />
-            </button>
+            {/* Attachments (Visual Only) - Restricted to Admin/Senior */}
+            {allowImages && (
+                <button style={{ color: '#64748b', padding: '8px' }} title="Send Image">
+                    <Paperclip size={22} />
+                </button>
+            )}
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 {/* Reply / Edit Preview */}
