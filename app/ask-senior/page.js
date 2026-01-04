@@ -73,11 +73,11 @@ export default function AskSeniorPage() {
                 </div>
 
                 {user && (
-                    <Link href="/ask-senior/ask" style={{ width: 'fit-content' }}>
-                        <button className={styles.askButton}>
+                    <Link href="/ask-senior/ask" style={{ width: 'fit-content', textDecoration: 'none' }}>
+                        <div className={styles.askButton}>
                             <Plus size={18} />
                             Ask a Question
-                        </button>
+                        </div>
                     </Link>
                 )}
             </header>
