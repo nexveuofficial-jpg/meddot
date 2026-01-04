@@ -66,6 +66,14 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
         if (downloading) return;
         setDownloading(true);
 
+        // Increment Views
+        try {
+            await supabase.rpc('increment_note_views', { note_id: note.id });
+        } catch (err) {
+            console.error("Failed to increment views:", err);
+            // Don't block opening the note
+        }
+
         try {
             let signedUrl = null;
 

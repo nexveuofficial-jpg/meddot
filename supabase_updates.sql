@@ -53,10 +53,28 @@ CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING ( bucket_id = 
 -- Allow authenticated upload
 CREATE POLICY "Authenticated Upload" ON storage.objects FOR INSERT WITH CHECK ( bucket_id = 'chat-uploads' AND auth.role() = 'authenticated' );
 
-    -- MAINTENANCE: Clear all chat history
-    -- Run this to delete all messages
-    -- TRUNCATE TABLE chat_messages;
+-- MAINTENANCE: Clear all chat history
+-- Run this to delete all messages
+-- TRUNCATE TABLE chat_messages;
 
-    -- MAINTENANCE: Clear all chat history
-    -- Run this to delete all messages
-    -- TRUNCATE TABLE chat_messages;
+-- 6. Notes Views
+-- Add views column if not exists
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'notes' AND column_name = 'views') THEN 
+        ALTER TABLE notes ADD COLUMN views integer DEFAULT 0; 
+    END IF; 
+END $$;
+
+-- RPC to increment views safely
+CREATE OR REPLACE FUNCTION increment_note_views(note_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE notes
+  SET views = views + 1
+  WHERE id = note_id;
+END;
+$$;
