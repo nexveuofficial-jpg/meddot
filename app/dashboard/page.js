@@ -46,11 +46,7 @@ export default function DashboardPage() {
         fetchAnnouncements();
     }, []);
 
-    // Helper wrapper for links or div
-    const CardWrapper = ({ href, children }) => {
-        if (href) return <Link href={href} style={{ display: 'block', height: '100%', textDecoration: 'none' }}>{children}</Link>;
-        return <div style={{ height: '100%' }}>{children}</div>;
-    };
+
 
     const allCards = [
         {
@@ -170,15 +166,27 @@ export default function DashboardPage() {
             <div className={styles.grid}>
                 {cards.map((card, index) => (
                     <div key={index} className={styles.cardContainer} style={{ animation: `fadeInUp 0.6s ease-out ${index * 0.1}s backwards` }}>
-                        <CardWrapper href={card.href}>
-                            <DashboardCard
-                                title={card.title}
-                                description={card.description}
-                                icon={card.icon}
-                                accentColor={card.accent}
-                                delay={index * 0.1}
-                            />
-                        </CardWrapper>
+                        {card.href ? (
+                            <Link href={card.href} style={{ display: 'block', height: '100%', textDecoration: 'none' }}>
+                                <DashboardCard
+                                    title={card.title}
+                                    description={card.description}
+                                    icon={card.icon}
+                                    accentColor={card.accent}
+                                    delay={index * 0.1}
+                                />
+                            </Link>
+                        ) : (
+                            <div style={{ height: '100%' }}>
+                                <DashboardCard
+                                    title={card.title}
+                                    description={card.description}
+                                    icon={card.icon}
+                                    accentColor={card.accent}
+                                    delay={index * 0.1}
+                                />
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>

@@ -15,18 +15,7 @@ export default function DashboardLayout({ children }) {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const NavLink = ({ href, children }) => {
-        const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
-        return (
-            <Link
-                href={href}
-                className={isActive ? styles.activeNav : styles.navItem}
-                onClick={() => setIsMobileMenuOpen(false)}
-            >
-                {children}
-            </Link>
-        );
-    };
+
 
     useEffect(() => {
         // Only redirect if auth is fully initialized and we definitely have no user
@@ -108,24 +97,24 @@ export default function DashboardLayout({ children }) {
                 </div>
 
                 <nav style={{ display: "flex", flexDirection: "column", gap: '0.5rem', marginTop: "2rem" }}>
-                    <NavLink href="/dashboard">Dashboard</NavLink>
-                    <NavLink href="/notes">Notes Library</NavLink>
-                    <NavLink href="/ask-senior">Ask Senior</NavLink>
-                    <NavLink href="/chat">Study Groups</NavLink>
-                    <NavLink href="/messages">Messages</NavLink>
-                    <NavLink href="/focus">Focus Mode</NavLink>
-                    <NavLink href="/profile">My Profile</NavLink>
+                    <NavLink href="/dashboard" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>Dashboard</NavLink>
+                    <NavLink href="/notes" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>Notes Library</NavLink>
+                    <NavLink href="/ask-senior" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>Ask Senior</NavLink>
+                    <NavLink href="/chat" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>Study Groups</NavLink>
+                    <NavLink href="/messages" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>Messages</NavLink>
+                    <NavLink href="/focus" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>Focus Mode</NavLink>
+                    <NavLink href="/profile" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>My Profile</NavLink>
 
                     {/* Admin Access */}
                     {isAdmin && (
-                        <NavLink href="/admin">
+                        <NavLink href="/admin" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>
                             <span style={{ color: 'var(--primary)', fontWeight: 600 }}>Admin Panel</span>
                         </NavLink>
                     )}
 
                     {/* Senior Panel */}
                     {(isSenior || isAdmin) && (
-                        <NavLink href="/senior">
+                        <NavLink href="/senior" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>
                             <span style={{ color: 'var(--primary)', fontWeight: 600 }}>Senior Panel</span>
                         </NavLink>
                     )}
