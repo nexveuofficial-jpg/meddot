@@ -19,6 +19,27 @@
     z-index: 9999;
     transition: transform 0.3s ease;
     backdrop-filter: blur(10px);
+    overflow-y: auto;
+    /* Enable vertical scrolling */
+}
+
+/* Sidebar Scrollbar Styling */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.5);
+    /* muted-foreground with opacity */
+    border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.8);
 }
 
 .main {
