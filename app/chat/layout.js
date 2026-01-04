@@ -18,6 +18,12 @@ export default function ChatLayout({ children }) {
         const fetchRooms = async () => {
             // ... existing fetch logic ...
             try {
+                if (!supabase) {
+                    setRooms([]);
+                    setLoading(false);
+                    return;
+                }
+
                 const { data, error } = await supabase
                     .from("chat_rooms")
                     .select("*")
