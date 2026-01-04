@@ -8,7 +8,7 @@ export default function SettingsPage() {
 
     useEffect(() => {
         router.push("/profile");
-    }, []);
+    }, [router]);
 
     return (
         <div style={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center", color: "white" }}>

@@ -17,6 +17,43 @@ export default function MessagesInbox() {
 
     useEffect(() => {
         if (!user) return;
+
+        const fetchConversations = async () => {
+            try {
+                // Get unique users interacted with
+                const { data, error } = await supabase
+                    .from("direct_messages")
+                    .select("*, sender:profiles!sender_id(id, full_name, email, role), receiver:profiles!receiver_id(id, full_name, email, role)")
+                    .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+                    .order("created_at", { ascending: false });
+
+                if (error) throw error;
+
+                const convos = {};
+                data.forEach(msg => {
+                    const partner = msg.sender_id === user.id ? msg.receiver : msg.sender;
+                    if (!partner) return;
+                    if (!convos[partner.id]) {
+                        convos[partner.id] = {
+                            partner,
+                            lastMessage: msg,
+                            unreadCount: (!msg.is_read && msg.receiver_id === user.id) ? 1 : 0
+                        };
+                    } else {
+                        if (!msg.is_read && msg.receiver_id === user.id) {
+                            convos[partner.id].unreadCount++;
+                        }
+                    }
+                });
+
+                setConversations(Object.values(convos));
+
+            } catch (error) {
+                console.error(error);
+            }
+            setLoading(false);
+        };
+
         fetchConversations();
 
         // Subscribe to new DMs to update inbox
@@ -33,42 +70,7 @@ export default function MessagesInbox() {
         return () => { supabase.removeChannel(channel); };
     }, [user]);
 
-    const fetchConversations = async () => {
-        try {
-            // Get unique users interacted with
-            // Since Supabase doesn't support complex distinct on multiple columns easily, we fetch latest messages
-            const { data, error } = await supabase
-                .from("direct_messages")
-                .select("*, sender:profiles!sender_id(id, full_name, email, role), receiver:profiles!receiver_id(id, full_name, email, role)")
-                .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-                .order("created_at", { ascending: false });
 
-            if (error) throw error;
-
-            const convos = {};
-            data.forEach(msg => {
-                const partner = msg.sender_id === user.id ? msg.receiver : msg.sender;
-                if (!partner) return; // Should not happen
-                if (!convos[partner.id]) {
-                    convos[partner.id] = {
-                        partner,
-                        lastMessage: msg,
-                        unreadCount: (!msg.is_read && msg.receiver_id === user.id) ? 1 : 0
-                    };
-                } else {
-                    if (!msg.is_read && msg.receiver_id === user.id) {
-                        convos[partner.id].unreadCount++;
-                    }
-                }
-            });
-
-            setConversations(Object.values(convos));
-
-        } catch (error) {
-            console.error(error);
-        }
-        setLoading(false);
-    };
 
     const handleSearch = async (term) => {
         setSearchTerm(term);

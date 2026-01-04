@@ -30,11 +30,11 @@ export default function RootLayout({ children }) {
               key={i}
               className="snowflake"
               style={{
-                left: `${Math.random() * 100}vw`,
-                animationDuration: `${Math.random() * 3 + 4}s`,
-                animationDelay: `${Math.random() * 5}s`,
-                width: `${Math.random() * 6 + 4}px`,
-                height: `${Math.random() * 6 + 4}px`,
+                left: `${(i * 17) % 100}vw`,
+                animationDuration: `${(i % 5) + 3}s`,
+                animationDelay: `${(i % 5)}s`,
+                width: `${(i % 6) + 4}px`,
+                height: `${(i % 6) + 4}px`,
                 filter: 'blur(1px)'
               }}
             />

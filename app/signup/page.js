@@ -166,7 +166,7 @@ export default function SignupPage() {
                         </div>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>Account Created!</h2>
                         <p style={{ color: '#64748b', marginBottom: '2rem', lineHeight: 1.5 }}>
-                            We've sent a confirmation email to <strong>{email}</strong>.<br />
+                            We&apos;ve sent a confirmation email to <strong>{email}</strong>.<br />
                             Please verify your email to unlock all features.
                         </p>
                         <button

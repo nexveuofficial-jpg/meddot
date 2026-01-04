@@ -11,25 +11,21 @@ import Loader from "../components/ui/Loader";
 export default function SeniorLayout({ children }) {
     const { user, loading, initialized, isSenior, isAdmin, logout } = useAuth();
     const router = useRouter();
-    const [isAuthorized, setIsAuthorized] = useState(null);
 
+
+    // Derived state instead of useEffect to avoid "setState during render" warning
+    // However, since we navigate, we still need effect for redirection
     useEffect(() => {
         if (!initialized || loading) return;
-
         if (!user) {
             router.replace("/login");
-            return;
         }
+    }, [user, loading, initialized, router]);
 
-        // Allow if Senior OR Admin
-        if (isSenior || isAdmin) {
-            setIsAuthorized(true);
-        } else {
-            setIsAuthorized(false);
-        }
-    }, [user, loading, initialized, isSenior, isAdmin, router]);
+    // Calculate authorization directly
+    const isAuthorizedComputed = (initialized && !loading && user) ? (isSenior || isAdmin) : null;
 
-    if (!initialized || loading || isAuthorized === null) {
+    if (!initialized || loading || isAuthorizedComputed === null) {
         return (
             <div style={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", background: "#f0f9ff" }}>
                 <Loader size={48} className="text-primary" />
@@ -37,7 +33,7 @@ export default function SeniorLayout({ children }) {
         );
     }
 
-    if (isAuthorized === false) {
+    if (isAuthorizedComputed === false) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-4 text-center">
                 <h1 className="text-2xl font-bold text-red-500">Access Restricted</h1>
