@@ -20,6 +20,10 @@ export default function SecurePDFReader({ isOpen, onClose, fileUrl, title, userE
 
     useEffect(() => {
         setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (isOpen) {
             document.body.style.overflow = 'hidden';
             setPageNumber(1);
