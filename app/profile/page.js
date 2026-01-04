@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "@/lib/supabase";
+import styles from "./profile.module.css";
 
 export default function ProfilePage() {
     const { user, profile } = useAuth();
@@ -103,55 +104,16 @@ export default function ProfilePage() {
     );
 
     return (
-        <div style={{
-            maxWidth: '1000px',
-            margin: '2rem auto',
-            padding: '2rem',
-        }}>
+        <div className={styles.container}>
             {/* Navigation */}
-            <a href="/dashboard" style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                marginBottom: '2rem',
-                color: '#e2e8f0',
-                textDecoration: 'none',
-                fontSize: '1rem',
-                fontWeight: 600,
-                padding: '0.5rem 1rem',
-                borderRadius: '0.75rem',
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(5px)',
-                transition: 'background 0.2s'
-            }}>
+            <a href="/dashboard" className={styles.backLink}>
                 ← Back to Dashboard
             </a>
 
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(300px, 1fr) 2fr', // Creative Responsive Grid
-                gap: '2rem',
-                alignItems: 'start'
-            }}>
+            <div className={styles.layout}>
                 {/* Left Column: Identity Card */}
-                <div style={{
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: '24px',
-                    padding: '2rem',
-                    textAlign: 'center',
-                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-                }}>
-                    <div style={{
-                        width: '150px',
-                        height: '150px',
-                        borderRadius: '50%',
-                        overflow: 'hidden',
-                        border: '4px solid white',
-                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                        background: '#e2e8f0',
-                        margin: '0 auto 1.5rem auto'
-                    }}>
+                <div className={`${styles.card} ${styles.leftCard}`}>
+                    <div className={styles.avatarContainer}>
                         {previewUrl ? (
                             <img src={previewUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
@@ -189,13 +151,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Right Column: Edit Form */}
-                <div style={{
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: '24px',
-                    padding: '2.5rem',
-                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-                }}>
+                <div className={`${styles.card} ${styles.rightCard}`}>
                     <h1 style={{
                         fontSize: '2rem',
                         fontWeight: 800,
@@ -212,7 +168,7 @@ export default function ProfilePage() {
                             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 📚 Academic Info
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div className={styles.formGrid}>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Full Name</label>
                                     <input type="text" value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
@@ -241,7 +197,7 @@ export default function ProfilePage() {
                             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 🌐 Social & Contact
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div className={styles.formGrid}>
                                 <div style={{}}>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Email (Read Only)</label>
                                     <input type="email" value={user?.email || ''} readOnly disabled

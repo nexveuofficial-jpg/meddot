@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import { useAuth } from "@/app/context/AuthContext";
 import DoctorCompanion from "../components/companion/DoctorCompanion";
+import styles from "./notes.module.css";
 
 const ITEMS_PER_PAGE = 50;
 
@@ -116,38 +117,14 @@ export default function NotesPage() {
     };
 
     return (
-        <div style={{
-            padding: "2rem 4rem",
-            maxWidth: "1400px",
-            margin: "0 auto",
-            minHeight: "100vh"
-        }}>
+        <div className={styles.container}>
             {/* Header */}
-            <header style={{
-                marginBottom: "3rem",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "end",
-                animation: "fadeInUp 0.6s ease-out"
-            }}>
+            <header className={styles.header}>
                 <div>
-                    <Link href="/dashboard" style={{
-                        color: "var(--muted-foreground)",
-                        textDecoration: "none",
-                        fontSize: "0.9rem",
-                        marginBottom: "0.5rem",
-                        display: "inline-block",
-                        transition: "color 0.2s"
-                    }}>
+                    <Link href="/dashboard" className={styles.backLink}>
                         ← Back
                     </Link>
-                    <h1 style={{
-                        fontSize: "3rem",
-                        fontWeight: "800",
-                        letterSpacing: "-0.04em",
-                        color: "var(--foreground)",
-                        lineHeight: 1
-                    }}>
+                    <h1 className={styles.title}>
                         Notes Library
                     </h1>
                 </div>
@@ -155,21 +132,7 @@ export default function NotesPage() {
                 {/* Upload Button checking Feature Flag */}
                 {isEnabled('enable_uploads') && user && (
                     <Link href="/notes/upload">
-                        <button style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                            background: "var(--primary)",
-                            color: "white",
-                            border: "none",
-                            padding: "0.75rem 1.5rem",
-                            borderRadius: "0.75rem",
-                            fontSize: "0.95rem",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            boxShadow: "var(--shadow-md)",
-                            transition: "all 0.2s"
-                        }}>
+                        <button className={styles.uploadButton}>
                             <Plus size={18} />
                             Upload Note
                         </button>
@@ -178,16 +141,8 @@ export default function NotesPage() {
             </header>
 
             {/* Search & Filter */}
-            <div style={{
-                display: "flex",
-                gap: "1rem",
-                marginBottom: "3rem",
-                animation: "fadeInUp 0.6s ease-out 0.1s backwards"
-            }}>
-                <div style={{
-                    flex: 1,
-                    position: "relative"
-                }}>
+            <div className={styles.filterSection}>
+                <div className={styles.searchContainer}>
                     <Search
                         size={20}
                         style={{
@@ -203,17 +158,7 @@ export default function NotesPage() {
                         placeholder="Search notes by title..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{
-                            width: "100%",
-                            padding: "1rem 1rem 1rem 3rem",
-                            borderRadius: "1rem",
-                            border: "1px solid var(--border)",
-                            background: "white",
-                            fontSize: "1rem",
-                            boxShadow: "var(--shadow-sm)",
-                            outline: "none",
-                            transition: "all 0.2s"
-                        }}
+                        className={styles.searchInput}
                     />
                 </div>
 
@@ -326,12 +271,7 @@ export default function NotesPage() {
                     </div>
                 ) : (
                     <>
-                        <div style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-                            gap: "2rem",
-                            animation: "fadeInUp 0.6s ease-out 0.2s backwards"
-                        }}>
+                        <div className={styles.grid}>
                             {notes.map((note) => (
                                 <NoteCard key={note.id} note={note} />
                             ))}
@@ -343,21 +283,7 @@ export default function NotesPage() {
                                 <button
                                     onClick={loadMoreNotes}
                                     disabled={loadingMore}
-                                    style={{
-                                        padding: '0.75rem 2rem',
-                                        background: 'white',
-                                        border: '1px solid var(--border)',
-                                        borderRadius: '2rem',
-                                        color: 'var(--foreground)',
-                                        fontWeight: 600,
-                                        cursor: 'pointer',
-                                        boxShadow: 'var(--shadow-sm)',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        transition: 'all 0.2s',
-                                        fontSize: '0.95rem'
-                                    }}
+                                    className={styles.loadMoreBtn}
                                 >
                                     {loadingMore && <Loader size={16} />}
                                     {loadingMore ? 'Loading...' : 'Load More Notes'}

@@ -52,9 +52,6 @@ export default function DoctorCompanion({ mood = "idle", context = "dashboard" }
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             style={{
-                position: 'fixed', // Default fixed, can be overridden by parent layout context if needed
-                bottom: '2rem',
-                right: '2rem',
                 zIndex: 50,
                 display: 'flex',
                 flexDirection: 'column',

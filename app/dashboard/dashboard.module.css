@@ -102,6 +102,12 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        /* Ensure it's reachable */
+        top: 0.75rem;
+        right: 0.75rem;
+        width: 44px;
+        height: 44px;
+        /* Touch target */
     }
 
     .sidebar {
@@ -119,8 +125,10 @@
     }
 
     .main {
-        padding: 6rem 1.5rem 2rem;
-        /* Increased top padding for content not to hide behind fixed header if any, or just spacing */
+        padding: 5rem 1rem 2rem;
+        /* Adjusted top padding to clear fixed mobile headers if any */
+        width: 100%;
+        overflow-x: hidden;
     }
 
     .overlay.visible {

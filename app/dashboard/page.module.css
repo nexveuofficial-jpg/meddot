@@ -85,8 +85,10 @@
     .header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 1rem;
+        gap: 0.5rem;
         margin-bottom: 2rem;
+        margin-top: 1rem;
+        /* Add spacing from toggle button */
     }
 
     .greeting {
@@ -102,6 +104,8 @@
         grid-template-columns: 1fr;
         /* Stack cards on mobile */
         gap: 1rem;
+        margin-bottom: 4rem;
+        /* Space for fab or bottom interactions */
     }
 
     .cardContainer {

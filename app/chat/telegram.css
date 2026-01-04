@@ -120,7 +120,9 @@
     gap: 0.5rem;
     border-top: 1px solid var(--border);
     /* Ensure sticking to bottom safely on iOS */
-    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    background: var(--background);
+    /* Ensure opaque background */
 }
 
 .chat-input-wrapper {
@@ -308,6 +310,8 @@
     .telegram-container {
         height: 100dvh;
         /* Mobile full height */
+        overflow: hidden;
+        /* Prevent body scroll */
     }
 
     .telegram-header {
