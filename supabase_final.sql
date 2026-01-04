@@ -111,8 +111,8 @@ BEGIN
   END IF;
 
   -- Create new DM room
-  INSERT INTO chat_rooms (name, type, participants, is_active)
-  VALUES ('DM', 'dm', ARRAY[current_user_id, other_user_id], true)
+  INSERT INTO chat_rooms (name, slug, type, participants, is_active)
+  VALUES ('DM', 'dm-' || gen_random_uuid(), 'dm', ARRAY[current_user_id, other_user_id], true)
   RETURNING id INTO room_id;
 
   RETURN room_id;
