@@ -14,6 +14,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata = {
   title: "Meddot | Medical Student Community",
   description: "A comprehensive platform for medical students.",
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({ children }) {
