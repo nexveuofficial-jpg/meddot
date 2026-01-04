@@ -12,6 +12,7 @@ export default function UserProfileModal({ userId, isOpen, onClose }) {
     const [loading, setLoading] = useState(true);
     const [friendStatus, setFriendStatus] = useState(null); // 'none', 'pending', 'accepted', 'received'
     const { user: currentUser } = useAuth();
+    console.log("UserProfileModal v2 loaded"); // Verification log
     const router = useRouter();
 
     useEffect(() => {
@@ -65,6 +66,7 @@ export default function UserProfileModal({ userId, isOpen, onClose }) {
     };
 
     const handleAddFriend = async () => {
+        if (!currentUser) return toast.error("You must be logged in.");
         try {
             const { error } = await supabase
                 .from("friendships")
@@ -74,13 +76,17 @@ export default function UserProfileModal({ userId, isOpen, onClose }) {
             setFriendStatus('pending');
             toast.success("Friend request sent!");
         } catch (error) {
-            toast.error("Failed to add friend: " + error.message);
+            console.error("Add Friend Error:", error);
+            if (error.code === '42P01') { // Undefined table
+                toast.error("System Error: Friendships table missing. Please contact admin.");
+            } else {
+                toast.error("Failed to add friend: " + error.message);
+            }
         }
     };
 
     const handleAcceptFriend = async () => {
         try {
-            // We need to update the row where THEY are user_id and WE are friend_id
             const { error } = await supabase
                 .from("friendships")
                 .update({ status: 'accepted' })
@@ -91,13 +97,14 @@ export default function UserProfileModal({ userId, isOpen, onClose }) {
             setFriendStatus('accepted');
             toast.success("Friend request accepted!");
         } catch (error) {
+            console.error("Accept Friend Error:", error);
             toast.error("Failed to accept: " + error.message);
         }
     };
 
     const handleMessage = async () => {
         try {
-            if (!currentUser) return alert("Please login first");
+            if (!currentUser) return toast.error("Please login first");
 
             // Call our RPC function
             const { data: roomId, error } = await supabase.rpc('get_or_create_dm_room', {
@@ -111,8 +118,12 @@ export default function UserProfileModal({ userId, isOpen, onClose }) {
                 router.push(`/chat/${roomId}`);
             }
         } catch (error) {
-            console.error(error);
-            toast.error("Failed to start chat");
+            console.error("DM Error:", error);
+            if (error.code === '42883') { // Undefined function
+                toast.error("System Error: DM feature not configured. Please contact admin.");
+            } else {
+                toast.error("Failed to start chat: " + error.message);
+            }
         }
     };
 
