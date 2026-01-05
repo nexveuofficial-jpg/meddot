@@ -7,8 +7,9 @@ import styles from "./AdminDashboard.module.css";
 import AdminFeatures from "../components/admin/AdminFeatures";
 import AdminUsers from "../components/admin/AdminUsers";
 import AdminNotes from "../components/admin/AdminNotes";
+import AdminChatRooms from "../components/admin/AdminChatRooms";
 import AdminAnnouncements from "../components/admin/AdminAnnouncements";
-import { Users, FileText, AlertCircle, TrendingUp } from "lucide-react";
+import { Users, FileText, AlertCircle, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function AdminPage() {
@@ -128,6 +129,10 @@ export default function AdminPage() {
                 {/* Left Column: Controls */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                     <AdminFeatures />
+
+                    <div id="rooms" style={{ scrollMarginTop: '2rem' }}>
+                        <AdminChatRooms />
+                    </div>
 
                     <div id="announcements" style={{ scrollMarginTop: '2rem' }}>
                         <AdminAnnouncements />
