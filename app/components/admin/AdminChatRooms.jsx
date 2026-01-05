@@ -148,101 +148,6 @@ export default function AdminChatRooms() {
         });
     };
 
-    // Modal Component
-    const Modal = () => {
-        if (!isEditing) return null;
-        return (
-            <div style={{
-                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                zIndex: 50, backdropFilter: 'blur(4px)'
-            }}>
-                <div style={{
-                    background: 'white', padding: '2rem', borderRadius: '1rem', width: '90%', maxWidth: '500px',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-                }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700 }}>{isEditing === 'new' ? 'Create Room' : 'Edit Room'}</h3>
-                        <button onClick={() => setIsEditing(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                            <X size={24} />
-                        </button>
-                    </div>
-
-                    <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem' }}>Room Name</label>
-                            <input
-                                type="text"
-                                required
-                                value={editData.name}
-                                onChange={e => setEditData({ ...editData, name: e.target.value })}
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                                placeholder="e.g. Anatomy Hall"
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem' }}>Subject / Category</label>
-                            <input
-                                type="text"
-                                required
-                                value={editData.subject}
-                                onChange={e => setEditData({ ...editData, subject: e.target.value })}
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                                placeholder="e.g. Anatomy"
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem' }}>Description</label>
-                            <textarea
-                                value={editData.description}
-                                onChange={e => setEditData({ ...editData, description: e.target.value })}
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1' }}
-                                rows={3}
-                                placeholder="What is this room for?"
-                            />
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.5rem' }}>Access Control</label>
-                            <div style={{
-                                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem',
-                                border: '1px solid #cbd5e1', borderRadius: '0.5rem', background: '#f8fafc', cursor: 'pointer'
-                            }} onClick={() => toggleRole('senior')}>
-                                <input
-                                    type="checkbox"
-                                    checked={(editData.allowed_roles || []).includes('senior')}
-                                    onChange={() => { }} // Handled by div click
-                                    style={{ width: '1.2rem', height: '1.2rem' }}
-                                />
-                                <span style={{ fontWeight: 500 }}>Restrict to Seniors & Admins Only</span>
-                            </div>
-                            <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>
-                                If unchecked, the room is public for all students.
-                            </p>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                            <button
-                                type="button"
-                                onClick={() => setIsEditing(false)}
-                                style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', background: '#f1f5f9', color: '#475569', border: 'none', fontWeight: 600, cursor: 'pointer' }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={saving}
-                                style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}
-                            >
-                                {saving ? 'Saving...' : 'Save Room'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        );
-    };
-
     return (
         <div className={styles.section} style={{ minHeight: '300px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -340,7 +245,99 @@ export default function AdminChatRooms() {
                 </div>
             )}
 
-            <Modal />
+            {/* Modal - Rendered Inline to prevent focus loss */}
+            {isEditing && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 50, backdropFilter: 'blur(4px)'
+                }}>
+                    <div style={{
+                        background: 'white', padding: '2rem', borderRadius: '1rem', width: '90%', maxWidth: '500px',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b' }}>{isEditing === 'new' ? 'Create Room' : 'Edit Room'}</h3>
+                            <button onClick={() => setIsEditing(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem', color: '#475569' }}>Room Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={editData.name}
+                                    onChange={e => setEditData({ ...editData, name: e.target.value })}
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#fff', color: '#0f172a' }}
+                                    placeholder="e.g. Anatomy Hall"
+                                    autoFocus
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem', color: '#475569' }}>Subject / Category</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={editData.subject}
+                                    onChange={e => setEditData({ ...editData, subject: e.target.value })}
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#fff', color: '#0f172a' }}
+                                    placeholder="e.g. Anatomy"
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem', color: '#475569' }}>Description</label>
+                                <textarea
+                                    value={editData.description}
+                                    onChange={e => setEditData({ ...editData, description: e.target.value })}
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#fff', color: '#0f172a' }}
+                                    rows={3}
+                                    placeholder="What is this room for?"
+                                />
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.5rem', color: '#475569' }}>Access Control</label>
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem',
+                                    border: '1px solid #cbd5e1', borderRadius: '0.5rem', background: '#f8fafc', cursor: 'pointer'
+                                }} onClick={() => toggleRole('senior')}>
+                                    <input
+                                        type="checkbox"
+                                        checked={(editData.allowed_roles || []).includes('senior')}
+                                        onChange={() => { }} // Handled by div click
+                                        style={{ width: '1.2rem', height: '1.2rem' }}
+                                    />
+                                    <span style={{ fontWeight: 500, color: '#334155' }}>Restrict to Seniors & Admins Only</span>
+                                </div>
+                                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>
+                                    If unchecked, the room is public for all students.
+                                </p>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditing(false)}
+                                    style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', background: '#f1f5f9', color: '#475569', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}
+                                >
+                                    {saving ? 'Saving...' : 'Save Room'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
 
             <ConfirmationModal
                 isOpen={deleteModalOpen}
