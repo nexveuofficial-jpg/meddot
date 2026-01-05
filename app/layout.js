@@ -17,6 +17,8 @@ export const metadata = {
   description: "A comprehensive platform for medical students.",
   icons: {
     icon: '/icon.png',
+    shortcut: '/favicon.ico',
+    apple: '/icon.png',
   },
 };
 
