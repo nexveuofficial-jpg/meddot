@@ -88,6 +88,21 @@ export default function QuestionDetailPage(props) {
         setLoading(false);
     };
 
+    useEffect(() => {
+        fetchQuestionAndAnswers();
+
+        const channel = supabase
+            .channel(`question:${params.id}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'answers', filter: `question_id=eq.${params.id}` }, () => {
+                fetchQuestionAndAnswers();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [params?.id]);
+
     const handleUpvote = async (answerId, currentUpvotes) => {
         if (!user) return;
         try {
