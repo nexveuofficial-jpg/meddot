@@ -16,7 +16,7 @@ export default function AskSeniorPage() {
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
-    const { isEnabled } = useFeature();
+    const { isEnabled, loading: featureLoading } = useFeature();
     const [selectedCategory, setSelectedCategory] = useState("All");
     const categories = ["All", "Exam Strategy", "Anatomy", "Physiology", "Clinical Postings"];
     const [selectedUserId, setSelectedUserId] = useState(null);
@@ -56,6 +56,14 @@ export default function AskSeniorPage() {
             fetchQuestions();
         }
     }, [isEnabled, selectedCategory]);
+
+    if (featureLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <Loader />
+            </div>
+        );
+    }
 
     if (!isEnabled('enable_ask_senior')) {
         return (
