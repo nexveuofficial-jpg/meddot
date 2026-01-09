@@ -195,7 +195,7 @@ export function AuthProvider({ children }) {
             logout,
             debugStatus, // Expose status
             isAdmin: profile?.role === 'admin' || user?.user_metadata?.role === 'admin',
-            isSenior: profile?.role === 'senior' || user?.user_metadata?.role === 'senior'
+            isSenior: ['senior', 'admin'].includes(profile?.role) || ['senior', 'admin'].includes(user?.user_metadata?.role)
         }}>
             {children}
         </AuthContext.Provider>
