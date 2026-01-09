@@ -17,16 +17,23 @@ export default function AskSeniorPage() {
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
     const { isEnabled } = useFeature();
-    const [selectedUserId, setSelectedUserId] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState("All");
+    const categories = ["All", "Exam Strategy", "Anatomy", "Physiology", "Clinical Postings"];
 
     useEffect(() => {
         const fetchQuestions = async () => {
             setLoading(true);
             try {
-                const { data, error } = await supabase
+                let query = supabase
                     .from("questions")
                     .select("*, profiles(username, full_name, role)")
                     .order("created_at", { ascending: false });
+                
+                if (selectedCategory !== "All") {
+                   query = query.eq('category', selectedCategory);
+                }
+
+                const { data, error } = await query;
 
                 if (error) throw error;
 
@@ -47,7 +54,7 @@ export default function AskSeniorPage() {
         if (isEnabled('enable_ask_senior')) {
             fetchQuestions();
         }
-    }, [isEnabled]);
+    }, [isEnabled, selectedCategory]);
 
     if (!isEnabled('enable_ask_senior')) {
         return (
@@ -82,11 +89,42 @@ export default function AskSeniorPage() {
                 )}
             </header>
 
+            {/* Category Filter Chips */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+                {categories.map(cat => (
+                    <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        style={{
+                            padding: '0.5rem 1rem',
+                            borderRadius: '99px',
+                            border: selectedCategory === cat ? '1px solid var(--primary)' : '1px solid var(--border)',
+                            background: selectedCategory === cat ? 'var(--primary)' : 'transparent',
+                            color: selectedCategory === cat ? 'white' : 'var(--muted-foreground)',
+                            fontSize: '0.9rem',
+                            fontWeight: 600,
+                            whiteSpace: 'nowrap',
+                            transition: 'all 0.2s',
+                        }}
+                    >
+                        {cat}
+                    </button>
+                ))}
+            </div>
+
             {loading ? (
                 <div className="flex justify-center p-20"><Loader /></div>
             ) : questions.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "4rem", background: "var(--muted)", borderRadius: "1rem", border: "1px dashed var(--border)" }}>
-                    <p>No questions yet. Be the first to ask!</p>
+                    <p>No questions found in this category.</p>
+                    {selectedCategory !== 'All' && (
+                        <button 
+                            onClick={() => setSelectedCategory('All')}
+                            style={{ marginTop: '1rem', color: 'var(--primary)', textDecoration: 'underline' }}
+                        >
+                            View all questions
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className={styles.grid}>

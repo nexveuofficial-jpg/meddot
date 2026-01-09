@@ -3,11 +3,23 @@
 import Link from "next/link";
 import { MessageCircle, Clock, CheckCircle } from "lucide-react";
 
+const getCategoryColor = (cat) => {
+    switch(cat) {
+        case 'Exam Strategy': return '#ef4444'; // Red
+        case 'Anatomy': return '#ef4444'; // Red (as per user request)
+        case 'Physiology': return '#3b82f6'; // Blue
+        case 'Clinical Postings': return '#10b981'; // Emerald
+        default: return 'var(--border)';
+    }
+};
+
 export default function QuestionCard({ question, onUserClick }) {
     // Handle answers count structure depending on how it's fetched (array or count object)
     const answerCount = Array.isArray(question.answers)
         ? question.answers.length
         : (question.answers?.[0]?.count || 0);
+
+    const categoryColor = getCategoryColor(question.category || question.subject);
 
     return (
         <Link
@@ -19,6 +31,7 @@ export default function QuestionCard({ question, onUserClick }) {
                 padding: "1.5rem",
                 borderRadius: "1rem",
                 border: "1px solid var(--card-border)",
+                borderLeft: `5px solid ${categoryColor}`, 
                 boxShadow: "var(--shadow-sm)",
                 transition: "all 0.2s",
                 display: "flex",

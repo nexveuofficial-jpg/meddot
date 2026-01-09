@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle, ThumbsUp } from "lucide-react";
 import Loader from "../../components/ui/Loader";
+import RichTextEditor from "../../components/ui/RichTextEditor";
 
 export default function QuestionDetailPage(props) {
     const params = use(props.params);
@@ -49,25 +50,34 @@ export default function QuestionDetailPage(props) {
             // Fetch Answers
             const { data: aData, error: aError } = await supabase
                 .from("answers")
-                .select("*, profiles(username, full_name, email, role, year_of_study)")
-                .eq("question_id", params.id)
-                .order("created_at", { ascending: true });
+                .select("*, profiles(*)")
+                .eq("question_id", params.id);
 
             if (aError) throw aError;
 
             const mappedAnswers = (aData || []).map(d => {
                 const p = Array.isArray(d.profiles) ? d.profiles[0] : d.profiles;
                 const dName = p?.username || p?.full_name || (p?.email?.split('@')[0]) || d.author_name || 'Anonymous';
-                
+                const dRole = p?.role || d.author_role || 'student';
+
                 return {
                     ...d,
                     profiles: p || {
                         full_name: d.author_name || 'Anonymous',
-                        role: d.author_role || 'student'
+                        role: dRole
                     },
                     display_name: dName,
-                    author_year: p?.year_of_study
+                    author_year: p?.year_of_study,
+                    display_role: dRole === 'admin' ? 'Admin' : (dRole === 'senior' ? `Senior (${p?.year_of_study ? 'Year ' + p.year_of_study : 'Intern'})` : 'Student')
                 };
+            });
+
+            // Sort: Accepted first, then upvotes desc, then time
+            mappedAnswers.sort((a, b) => {
+                if (a.is_accepted === b.is_accepted) {
+                    return (b.upvotes || 0) - (a.upvotes || 0);
+                }
+                return a.is_accepted ? -1 : 1;
             });
 
             setAnswers(mappedAnswers);
@@ -78,41 +88,80 @@ export default function QuestionDetailPage(props) {
         setLoading(false);
     };
 
-    useEffect(() => {
-        fetchQuestionAndAnswers();
+    const handleUpvote = async (answerId, currentUpvotes) => {
+        if (!user) return;
+        try {
+            // Optimistic Update
+            setAnswers(prev => prev.map(a => 
+                a.id === answerId ? { ...a, upvotes: (a.upvotes || 0) + 1 } : a
+            ));
 
-        // Realtime Subscription
-        const channel = supabase
-            .channel(`question:${params.id}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'answers',
-                    filter: `question_id=eq.${params.id}`
-                },
-                (payload) => {
-                    const newAns = payload.new;
-                    setAnswers(prev => [...prev, {
-                        ...newAns,
-                        profiles: {
-                            full_name: newAns.author_name || 'Anonymous',
-                            role: newAns.author_role || 'student'
-                        }
-                    }]);
+            const { error } = await supabase.from("answer_upvotes").insert([{
+                user_id: user.id,
+                answer_id: answerId
+            }]);
+
+            if (error) {
+                if (error.code === '23505') { // Unique violation
+                    alert("You have already upvoted this answer.");
+                    // Revert optimistic
+                    setAnswers(prev => prev.map(a => 
+                        a.id === answerId ? { ...a, upvotes: currentUpvotes } : a
+                    ));
+                } else {
+                    throw error;
                 }
-            )
-            .subscribe();
+            } else {
+                // Increment count on answers table
+                await supabase.rpc('increment_upvotes', { row_id: answerId });
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [params.id]);
+    const handleAcceptAnswer = async (answerId) => {
+        if (!user || user.id !== question.author_id) return;
 
-    const handleAnswerSubmit = async (e) => {
-        e.preventDefault();
+        try {
+             // Reset all for this question
+             await supabase.from("answers").update({ is_accepted: false }).eq('question_id', params.id);
+             
+             // Set new accepted
+             const { error } = await supabase
+                 .from("answers")
+                 .update({ is_accepted: true })
+                 .eq('id', answerId);
+
+             if (error) throw error;
+             
+             // Update local state
+             setAnswers(prev => prev.map(a => ({
+                 ...a,
+                 is_accepted: a.id === answerId
+             })).sort((a, b) => {
+                 // Re-sort
+                 const aAccepted = a.id === answerId;
+                 const bAccepted = b.id === answerId;
+                 if (aAccepted === bAccepted) return (b.upvotes || 0) - (a.upvotes || 0);
+                 return aAccepted ? -1 : 1;
+             }));
+
+        } catch (error) {
+            alert("Error accepting answer: " + error.message);
+        }
+    };
+
+    const handleAnswerSubmit = async () => {
+        // e.preventDefault() is not needed as this is triggered from RichTextEditor parent (div not form, or custom button)
         if (!newAnswer.trim() || !user) return;
+        
+        // RBAC Check
+        if (user.role !== 'senior' && user.role !== 'admin') {
+            alert("Only Seniors can post answers.");
+            return;
+        }
+
         setSubmitting(true);
 
         try {
@@ -121,14 +170,11 @@ export default function QuestionDetailPage(props) {
                 content: newAnswer,
                 author_id: user.id,
                 author_name: user.full_name || user.email || 'Anonymous',
-                author_role: user.role || 'student',
+                author_role: user.role || 'student', // Fallback
                 created_at: new Date().toISOString()
             }]);
 
             if (error) throw error;
-
-            // Optionally update answer count on question
-            // await supabase.rpc('increment_answer_count', { row_id: params.id });
 
             setNewAnswer("");
         } catch (error) {
@@ -152,7 +198,7 @@ export default function QuestionDetailPage(props) {
             <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--card-border)', marginBottom: '2rem', boxShadow: 'var(--shadow-sm)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                     <span style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", color: "var(--primary)", background: "var(--accent)", padding: "0.25rem 0.75rem", borderRadius: "99px" }}>
-                        {question.topic || 'General'}
+                        {question.category || question.topic || 'General'}
                     </span>
                     <span style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>
                         {new Date(question.created_at).toLocaleDateString()}
@@ -173,30 +219,76 @@ export default function QuestionDetailPage(props) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {answers.map(answer => (
                         <div key={answer.id} style={{
-                            background: answer.author_id === user?.id ? 'var(--accent)' : 'var(--card-bg)', // Highlight own answers
+                            background: answer.is_accepted ? '#f0fdf4' : 'var(--card-bg)',
+                            border: answer.is_accepted ? '2px solid #22c55e' : '1px solid var(--card-border)',
                             padding: '1.5rem',
                             borderRadius: '1rem',
-                            border: '1px solid var(--card-border)',
                             position: 'relative'
                         }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                <span style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    {answer.display_name}
-                                    {answer.profiles?.role !== 'student' && <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 6px', borderRadius: '4px' }}>{answer.profiles?.role}</span>}
-                                    {answer.author_year && <span style={{ fontSize: '0.7rem', background: '#f3f4f6', border: '1px solid #e5e7eb', padding: '2px 6px', borderRadius: '4px', color: '#4b5563' }}>Year {answer.author_year}</span>}
-                                </span>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{new Date(answer.created_at).toLocaleDateString()}</span>
+                            {answer.is_accepted && (
+                                <div style={{ position: 'absolute', top: '-10px', right: '20px', background: '#22c55e', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <CheckCircle size={12} /> Accepted Answer
+                                </div>
+                            )}
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0369a1', fontWeight: 700 }}>
+                                        {answer.display_name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            {answer.display_name}
+                                            {/* Senior Badge */}
+                                            {(answer.profiles?.role === 'senior' || answer.profiles?.role === 'admin') && (
+                                                <span style={{ fontSize: '0.75rem', background: '#dbeafe', color: '#1e40af', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
+                                                    {answer.display_role || 'Senior'}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>
+                                            {new Date(answer.created_at).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                                     {/* Mark as Accepted (Visible to Question Author Only) */}
+                                     {user?.id === question.author_id && !answer.is_accepted && (
+                                        <button 
+                                            onClick={() => handleAcceptAnswer(answer.id)}
+                                            style={{ fontSize: '0.75rem', color: '#16a34a', border: '1px solid #16a34a', borderRadius: '4px', padding: '2px 6px' }}
+                                        >
+                                            Mark as Best Answer
+                                        </button>
+                                     )}
+                                </div>
                             </div>
-                            <p style={{ lineHeight: 1.6 }}>{answer.content}</p>
+                            
+                            {/* Content - Rich Text Supported */}
+                            <div 
+                                className="prose prose-sm"
+                                style={{ lineHeight: 1.6, color: 'var(--foreground)' }}
+                                dangerouslySetInnerHTML={{ __html: answer.content }}
+                            />
+
+                            <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <button 
+                                    onClick={() => handleUpvote(answer.id, answer.upvotes || 0)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--muted-foreground)', fontWeight: 500, fontSize: '0.9rem' }}
+                                >
+                                    <ThumbsUp size={16} /> 
+                                    {answer.upvotes || 0} Helpful
+                                </button>
+                            </div>
                         </div>
                     ))}
-                    {answers.length === 0 && <p style={{ color: 'var(--muted-foreground)', fontStyle: 'italic' }}>No answers yet. Be the first!</p>}
+                    {answers.length === 0 && <p style={{ color: 'var(--muted-foreground)', fontStyle: 'italic' }}>No answers yet. Seniors will respond soon!</p>}
                 </div>
             </div>
 
-            {/* Post Answer Form */}
-            {user ? (
-                <form onSubmit={handleAnswerSubmit} style={{
+            {/* Post Answer Form - ONLY FOR SENIORS/ADMINS */}
+            {user && (user.role === 'senior' || user.role === 'admin') ? (
+                <div style={{
                     background: 'var(--card-bg)',
                     padding: '1.5rem',
                     borderRadius: '1rem',
@@ -205,18 +297,18 @@ export default function QuestionDetailPage(props) {
                     position: 'sticky',
                     bottom: '2rem'
                 }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Post your Answer</label>
-                    <textarea
-                        rows={3}
-                        value={newAnswer}
-                        onChange={e => setNewAnswer(e.target.value)}
-                        placeholder="Write a helpful response..."
-                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', marginBottom: '1rem', resize: 'vertical' }}
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Post your Answer (Senior)</label>
+                    <RichTextEditor 
+                        content={newAnswer} 
+                        onChange={setNewAnswer} 
+                        placeholder="Write a detailed explanation..." 
                     />
+                    
                     <button
-                        type="submit"
+                        onClick={handleAnswerSubmit}
                         disabled={submitting}
                         style={{
+                            marginTop: '1rem',
                             background: 'var(--primary)',
                             color: 'white',
                             padding: '0.75rem 1.5rem',
@@ -234,10 +326,14 @@ export default function QuestionDetailPage(props) {
                         Post Answer
                     </button>
                     <div style={{ clear: 'both' }}></div>
-                </form>
+                </div>
+            ) : user ? (
+                <div style={{ textAlign: 'center', padding: '2rem', background: 'var(--muted)', borderRadius: '1rem' }}>
+                    <p style={{ fontWeight: 600, color: 'var(--muted-foreground)' }}>Only Seniors can post answers.</p>
+                </div>
             ) : (
                 <div style={{ textAlign: 'center', padding: '2rem', background: 'var(--muted)', borderRadius: '1rem' }}>
-                    <Link href="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>Login</Link> to post an answer.
+                    <Link href="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>Login</Link> to view.
                 </div>
             )}
         </div>
