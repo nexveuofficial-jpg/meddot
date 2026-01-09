@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
-import { ArrowLeft, Send, CheckCircle, ThumbsUp } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle, ThumbsUp, Trash2, Edit2 } from "lucide-react";
 import Loader from "../../components/ui/Loader";
 import RichTextEditor from "../../components/ui/RichTextEditor";
 
@@ -17,6 +17,49 @@ export default function QuestionDetailPage(props) {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const { user, profile, isAdmin, isSenior } = useAuth();
+    const router = useRouter();
+    const [editingAnswerId, setEditingAnswerId] = useState(null);
+    const [editContent, setEditContent] = useState("");
+
+    const handleDeleteQuestion = async () => {
+        if (!confirm("Are you sure you want to delete this question? This action cannot be undone.")) return;
+        try {
+            const { error } = await supabase.from("questions").delete().eq("id", params.id);
+            if (error) throw error;
+            router.push("/ask-senior");
+        } catch (error) {
+            alert("Error deleting question: " + error.message);
+        }
+    };
+
+    const handleDeleteAnswer = async (answerId) => {
+        if (!confirm("Delete this answer?")) return;
+        try {
+            const { error } = await supabase.from("answers").delete().eq("id", answerId);
+            if (error) throw error;
+            setAnswers(prev => prev.filter(a => a.id !== answerId));
+        } catch (error) {
+            alert("Error deleting answer: " + error.message);
+        }
+    };
+
+    const handleStartEdit = (answer) => {
+        setEditingAnswerId(answer.id);
+        setEditContent(answer.content);
+    };
+
+    const handleSaveEdit = async (answerId) => {
+        try {
+            const { error } = await supabase.from("answers").update({ content: editContent }).eq("id", answerId);
+            if (error) throw error;
+            
+            setAnswers(prev => prev.map(a => a.id === answerId ? { ...a, content: editContent } : a));
+            setEditingAnswerId(null);
+            setEditContent("");
+        } catch (error) {
+            alert("Error updating answer: " + error.message);
+        }
+    };
 
     const fetchQuestionAndAnswers = async () => {
         if (!params?.id) return;
@@ -222,10 +265,20 @@ export default function QuestionDetailPage(props) {
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '1rem', lineHeight: 1.3 }}>{question.title || question.content}</h1>
                 {question.body && <p style={{ fontSize: '1rem', color: 'var(--foreground)', marginBottom: '1.5rem', lineHeight: 1.6 }}>{question.body}</p>}
 
-                <p style={{ color: 'var(--muted-foreground)', fontWeight: 500 }}>
-                    Asked by {question.display_name}
-                    {question.author_year && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '2px 6px', color: '#4b5563' }}>Year {question.author_year}</span>}
-                </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+                    <p style={{ color: 'var(--muted-foreground)', fontWeight: 500, margin: 0 }}>
+                        Asked by {question.display_name}
+                        {question.author_year && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '2px 6px', color: '#4b5563' }}>Year {question.author_year}</span>}
+                    </p>
+                    {isAdmin && (
+                        <button
+                            onClick={handleDeleteQuestion}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '0.5rem', padding: '0.5rem 1rem', background: 'transparent', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                        >
+                            <Trash2 size={16} /> Delete Question (Admin)
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Answers Section */}
@@ -276,15 +329,43 @@ export default function QuestionDetailPage(props) {
                                             Mark as Best Answer
                                         </button>
                                      )}
+                                     
+                                     {/* Answer Actions: Edit/Delete */}
+                                     {user && (
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            {/* Edit: Own Answer + Senior */}
+                                            {editingAnswerId !== answer.id && isSenior && user.id === answer.author_id && (
+                                                <button onClick={() => handleStartEdit(answer)} style={{ color: 'var(--muted-foreground)', padding: '4px' }} title="Edit">
+                                                    <Edit2 size={14} />
+                                                </button>
+                                            )}
+                                            {/* Delete: Own Answer (Senior) OR Admin */}
+                                            {((isSenior && user.id === answer.author_id) || isAdmin) && (
+                                                <button onClick={() => handleDeleteAnswer(answer.id)} style={{ color: '#ef4444', padding: '4px' }} title="Delete">
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            )}
+                                        </div>
+                                     )}
                                 </div>
                             </div>
                             
-                            {/* Content - Rich Text Supported */}
-                            <div 
-                                className="prose prose-sm"
-                                style={{ lineHeight: 1.6, color: 'var(--foreground)' }}
-                                dangerouslySetInnerHTML={{ __html: answer.content }}
-                            />
+                            {/* Content - Rich Text Supported OR Editor Mode */}
+                            {editingAnswerId === answer.id ? (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <RichTextEditor content={editContent} onChange={setEditContent} />
+                                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+                                        <button onClick={() => setEditingAnswerId(null)} style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'transparent' }}>Cancel</button>
+                                        <button onClick={() => handleSaveEdit(answer.id)} style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', background: 'var(--primary)', color: 'white', border: 'none' }}>Save Changes</button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div 
+                                    className="prose prose-sm"
+                                    style={{ lineHeight: 1.6, color: 'var(--foreground)' }}
+                                    dangerouslySetInnerHTML={{ __html: answer.content }}
+                                />
+                            )}
 
                             <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                 <button 
