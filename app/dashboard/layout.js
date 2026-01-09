@@ -102,6 +102,7 @@ export default function DashboardLayout({ children }) {
                     <NavLink href="/messages" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>Messages</NavLink>
                     <NavLink href="/focus" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>Focus Mode</NavLink>
                     <NavLink href="/profile" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>My Profile</NavLink>
+                    <NavLink href="/contact" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen}>Contact Us</NavLink>
 
                     {/* Admin Access */}
                     {isAdmin && (

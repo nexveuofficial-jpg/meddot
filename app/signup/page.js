@@ -16,22 +16,74 @@ export default function SignupPage() {
     const { signup } = useAuth();
     const router = useRouter();
 
+    const [showSuccess, setShowSuccess] = useState(false);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const result = await signup(name, email, password, studyYear);
+
         if (result.success) {
-            // Check if we have a session (immediate login)
+            // Because email confirmation is ON, we usually won't get a session immediately.
+            // However, we check just in case.
             if (result.data?.session) {
                 router.push('/dashboard');
             } else {
-                // If no session (shouldn't happen if email confirm is off), just go to login
-                // or user can just login manually.
-                router.push('/login');
+                // Email confirmation required
+                setShowSuccess(true);
             }
         } else {
             alert(result.error || "Signup failed");
         }
     };
+
+    if (showSuccess) {
+        return (
+            <div style={{
+                minHeight: "100vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "2rem"
+            }}>
+                <div style={{
+                    width: "100%",
+                    maxWidth: "400px",
+                    padding: "2rem",
+                    borderRadius: "1rem",
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    color: "#0f172a",
+                    textAlign: "center"
+                }}>
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+                        <BrandLogo size="2rem" />
+                    </div>
+                    <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>Check your email</h2>
+                    <p style={{ color: "#64748b", marginBottom: "1.5rem", lineHeight: 1.6 }}>
+                        We've sent a confirmation link to<br/> <span style={{fontWeight: 600, color: "#0f172a"}}>{email}</span>.
+                    </p>
+                    <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "2rem" }}>
+                        Please check your inbox (and spam folder) and click the link to verify your account.
+                    </p>
+                    <Link 
+                        href="/login"
+                        style={{
+                            display: "inline-block",
+                            padding: "0.75rem 2rem",
+                            borderRadius: "0.5rem",
+                            background: "var(--primary)",
+                            color: "white",
+                            fontWeight: 600,
+                            textDecoration: "none"
+                        }}
+                    >
+                        Back to Login
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div style={{

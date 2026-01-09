@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { Resend } from "npm:resend"
+import { serve } from "std/http/server.ts"
+import { Resend } from "resend"
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 
@@ -51,7 +51,8 @@ serve(async (req) => {
 
     } catch (err) {
         console.error("Unexpected Error:", err);
-        return new Response(JSON.stringify({ error: err.message }), {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        return new Response(JSON.stringify({ error: errorMessage }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 500,
         })
