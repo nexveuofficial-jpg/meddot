@@ -5,6 +5,18 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import styles from "./AdminDashboard.module.css";
+import { Users, FileText, MessageSquare, Megaphone, Home, LogOut, Shield, Menu, X } from "lucide-react";
+
+const SidebarLink = ({ href, icon: Icon, label, onClick }) => (
+    <a
+        href={href}
+        onClick={onClick}
+        className={styles.navLink}
+    >
+        <span className={styles.navLinkIcon}><Icon size={20} /></span>
+        <span>{label}</span>
+    </a>
+);
 
 export default function AdminLayout({ children }) {
     const { user, loading, initialized, isAdmin } = useAuth();
@@ -100,26 +112,15 @@ export default function AdminLayout({ children }) {
     return (
         <div style={{ background: "#f1f5f9", minHeight: "100vh", color: "#0f172a", display: "flex", flexDirection: "column" }}>
             {/* Mobile Header */}
-            <header className="lg:hidden" style={{
-                background: "#0f172a",
-                padding: "1rem",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                color: "white"
-            }}>
+            <header className={`${styles.mobileHeader} lg:hidden`}>
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
                         style={{ background: "none", border: "none", color: "white", cursor: "pointer" }}
                     >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                        </svg>
+                        <Menu size={24} />
                     </button>
-                    <span style={{ fontWeight: 700, fontSize: "1.1rem" }}>Meddot Admin</span>
+                    <span className={styles.brand} style={{ fontSize: "1.25rem" }}>Meddot Admin</span>
                 </div>
             </header>
 
@@ -128,55 +129,59 @@ export default function AdminLayout({ children }) {
                 {sidebarOpen && (
                     <div
                         onClick={() => setSidebarOpen(false)}
-                        style={{
-                            position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40
-                        }}
-                        className="lg:hidden"
+                        className={`${styles.mobileOverlay} lg:hidden`}
                     />
                 )}
 
                 <aside
-                    className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
-                    style={{
-                        width: "250px",
-                        borderRight: "1px solid var(--border)",
-                        padding: "1rem",
-                        background: "#0f172a",
-                        color: "white",
-                        position: 'fixed',
-                        height: '100vh',
-                        zIndex: 50,
-                        transition: 'transform 0.3s ease-in-out',
-                        left: 0,
-                        top: 0,
-                        bottom: 0
-                    }}
+                    className={`${styles.sidebar} ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
                 >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: "2rem" }}>
-                        <h2 style={{ fontSize: "1.25rem", color: "#38bdf8", margin: 0 }}>Meddot Admin</h2>
+                    <div className={styles.sidebarHeader}>
+                        <div style={{ background: 'linear-gradient(135deg, #38bdf8, #818cf8)', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex' }}>
+                            <Shield size={24} color="white" />
+                        </div>
+                        <h2 className={styles.brand}>Meddot</h2>
+
                         {/* Close button mobile only */}
                         <button
                             className="lg:hidden"
                             onClick={() => setSidebarOpen(false)}
-                            style={{ background: 'none', border: 'none', color: 'white' }}
+                            style={{ background: 'none', border: 'none', color: 'gray', marginLeft: 'auto', cursor: 'pointer' }}
                         >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
+                            <X size={20} />
                         </button>
                     </div>
 
-                    <nav style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                        <a href="#users" onClick={() => setSidebarOpen(false)} style={{ padding: "0.5rem", color: "#e2e8f0", textDecoration: "none", borderRadius: "0.5rem", transition: "background 0.2s" }} className="hover:bg-slate-800">User Management</a>
-                        <a href="#moderation" onClick={() => setSidebarOpen(false)} style={{ padding: "0.5rem", color: "#94a3b8", textDecoration: "none", borderRadius: "0.5rem", transition: "background 0.2s" }} className="hover:text-white">Content Moderation</a>
-                        <a href="#announcements" onClick={() => setSidebarOpen(false)} style={{ padding: "0.5rem", color: "#94a3b8", textDecoration: "none", borderRadius: "0.5rem", transition: "background 0.2s" }} className="hover:text-white">Announcements</a>
-                        <a href="#rooms" onClick={() => setSidebarOpen(false)} style={{ padding: "0.5rem", color: "#94a3b8", textDecoration: "none", borderRadius: "0.5rem", transition: "background 0.2s" }} className="hover:text-white">Chat Rooms</a>
+                    <nav className={styles.nav}>
+                        <SidebarLink href="/dashboard" icon={Home} label="Return to App" onClick={() => setSidebarOpen(false)} />
+
+                        <div style={{ height: '1px', background: '#1e293b', margin: '0.5rem 0' }}></div>
+
+                        <SidebarLink href="#users" icon={Users} label="User Management" onClick={() => setSidebarOpen(false)} />
+                        <SidebarLink href="#moderation" icon={FileText} label="Content Moderation" onClick={() => setSidebarOpen(false)} />
+                        <SidebarLink href="#announcements" icon={Megaphone} label="Announcements" onClick={() => setSidebarOpen(false)} />
+                        <SidebarLink href="#rooms" icon={MessageSquare} label="Chat Rooms" onClick={() => setSidebarOpen(false)} />
                     </nav>
+
+                    <div className={styles.sidebarFooter}>
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', padding: '0 0.5rem' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                                {user?.email?.[0].toUpperCase()}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{user?.full_name?.split(' ')[0] || 'Admin'}</span>
+                                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Administrator</span>
+                            </div>
+                        </div>
+                        <button onClick={() => router.push('/login')} className={styles.logoutButton}>
+                            <LogOut size={18} />
+                            <span>Sign Out</span>
+                        </button>
+                    </div>
                 </aside>
 
                 {/* Main Content Spacer for Desktop Sidebar */}
-                <div className="hidden lg:block" style={{ width: "250px", flexShrink: 0 }}></div>
+                <div className="hidden lg:block" style={{ width: "280px", flexShrink: 0 }}></div>
 
                 <main style={{ flex: 1, padding: "1.5rem", overflowX: "hidden" }}>
                     {children}
