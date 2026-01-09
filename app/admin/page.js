@@ -78,10 +78,12 @@ export default function AdminPage() {
                 alignItems: "center",
                 marginBottom: "2rem",
                 paddingBottom: "1.5rem",
-                borderBottom: "1px solid var(--border)"
+                borderBottom: "1px solid var(--border)",
+                flexWrap: "wrap",
+                gap: "1rem"
             }}>
                 <div>
-                    <h1 style={{ fontSize: "2.5rem", fontWeight: "800", color: "#1e293b", marginBottom: "0.5rem" }}>Admin Command Center</h1>
+                    <h1 style={{ fontSize: "2.5rem", fontWeight: "800", color: "#1e293b", marginBottom: "0.5rem", lineHeight: 1.2 }}>Admin Command Center</h1>
                     <p style={{ color: "#64748b" }}>Welcome back, {user?.full_name || 'Admin'}</p>
                 </div>
                 <button
