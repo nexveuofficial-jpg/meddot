@@ -147,6 +147,8 @@ export default function AdminChatRooms() {
         });
     };
 
+    const inputStyle = "w-full bg-slate-900/80 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder:text-slate-400";
+
     return (
         <div className="bg-[#1F2937]/30 backdrop-blur-md border border-white/5 rounded-2xl p-6 min-h-[300px]">
             <div className="flex justify-between items-center mb-6">
@@ -247,7 +249,7 @@ export default function AdminChatRooms() {
                                     required
                                     value={editData.name}
                                     onChange={e => setEditData({ ...editData, name: e.target.value })}
-                                    className="w-full bg-[#1F2937] border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder:text-slate-600"
+                                    className={inputStyle}
                                     placeholder="e.g. Anatomy Hall"
                                     autoFocus
                                 />
@@ -259,7 +261,7 @@ export default function AdminChatRooms() {
                                     required
                                     value={editData.subject}
                                     onChange={e => setEditData({ ...editData, subject: e.target.value })}
-                                    className="w-full bg-[#1F2937] border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder:text-slate-600"
+                                    className={inputStyle}
                                     placeholder="e.g. Anatomy"
                                 />
                             </div>
@@ -268,7 +270,7 @@ export default function AdminChatRooms() {
                                 <textarea
                                     value={editData.description}
                                     onChange={e => setEditData({ ...editData, description: e.target.value })}
-                                    className="w-full bg-[#1F2937] border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all min-h-[100px] placeholder:text-slate-600"
+                                    className={`${inputStyle} min-h-[100px]`}
                                     placeholder="What is this room for?"
                                 />
                             </div>

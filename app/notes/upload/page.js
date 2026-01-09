@@ -8,6 +8,9 @@ import { supabase } from "@/lib/supabase";
 import { UploadCloud, FileText, ArrowLeft, AlertCircle } from "lucide-react";
 import Loader from "../../components/ui/Loader";
 import Link from "next/link";
+import GlassCard from "@/app/components/ui/GlassCard";
+import GlassButton from "@/app/components/ui/GlassButton";
+import GlassInput from "@/app/components/ui/GlassInput";
 
 export default function UploadNotePage() {
     const { user, profile } = useAuth();
@@ -28,9 +31,11 @@ export default function UploadNotePage() {
     // Gate access
     if (!isEnabled('enable_uploads') && user?.role !== 'admin') {
         return (
-            <div style={{ padding: '4rem', textAlign: 'center' }}>
-                <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Uploads are currently disabled.</h2>
-                <Link href="/dashboard" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Back to Dashboard</Link>
+            <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center">
+                <h2 className="text-2xl font-bold text-white mb-4">Uploads are currently disabled.</h2>
+                <Link href="/dashboard" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-4">
+                    Back to Dashboard
+                </Link>
             </div>
         );
     }
@@ -115,50 +120,55 @@ export default function UploadNotePage() {
     };
 
     return (
-        <div style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem" }}>
-            <Link href="/notes" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--muted-foreground)', marginBottom: '2rem', textDecoration: 'none' }}>
+        <div className="max-w-3xl mx-auto p-4 md:p-8">
+            <Link href="/notes" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors">
                 <ArrowLeft size={18} /> Back to Library
             </Link>
 
-            <div style={{ background: "#fff", borderRadius: "1rem", padding: "2.5rem", boxShadow: "var(--shadow-lg)", border: "1px solid var(--border)" }}>
-                <div style={{ marginBottom: "2rem", textAlign: "center" }}>
-                    <h1 style={{ fontSize: "2rem", fontWeight: "800", marginBottom: "0.5rem", background: "linear-gradient(135deg, var(--primary), var(--accent))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <GlassCard className="p-8 border-slate-700/50 bg-slate-900/60 backdrop-blur-xl">
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                         Contribute Note
                     </h1>
-                    <p style={{ color: "var(--muted-foreground)" }}>Share your knowledge with the Meddot community.</p>
+                    <p className="text-slate-400">Share your knowledge with the Meddot community.</p>
                 </div>
 
                 {error && (
-                    <div style={{ padding: "1rem", background: "#fef2f2", color: "#ef4444", borderRadius: "0.5rem", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem", border: "1px solid #fecaca" }}>
-                        <AlertCircle size={20} />
+                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-200 mb-6">
+                        <AlertCircle size={20} className="shrink-0" />
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleUpload} style={{ display: "grid", gap: "1.5rem" }}>
+                <form onSubmit={handleUpload} className="space-y-6">
                     {/* File Upload Zone */}
-                    <div style={{
-                        border: "2px dashed var(--border)",
-                        borderRadius: "1rem",
-                        padding: "3rem 1rem",
-                        textAlign: "center",
-                        cursor: "pointer",
-                        background: file ? "#f0fdf4" : "transparent",
-                        borderColor: file ? "#22c55e" : "var(--border)",
-                        transition: "all 0.2s"
-                    }} onClick={() => fileInputRef.current?.click()}>
+                    <div 
+                        className={`
+                            border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all
+                            ${file 
+                                ? 'bg-green-500/5 border-green-500/50' 
+                                : 'bg-slate-900/40 border-slate-700 hover:border-slate-600 hover:bg-slate-900/60'}
+                        `}
+                        onClick={() => fileInputRef.current?.click()}
+                    >
                         <input
                             ref={fileInputRef}
                             type="file"
                             accept="application/pdf"
                             onChange={handleFileChange}
-                            style={{ display: "none" }}
+                            className="hidden"
                         />
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
-                            {file ? <FileText size={48} color="#22c55e" /> : <UploadCloud size={48} color="var(--muted-foreground)" />}
+                        <div className="flex flex-col items-center gap-4">
+                            {file ? (
+                                <FileText size={48} className="text-green-500" />
+                            ) : (
+                                <UploadCloud size={48} className="text-slate-500" />
+                            )}
                             <div>
-                                <h3 style={{ fontSize: "1.1rem", fontWeight: 600 }}>{file ? file.name : "Click to select PDF"}</h3>
-                                <p style={{ fontSize: "0.9rem", color: "var(--muted-foreground)" }}>
+                                <h3 className={`text-lg font-semibold ${file ? 'text-green-400' : 'text-slate-300'}`}>
+                                    {file ? file.name : "Click to select PDF"}
+                                </h3>
+                                <p className="text-sm text-slate-500 mt-1">
                                     {file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "Max file size: 10MB"}
                                 </p>
                             </div>
@@ -166,44 +176,44 @@ export default function UploadNotePage() {
                     </div>
 
                     {/* Metadata Fields */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Title *</label>
-                            <input
+                            <label className="block text-sm font-medium text-slate-400 mb-2">Title *</label>
+                            <GlassInput
                                 type="text"
                                 placeholder="e.g. Cranial Nerves Summary"
                                 value={formData.title}
                                 onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                style={inputStyle}
                                 required
+                                className="bg-slate-900/80 border-slate-700"
                             />
                         </div>
                         <div>
-                            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Subject (Broad) *</label>
+                            <label className="block text-sm font-medium text-slate-400 mb-2">Subject (Broad) *</label>
                             <select
                                 value={formData.subject}
                                 onChange={e => setFormData({ ...formData, subject: e.target.value })}
-                                style={inputStyle}
                                 required
+                                className="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all appearance-none"
                             >
-                                <option value="">Select Subject</option>
-                                <optgroup label="First Year (Pre-Clinical)">
+                                <option value="" className="bg-slate-900">Select Subject</option>
+                                <optgroup label="First Year (Pre-Clinical)" className="bg-slate-900">
                                     <option value="Anatomy">Anatomy</option>
                                     <option value="Physiology">Physiology</option>
                                     <option value="Biochemistry">Biochemistry</option>
                                 </optgroup>
-                                <optgroup label="Second Year (Para-Clinical)">
+                                <optgroup label="Second Year (Para-Clinical)" className="bg-slate-900">
                                     <option value="Pathology">Pathology</option>
                                     <option value="Pharmacology">Pharmacology</option>
                                     <option value="Microbiology">Microbiology</option>
                                     <option value="Forensic Medicine">Forensic Medicine</option>
                                 </optgroup>
-                                <optgroup label="Third Year">
+                                <optgroup label="Third Year" className="bg-slate-900">
                                     <option value="Community Medicine">Community Medicine</option>
                                     <option value="Ophthalmology">Ophthalmology</option>
                                     <option value="ENT">ENT</option>
                                 </optgroup>
-                                <optgroup label="Final Year (Clinical)">
+                                <optgroup label="Final Year (Clinical)" className="bg-slate-900">
                                     <option value="General Medicine">General Medicine</option>
                                     <option value="General Surgery">General Surgery</option>
                                     <option value="Obstetrics & Gynecology">Obstetrics & Gynecology</option>
@@ -219,65 +229,42 @@ export default function UploadNotePage() {
                     </div>
 
                     <div>
-                        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Topic / Sub-Category</label>
-                        <input
+                        <label className="block text-sm font-medium text-slate-400 mb-2">Topic / Sub-Category</label>
+                        <GlassInput
                             type="text"
                             placeholder="e.g. Neuroanatomy, CVS, etc."
                             value={formData.category} // Storing specific topic in category
                             onChange={e => setFormData({ ...formData, category: e.target.value })}
-                            style={inputStyle}
+                            className="bg-slate-900/80 border-slate-700"
                         />
                     </div>
 
                     <div>
-                        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Description</label>
+                        <label className="block text-sm font-medium text-slate-400 mb-2">Description</label>
                         <textarea
                             rows="3"
                             placeholder="Brief description of what this note covers..."
                             value={formData.description}
                             onChange={e => setFormData({ ...formData, description: e.target.value })}
-                            style={inputStyle}
+                            className="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all placeholder:text-slate-500 resize-none"
                         />
                     </div>
 
-                    <button
+                    <GlassButton
                         type="submit"
                         disabled={uploading}
-                        style={{
-                            padding: "1rem",
-                            borderRadius: "0.75rem",
-                            background: "var(--foreground)",
-                            color: "var(--background)",
-                            fontWeight: 600,
-                            fontSize: "1rem",
-                            border: "none",
-                            cursor: uploading ? "not-allowed" : "pointer",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                            marginTop: "1rem",
-                            opacity: uploading ? 0.7 : 1
-                        }}
+                        className="w-full"
+                        variant="primary"
+                        loading={uploading}
                     >
-                        {uploading ? <>Uploading... <Loader size={20} /></> : "Submit Note"}
-                    </button>
+                        {uploading ? "Uploading..." : "Submit Note"}
+                    </GlassButton>
 
-                    <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', textAlign: 'center' }}>
+                    <p className="text-xs text-slate-500 text-center">
                         Note: All uploads are reviewed by Key Seniors or Admins before publishing.
                     </p>
                 </form>
-            </div>
+            </GlassCard>
         </div>
     );
 }
-
-const inputStyle = {
-    width: "100%",
-    padding: "0.75rem",
-    borderRadius: "0.5rem",
-    border: "1px solid var(--border)",
-    fontSize: "0.95rem",
-    background: "var(--background)",
-    color: "var(--foreground)"
-};

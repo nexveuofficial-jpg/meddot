@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
-import { User, Shield, GraduationCap } from "lucide-react";
+import { User, Users, Shield, GraduationCap } from "lucide-react";
 import Loader from "../ui/Loader";
 import { motion } from "framer-motion";
 

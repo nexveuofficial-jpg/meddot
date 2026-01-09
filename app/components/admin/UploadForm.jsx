@@ -35,13 +35,15 @@ export default function UploadForm({ onUpload }) {
         });
     };
 
+    const inputBaseStyle = "bg-slate-900/80 border border-slate-700 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder:text-slate-400";
+
     return (
         <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="flex flex-col space-y-2">
                 <label className="text-sm font-medium text-slate-400">Note Title</label>
                 <input
                     name="title"
-                    className="bg-[#0F1623] border border-white/10 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder:text-slate-600"
+                    className={inputBaseStyle}
                     value={formData.title}
                     onChange={handleChange}
                     placeholder="e.g. Cardiac Anatomy"
@@ -53,7 +55,7 @@ export default function UploadForm({ onUpload }) {
                 <label className="text-sm font-medium text-slate-400">Subject</label>
                 <select
                     name="subject"
-                    className="bg-[#0F1623] border border-white/10 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
+                    className={inputBaseStyle}
                     value={formData.subject}
                     onChange={handleChange}
                     required
@@ -71,7 +73,7 @@ export default function UploadForm({ onUpload }) {
                 <label className="text-sm font-medium text-slate-400">Year</label>
                 <select
                     name="year"
-                    className="bg-[#0F1623] border border-white/10 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
+                    className={inputBaseStyle}
                     value={formData.year}
                     onChange={handleChange}
                 >
@@ -86,7 +88,7 @@ export default function UploadForm({ onUpload }) {
                 <label className="text-sm font-medium text-slate-400">Description</label>
                 <textarea
                     name="description"
-                    className="bg-[#0F1623] border border-white/10 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all min-h-[100px] placeholder:text-slate-600"
+                    className={`${inputBaseStyle} min-h-[100px]`}
                     value={formData.description}
                     onChange={handleChange}
                     placeholder="Brief details..."
@@ -97,7 +99,7 @@ export default function UploadForm({ onUpload }) {
                 <label className="text-sm font-medium text-slate-400">File (Mock)</label>
                 <input 
                     type="file" 
-                    className="bg-[#0F1623] border border-white/10 rounded-lg p-2 text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20 cursor-not-allowed" 
+                    className="bg-slate-900/80 border border-slate-700 rounded-lg p-2 text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20 cursor-not-allowed" 
                     disabled 
                     title="Upload disabled for prototype" 
                 />
@@ -105,7 +107,7 @@ export default function UploadForm({ onUpload }) {
 
             <button 
                 type="submit" 
-                className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-cyan-500/20 mt-4"
+                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:brightness-110 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-cyan-500/20 mt-4"
             >
                 Upload Note
             </button>

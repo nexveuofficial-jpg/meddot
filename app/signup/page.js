@@ -4,8 +4,11 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, User, Mail, Lock, GraduationCap, ArrowLeft, CheckCircle } from "lucide-react";
 import BrandLogo from "../components/BrandLogo";
+import GlassCard from "../components/ui/GlassCard";
+import GlassInput from "../components/ui/GlassInput";
+import GlassButton from "../components/ui/GlassButton";
 
 export default function SignupPage() {
     const [name, setName] = useState("");
@@ -16,212 +19,151 @@ export default function SignupPage() {
     const { signup } = useAuth();
     const router = useRouter();
 
+    const [isLoading, setIsLoading] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [error, setError] = useState("");
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const result = await signup(name, email, password, studyYear);
+        setIsLoading(true);
+        setError("");
 
-        if (result.success) {
-            // Because email confirmation is ON, we usually won't get a session immediately.
-            // However, we check just in case.
-            if (result.data?.session) {
-                router.push('/dashboard');
+        try {
+            const result = await signup(name, email, password, studyYear);
+
+            if (result.success) {
+                if (result.data?.session) {
+                    router.push('/dashboard');
+                } else {
+                    setShowSuccess(true);
+                }
             } else {
-                // Email confirmation required
-                setShowSuccess(true);
+                setError(result.error || "Signup failed");
+                setIsLoading(false);
             }
-        } else {
-            alert(result.error || "Signup failed");
+        } catch (err) {
+            console.error("Signup Crash:", err);
+            setError("An unexpected error occurred.");
+            setIsLoading(false);
         }
     };
 
     if (showSuccess) {
         return (
-            <div style={{
-                minHeight: "100vh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "2rem"
-            }}>
-                <div style={{
-                    width: "100%",
-                    maxWidth: "400px",
-                    padding: "2rem",
-                    borderRadius: "1rem",
-                    background: "#ffffff",
-                    border: "1px solid #e2e8f0",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                    color: "#0f172a",
-                    textAlign: "center"
-                }}>
-                    <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
-                        <BrandLogo size="2rem" />
-                    </div>
-                    <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>Check your email</h2>
-                    <p style={{ color: "#64748b", marginBottom: "1.5rem", lineHeight: 1.6 }}>
-                        We've sent a confirmation link to<br/> <span style={{fontWeight: 600, color: "#0f172a"}}>{email}</span>.
-                    </p>
-                    <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "2rem" }}>
-                        Please check your inbox (and spam folder) and click the link to verify your account.
-                    </p>
-                    <Link 
-                        href="/login"
-                        style={{
-                            display: "inline-block",
-                            padding: "0.75rem 2rem",
-                            borderRadius: "0.5rem",
-                            background: "var(--primary)",
-                            color: "white",
-                            fontWeight: 600,
-                            textDecoration: "none"
-                        }}
-                    >
-                        Back to Login
-                    </Link>
+            <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+                <div className="w-full max-w-md relative z-10">
+                    <GlassCard className="p-8 text-center border-green-500/30 bg-slate-900/80">
+                        <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-green-400">
+                            <CheckCircle size={32} />
+                        </div>
+                        <h2 className="text-2xl font-bold text-white mb-4">Check your email</h2>
+                        <p className="text-slate-400 mb-6 leading-relaxed">
+                            We've sent a confirmation link to<br/> <span className="text-white font-semibold">{email}</span>.
+                        </p>
+                        <p className="text-sm text-slate-500 mb-8">
+                            Please check your inbox (and spam folder) and click the link to verify your account.
+                        </p>
+                        <Link href="/login">
+                            <GlassButton variant="primary" className="w-full">
+                                Back to Login
+                            </GlassButton>
+                        </Link>
+                    </GlassCard>
                 </div>
             </div>
         );
     }
 
     return (
-        <div style={{
-            minHeight: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "2rem"
-        }}>
-            <div style={{
-                width: "100%",
-                maxWidth: "400px",
-                padding: "2rem",
-                borderRadius: "1rem",
-                background: "#ffffff",
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                color: "#0f172a"
-            }}>
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
-                    <BrandLogo size="2rem" />
+        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+             
+            <div className="w-full max-w-md relative z-10">
+                <div className="flex justify-center mb-8">
+                    <BrandLogo size="3rem" showIcon={true} />
                 </div>
-                <h2 style={{ textAlign: "center", marginBottom: "1.5rem", fontSize: "1.2rem", fontWeight: 600, color: "#64748b" }}>Create your account</h2>
+                
+                <GlassCard className="p-8 border-slate-700/50 bg-slate-900/60 backdrop-blur-xl">
+                    <div className="text-center mb-8">
+                        <h2 className="text-2xl font-bold text-white mb-2">Create Account</h2>
+                        <p className="text-slate-400">Join the future of medical education</p>
+                    </div>
 
-                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    <div>
-                        <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem", fontWeight: 500 }}>Full Name</label>
-                        <input
-                            type="text"
+                    {error && (
+                         <div className="mb-6 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-200 text-sm text-center">
+                            {error}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <GlassInput 
+                            icon={User}
+                            placeholder="Full Name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
-                            style={{
-                                width: "100%",
-                                padding: "0.75rem",
-                                borderRadius: "0.5rem",
-                                border: "1px solid #cbd5e1",
-                                background: "#f8fafc",
-                                color: "#0f172a"
-                            }}
+                            className="bg-slate-900/80 border-slate-700"
                         />
-                    </div>
 
-                    <div>
-                        <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem", fontWeight: 500 }}>Email</label>
-                        <input
+                        <GlassInput 
+                            icon={Mail}
+                            placeholder="Email Address"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            style={{
-                                width: "100%",
-                                padding: "0.75rem",
-                                borderRadius: "0.5rem",
-                                border: "1px solid #cbd5e1",
-                                background: "#f8fafc",
-                                color: "#0f172a"
-                            }}
+                            className="bg-slate-900/80 border-slate-700"
                         />
-                    </div>
 
-                    <div>
-                        <label style={{ display: "block", marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Study Year</label>
-                        <input
+                        <GlassInput 
+                            icon={GraduationCap}
+                            placeholder="Study Year (e.g. 1)"
                             type="number"
                             min="1"
                             max="6"
-                            placeholder="e.g. 1 (for 1st year)"
                             value={studyYear}
                             onChange={(e) => setStudyYear(e.target.value)}
                             required
-                            style={{
-                                width: "100%",
-                                padding: "0.75rem",
-                                borderRadius: "0.5rem",
-                                border: "1px solid #cbd5e1",
-                                background: "#f8fafc",
-                                color: "#0f172a"
-                            }}
+                            className="bg-slate-900/80 border-slate-700"
                         />
-                    </div>
 
-                    <div>
-                        <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem", fontWeight: 500 }}>Password</label>
-                        <div style={{ position: "relative" }}>
-                            <input
+                        <div className="relative">
+                            <GlassInput 
+                                icon={Lock}
+                                placeholder="Password"
                                 type={showPassword ? "text" : "password"}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                style={{
-                                    width: "100%",
-                                    padding: "0.75rem",
-                                    borderRadius: "0.5rem",
-                                    border: "1px solid #cbd5e1",
-                                    background: "#f8fafc",
-                                    color: "#0f172a",
-                                    paddingRight: "2.5rem"
-                                }}
+                                className="bg-slate-900/80 border-slate-700"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                style={{
-                                    position: "absolute",
-                                    right: "0.75rem",
-                                    top: "50%",
-                                    transform: "translateY(-50%)",
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    color: "#64748b"
-                                }}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
                             >
-                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                         </div>
+
+                        <GlassButton 
+                            type="submit" 
+                            variant="primary" 
+                            className="w-full mt-4"
+                            loading={isLoading}
+                        >
+                            {isLoading ? "Creating Account..." : "Sign Up"}
+                        </GlassButton>
+                    </form>
+
+                    <div className="mt-8 text-center">
+                        <p className="text-slate-400 text-sm">
+                            Already have an account?{" "}
+                            <Link href="/login" className="text-cyan-400 hover:text-cyan-300 font-bold transition-colors">
+                                Sign In
+                            </Link>
+                        </p>
                     </div>
-
-                    <button
-                        type="submit"
-                        style={{
-                            marginTop: "1rem",
-                            padding: "0.75rem",
-                            borderRadius: "0.5rem",
-                            background: "var(--primary)",
-                            color: "white",
-                            fontWeight: 600,
-                            fontSize: "1rem"
-                        }}
-                    >
-                        Sign Up
-                    </button>
-                </form>
-
-                <p style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
-                    Already have an account? <Link href="/login" style={{ color: "var(--primary)" }}>Sign in</Link>
-                </p>
+                </GlassCard>
             </div>
         </div>
     );
