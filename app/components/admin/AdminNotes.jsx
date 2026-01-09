@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import styles from "../../admin/AdminDashboard.module.css";
+
 import { Check, X, Eye, Trash2 } from "lucide-react";
 import Loader from "../ui/Loader";
 import { toast } from "sonner";

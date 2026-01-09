@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
-import styles from "./AdminDashboard.module.css";
+
 import AdminFeatures from "../components/admin/AdminFeatures";
 import AdminUsers from "../components/admin/AdminUsers";
 import AdminNotes from "../components/admin/AdminNotes";

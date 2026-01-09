@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import styles from "../../admin/AdminDashboard.module.css";
+
 import { User, Shield, GraduationCap } from "lucide-react";
 import Loader from "../ui/Loader";
 import { motion } from "framer-motion";

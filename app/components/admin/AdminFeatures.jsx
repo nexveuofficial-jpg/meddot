@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useFeature } from "@/app/context/FeatureFlagContext";
-import styles from "../../admin/AdminDashboard.module.css";
+
 import { ToggleLeft, ToggleRight } from "lucide-react";
 import Loader from "../ui/Loader";
 import { toast } from "sonner";

@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
-import { ArrowLeft, MoreVertical, Search } from "lucide-react"; // Added MoreVertical, Search for header visuals
+import { ArrowLeft, MoreVertical, Search, User } from "lucide-react";
 import Loader from "../../components/ui/Loader";
 import Link from "next/link";
 import UserProfileModal from "@/app/components/UserProfileModal";
@@ -14,9 +14,6 @@ import ToastContainer from "@/app/components/ui/Toast";
 import MessageBubble from "@/app/components/chat/MessageBubble";
 import ChatInput from "@/app/components/chat/ChatInput";
 import ContextMenu from "@/app/components/chat/ContextMenu";
-
-// Styles
-import "@/app/chat/telegram.css";
 
 export default function ChatRoomPage(props) {
     const params = use(props.params);
@@ -33,12 +30,12 @@ export default function ChatRoomPage(props) {
     const [onlineCount, setOnlineCount] = useState(0);
 
     // Context Menu State
-    const [contextMenu, setContextMenu] = useState(null); // { x, y, message }
+    const [contextMenu, setContextMenu] = useState(null);
 
     // Reply & Edit State
-    const [replyTo, setReplyTo] = useState(null); // Message object
-    const [editingMessage, setEditingMessage] = useState(null); // Message object to edit
-    const [viewedImage, setViewedImage] = useState(null); // Image Modal URL
+    const [replyTo, setReplyTo] = useState(null);
+    const [editingMessage, setEditingMessage] = useState(null);
+    const [viewedImage, setViewedImage] = useState(null);
 
     const addToast = (message, type = 'info', duration = 3000) => {
         const id = Date.now();
@@ -49,14 +46,13 @@ export default function ChatRoomPage(props) {
         setToasts(prev => prev.filter(t => t.id !== id));
     };
 
-    // Scroll helpers
     const scrollToBottom = (behavior = "smooth") => {
         messagesEndRef.current?.scrollIntoView({ behavior });
     };
 
     useEffect(() => {
         if (messages.length > 0) scrollToBottom("smooth");
-    }, [messages.length]); // Scroll on new count
+    }, [messages.length]);
 
     // Fetch Data
     useEffect(() => {
@@ -64,8 +60,7 @@ export default function ChatRoomPage(props) {
 
         const fetchData = async () => {
             if (!supabase) {
-                console.error("Supabase client not initialized (missing env vars)");
-                addToast("Database connection missing", "error");
+                console.error("Supabase client not initialized");
                 setLoading(false);
                 return;
             }
@@ -80,7 +75,7 @@ export default function ChatRoomPage(props) {
 
                 if (roomError) throw roomError;
 
-                // If DM, fetch friend's name
+                // DM Logic
                 if (roomData.type === 'dm' && user) {
                     const friendId = roomData.participants.find(id => id !== user.id);
                     if (friendId) {
@@ -93,7 +88,7 @@ export default function ChatRoomPage(props) {
                         if (friendProfile) {
                             roomData.name = friendProfile.full_name || friendProfile.username;
                             roomData.image = friendProfile.avatar_url;
-                            roomData.friendId = friendId; // Store for profile click
+                            roomData.friendId = friendId;
                         }
                     }
                 }
@@ -109,7 +104,6 @@ export default function ChatRoomPage(props) {
 
                 if (msgError) throw msgError;
                 
-                // Map profile data to message structure for consistency
                 const mappedMsgs = (msgs || []).map(m => {
                      const p = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
                      return {
@@ -142,22 +136,18 @@ export default function ChatRoomPage(props) {
                     const eventType = payload.eventType;
                     if (eventType === 'INSERT') {
                         setMessages(prev => {
-                            // Deduplicate: Check if message exists
                             if (prev.find(m => m.id === payload.new.id)) return prev;
 
-                            // Optimistic Replacement for Own Messages
-                            // If we find a message with same content from same user that has a timestamp-like ID, replace it.
                             if (payload.new.user_id === user.id) {
                                 const optimisticMatch = prev.find(m =>
                                     m.user_id === user.id &&
                                     m.content === payload.new.content &&
-                                    (m.id.length < 20) // Heuristic: Timestamp (13 chars) vs UUID (36 chars)
+                                    (m.id.length < 20)
                                 );
                                 if (optimisticMatch) {
                                     return prev.map(m => m.id === optimisticMatch.id ? payload.new : m);
                                 }
                             }
-
                             return [...prev, payload.new];
                         });
                     } else if (eventType === 'DELETE') {
@@ -171,15 +161,12 @@ export default function ChatRoomPage(props) {
                 const newState = channel.presenceState();
                 setOnlineCount(Object.keys(newState).length);
             })
-            .subscribe(async (status, err) => {
+            .subscribe(async (status) => {
                 if (status === 'SUBSCRIBED' && user) {
                     await channel.track({
                         user_id: user.id,
                         online_at: new Date().toISOString(),
                     });
-                } else if (status === 'CHANNEL_ERROR') {
-                    console.error('Realtime connection error:', err);
-                    addToast("Could not connect to chat server.", "error");
                 }
             });
 
@@ -192,45 +179,30 @@ export default function ChatRoomPage(props) {
     const handleSendMessage = async (text, file = null) => {
         if (!user) return;
 
-        // Rate Limit (Student)
         const isStaff = user.role === 'admin' || user.role === 'senior';
         if (!isStaff && room?.type !== 'dm') {
             const now = Date.now();
             if (now - lastMessageTime.current < 9000) {
-                addToast(`Please wait few seconds.`, 'warning');
+                addToast("Please wait a few seconds before sending another message.", 'warning');
                 return;
             }
             lastMessageTime.current = now;
         }
 
-        if (!supabase) {
-            addToast("Chat unavailable (Database error)", "error");
-            return;
-        }
-
         const optimisticId = Date.now().toString();
 
         if (editingMessage && !file) {
-            // Handle Edit (Text only)
             const updatedContent = text;
             setMessages(prev => prev.map(m => m.id === editingMessage.id ? { ...m, content: updatedContent, is_edited: true } : m));
-            setEditingMessage(null); // Exit edit mode
-
+            setEditingMessage(null);
             try {
-                const { error } = await supabase
-                    .from("chat_messages")
-                    .update({ content: updatedContent, is_edited: true })
-                    .eq("id", editingMessage.id);
-
-                if (error) throw error;
+                await supabase.from("chat_messages").update({ content: updatedContent, is_edited: true }).eq("id", editingMessage.id);
             } catch (error) {
-                console.error("Edit Error:", error);
                 addToast("Failed to edit.", "error");
             }
             return;
         }
 
-        // Prepare Optimistic Message
         const newMessageObj = {
             id: optimisticId,
             room_id: params.roomId,
@@ -239,7 +211,7 @@ export default function ChatRoomPage(props) {
             role: profile?.role || user.role || 'student',
             author_year: profile?.year_of_study,
             content: text || (file ? ' Sent an image' : ''),
-            image_url: file ? URL.createObjectURL(file) : null, // Optimistic preview
+            image_url: file ? URL.createObjectURL(file) : null,
             created_at: new Date().toISOString(),
             reply_to_id: replyTo ? replyTo.id : null,
             reply_to: replyTo ? { id: replyTo.id, user_name: replyTo.user_name, content: replyTo.content } : null
@@ -250,31 +222,13 @@ export default function ChatRoomPage(props) {
 
         try {
             let publicUrl = null;
-
             if (file) {
-                // Upload Image
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
                 const filePath = `${params.roomId}/${fileName}`;
-
-                const { error: uploadError } = await supabase.storage
-                    .from('chat-uploads')
-                    .upload(filePath, file);
-
-                if (uploadError) {
-                    console.error("Upload error:", uploadError);
-                    // Create bucket if it doesn't exist (Handling missing bucket error gracefully-ish)
-                    if (uploadError.message.includes("Bucket not found")) {
-                        addToast("Image upload failed: System storage not ready.", "error");
-                        throw uploadError;
-                    }
-                    throw uploadError;
-                }
-
-                const { data: urlData } = supabase.storage
-                    .from('chat-uploads')
-                    .getPublicUrl(filePath);
-
+                const { error: uploadError } = await supabase.storage.from('chat-uploads').upload(filePath, file);
+                if (uploadError) throw uploadError;
+                const { data: urlData } = supabase.storage.from('chat-uploads').getPublicUrl(filePath);
                 publicUrl = urlData.publicUrl;
             }
 
@@ -288,118 +242,52 @@ export default function ChatRoomPage(props) {
                 reply_to_id: replyTo ? replyTo.id : null
             };
 
-            const { data, error } = await supabase
-                .from("chat_messages")
-                .insert([insertPayload])
-                .select("*, image_url")
-                .single();
-
+            const { data, error } = await supabase.from("chat_messages").insert([insertPayload]).select("*, image_url").single();
             if (error) throw error;
-
-            // Update optimistic with real data
             setMessages(prev => prev.map(m => m.id === optimisticId ? data : m));
-
         } catch (error) {
             console.error("Send Error:", error);
-            addToast(`Failed to send: ${error.message || error.error_description || "Unknown error"}`, "error");
+            addToast("Failed to send.", "error");
             setMessages(prev => prev.filter(m => m.id !== optimisticId));
         }
     };
 
-    // Actions
     const handleContextMenu = (e, msg) => {
         e.preventDefault();
-        setContextMenu({
-            x: e.pageX,
-            y: e.pageY,
-            message: msg
-        });
+        setContextMenu({ x: e.pageX, y: e.pageY, message: msg });
     };
 
     const deleteMessage = async (msgId) => {
-        setMessages(prev => prev.filter(m => m.id !== msgId)); // Optimistic
-        if (!supabase) return;
-        try {
-            await supabase.from("chat_messages").delete().eq("id", msgId);
-        } catch (err) {
-            console.error("Delete failed", err);
-            addToast("Delete failed", "error");
-        }
+        setMessages(prev => prev.filter(m => m.id !== msgId));
+        try { await supabase.from("chat_messages").delete().eq("id", msgId); } catch (err) { }
     };
 
-    // Direct Message Logic (from Context Menu)
     const handleDirectMessage = async (targetUserId) => {
         try {
             if (!user) return addToast("Please login first", "error");
-
-            // Call our RPC function
-            const { data: roomId, error } = await supabase.rpc('get_or_create_dm_room', {
-                other_user_id: targetUserId
-            });
-
+            const { data: roomId, error } = await supabase.rpc('get_or_create_dm_room', { other_user_id: targetUserId });
             if (error) throw error;
-
-            if (roomId) {
-                router.push(`/chat/${roomId}`);
-            }
-        } catch (error) {
-            console.error("DM Error:", error);
-            addToast("Failed to start chat: " + (error.message || "Unknown error"), "error");
-        }
+            if (roomId) router.push(`/chat/${roomId}`);
+        } catch (error) { addToast("Failed to start chat", "error"); }
     };
 
-    // Prepare Context Menu Options
     const getMenuOptions = () => {
         if (!contextMenu) return [];
         const { message } = contextMenu;
         const isOwn = message.user_id === user?.id;
-        const isAdmin = user?.role === 'admin' || user?.role === 'senior';
-
+        const isAdminUser = user?.role === 'admin' || user?.role === 'senior';
         const options = [
-            {
-                label: 'Reply',
-                icon: <Search size={16} />, // Search icon as placeholder for reply or just Reply icon if available in imports
-                action: () => setReplyTo(message)
-            },
-            {
-                label: 'Copy',
-                icon: <ArrowLeft size={16} style={{ transform: 'rotate(180deg)' }} />, // Placeholder
-                action: () => navigator.clipboard.writeText(message.content)
-            }
+             { label: 'Reply', action: () => setReplyTo(message) },
+             { label: 'Copy', action: () => navigator.clipboard.writeText(message.content) }
         ];
-
-        if (!isOwn) {
-            options.push({
-                label: 'Message',
-                icon: <div style={{ color: '#3b82f6' }}>💬</div>,
-                action: () => handleDirectMessage(message.user_id)
-            });
-        }
-
-        if (isOwn) {
-            options.push({
-                label: 'Edit',
-                icon: <div style={{ color: '#0f172a' }}>✎</div>,
-                action: () => setEditingMessage(message)
-            });
-        }
-
-        if (isOwn || isAdmin) {
-            options.push({
-                label: 'Delete',
-                icon: <div style={{ color: '#ef4444' }}>🗑️</div>,
-                danger: true,
-                action: () => deleteMessage(message.id)
-            });
-        }
-
+        if (!isOwn) options.push({ label: 'Message', action: () => handleDirectMessage(message.user_id) });
+        if (isOwn) options.push({ label: 'Edit', action: () => setEditingMessage(message) });
+        if (isOwn || isAdminUser) options.push({ label: 'Delete', danger: true, action: () => deleteMessage(message.id) });
         return options;
     };
 
-    // Render helpers
-    // Enhance messages with 'reply_to' object if missing (client-side join)
     const processedMessages = messages.map(m => {
-        if (m.reply_to) return m; // Already has it (fetched or optimistic)
+        if (m.reply_to) return m;
         if (m.reply_to_id) {
             const parent = messages.find(p => p.id === m.reply_to_id);
             if (parent) return { ...m, reply_to: parent };
@@ -407,7 +295,6 @@ export default function ChatRoomPage(props) {
         return m;
     });
 
-    // Grouping by Date
     const groupedMessages = [];
     let lastDate = null;
     processedMessages.forEach(msg => {
@@ -419,34 +306,51 @@ export default function ChatRoomPage(props) {
         groupedMessages.push({ type: 'msg', data: msg });
     });
 
-
-    if (loading) return <div className="flex justify-center h-screen items-center"><Loader /></div>;
-    if (!room) return <div className="p-10 text-center">Room not found</div>;
+    if (loading) return <div className="flex h-full items-center justify-center"><Loader /></div>;
+    if (!room) return <div className="p-10 text-center text-slate-400">Room not found</div>;
 
     return (
-        <div className="telegram-container">
+        <div className="flex flex-col h-full bg-[#0B1120]">
             {/* Header */}
-            <header className="telegram-header glass">
-                <Link href="/chat" style={{ color: "var(--foreground)", marginRight: '10px' }}>
-                    <ArrowLeft size={22} />
+            <header className="flex items-center gap-4 px-6 py-4 border-b border-white/5 bg-[#0F1623]/80 backdrop-blur-md sticky top-0 z-20">
+                <Link href="/chat" className="md:hidden text-slate-400 hover:text-white transition-colors">
+                    <ArrowLeft size={20} />
                 </Link>
-                <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setSelectedUserId(room.friendId || room.created_by || null)}>
-                    <h1 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#000" }}>{room.name}</h1>
-                    <span style={{ fontSize: "0.85rem", color: "#0ea5e9", fontWeight: 500 }}>
-                        {room.type === 'dm' ? 'Direct Message' : `${onlineCount} members online`}
-                    </span>
+                
+                <div 
+                    className="flex-1 cursor-pointer flex items-center gap-3" 
+                    onClick={() => setSelectedUserId(room.friendId || room.created_by || null)}
+                >
+                    <div className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden">
+                        {room.image ? (
+                            <img src={room.image} alt="room" className="w-full h-full object-cover" />
+                        ) : (
+                            <User size={18} className="text-slate-400" />
+                        )}
+                    </div>
+                    <div>
+                        <h1 className="text-base font-bold text-white leading-tight">{room.name}</h1>
+                        <span className="text-xs font-medium text-cyan-400">
+                            {room.type === 'dm' ? 'Direct Message' : `${onlineCount} active`}
+                        </span>
+                    </div>
                 </div>
-                <Search size={22} color="#555" />
-                <MoreVertical size={22} color="#555" />
+
+                <div className="flex items-center gap-2 text-slate-400">
+                    <button className="p-2 hover:bg-white/5 rounded-full transition-colors"><Search size={20} /></button>
+                    <button className="p-2 hover:bg-white/5 rounded-full transition-colors"><MoreVertical size={20} /></button>
+                </div>
             </header>
 
             {/* Chat Area */}
-            <div className="chat-scroll-area">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-white/20">
                 {groupedMessages.map(item => {
                     if (item.type === 'date') {
                         return (
-                            <div key={item.id} style={{ display: 'flex', justifyContent: 'center' }}>
-                                <div className="date-header">{item.date}</div>
+                            <div key={item.id} className="flex justify-center my-6">
+                                <div className="bg-white/5 text-slate-400 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-white/5">
+                                    {item.date}
+                                </div>
                             </div>
                         );
                     }
@@ -458,7 +362,7 @@ export default function ChatRoomPage(props) {
                             isOwn={user && msg.user_id === user.id}
                             onContextMenu={handleContextMenu}
                             onReplyClick={(replyId) => {
-                                const target = document.getElementById(`msg-${replyId}`); // Need to add id to bubble
+                                const target = document.getElementById(`msg-${replyId}`);
                                 if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }}
                             onImageClick={(url) => setViewedImage(url)}
@@ -469,7 +373,6 @@ export default function ChatRoomPage(props) {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* ... Input ... */}
             {/* Input */}
             <ChatInput
                 onSend={handleSendMessage}
@@ -492,27 +395,21 @@ export default function ChatRoomPage(props) {
 
             {/* Image Modal */}
             {viewedImage && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 100,
-                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    flexDirection: 'column'
-                }} onClick={() => setViewedImage(null)}>
-                    <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 101 }}>
-                        <button onClick={() => setViewedImage(null)} style={{ color: 'white', padding: '10px' }}>
-                            {/* Close Icon manually or lucide */}
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        </button>
-                    </div>
+                <div 
+                    className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in"
+                    onClick={() => setViewedImage(null)}
+                >
+                    <button onClick={() => setViewedImage(null)} className="absolute top-6 right-6 text-white/50 hover:text-white p-2">
+                        <ArrowLeft size={32} className="rotate-45" />
+                    </button>
                     <img
                         src={viewedImage}
-                        style={{ maxWidth: '95%', maxHeight: '95%', objectFit: 'contain', borderRadius: '4px' }}
-                        onClick={(e) => e.stopPropagation()} // Click image shouldn't close? Actually clicking anywhere should likely close for ease roughly
+                        className="max-w-full max-h-[90vh] rounded-lg shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
                     />
                 </div>
             )}
 
-            {/* Modals */}
             <UserProfileModal userId={selectedUserId} isOpen={!!selectedUserId} onClose={() => setSelectedUserId(null)} />
             <ToastContainer toasts={toasts} removeToast={removeToast} />
         </div>

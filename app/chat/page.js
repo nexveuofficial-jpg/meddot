@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useFeature } from "@/app/context/FeatureFlagContext";
-import { MessageCircle, Users, ArrowRight, Activity, Bone, FlaskConical, Microscope, Pill, Coffee } from "lucide-react";
+import { MessageCircle, Activity, Bone, FlaskConical, Microscope, Pill, Coffee, Hash, ArrowRight } from "lucide-react";
 import Loader from "../components/ui/Loader";
+import RevealOnScroll from "../components/ui/RevealOnScroll";
 
 // Mapping icons string to components
 const iconMap = {
@@ -16,8 +17,6 @@ const iconMap = {
     'Pill': Pill,
     'Coffee': Coffee
 };
-
-import styles from "./chat.module.css";
 
 export default function ChatLobbyPage() {
     const { isEnabled } = useFeature();
@@ -34,7 +33,7 @@ export default function ChatLobbyPage() {
                     .order("name", { ascending: true });
 
                 if (error) throw error;
-                setRooms(data);
+                setRooms(data || []);
             } catch (error) {
                 console.error("Error fetching rooms:", error);
             }
@@ -48,66 +47,67 @@ export default function ChatLobbyPage() {
 
     if (!isEnabled('enable_chat')) {
         return (
-            <div style={{ padding: '4rem', textAlign: 'center' }}>
-                <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Chat is currently disabled.</h2>
-                <Link href="/dashboard" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Back to Dashboard</Link>
+            <div className="flex flex-col items-center justify-center h-full text-slate-500">
+                <MessageCircle size={48} className="mb-4 opacity-50" />
+                <h2 className="text-xl font-bold">Chat is currently disabled.</h2>
+                <Link href="/dashboard" className="text-cyan-400 hover:underline mt-2">Back to Dashboard</Link>
             </div>
         );
     }
 
-    if (loading) return <div className="flex justify-center p-20"><Loader /></div>;
+    if (loading) return <div className="flex items-center justify-center h-full"><Loader /></div>;
 
     return (
-        <div className={styles.container}>
-            <header className={styles.header}>
-                <Link href="/dashboard" style={{ color: "var(--muted-foreground)", textDecoration: "none", fontSize: "0.9rem", marginBottom: "0.5rem", display: "inline-block" }}>← Back</Link>
-                <h1 className={styles.title}>
-                    Study Rooms
-                </h1>
-                <p style={{ marginTop: "1rem", color: "var(--muted-foreground)", maxWidth: "500px" }}>
-                    Join a room to discuss topics, ask quick questions, or just hang out.
-                </p>
-            </header>
+        <div className="h-full overflow-y-auto p-6 md:p-10">
+            <RevealOnScroll>
+                <header className="mb-10 text-center md:text-left">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold uppercase tracking-wider mb-4">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                        </span>
+                        Live Community
+                    </div>
+                    <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3">
+                        Study Rooms
+                    </h1>
+                    <p className="text-slate-400 max-w-xl text-lg leading-relaxed">
+                        Join a room to discuss topics, ask quick questions, or coordinate study sessions with your batchmates.
+                    </p>
+                </header>
+            </RevealOnScroll>
 
-            <div className={styles.grid}>
-                {rooms.map((room) => {
-                    const Icon = iconMap[room.icon] || MessageCircle;
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
+                {rooms.map((room, index) => {
+                    const Icon = iconMap[room.icon] || Hash;
                     return (
-                        <Link key={room.id} href={`/chat/${room.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                            <div className={styles.card}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.transform = "translateY(-4px)";
-                                    e.currentTarget.style.boxShadow = "var(--shadow-lg)";
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.transform = "none";
-                                    e.currentTarget.style.boxShadow = "var(--shadow-sm)";
-                                }}
-                            >
-                                <div style={{
-                                    width: "48px",
-                                    height: "48px",
-                                    background: "var(--accent)",
-                                    borderRadius: "12px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    marginBottom: "1.5rem",
-                                    color: "var(--primary)"
-                                }}>
-                                    <Icon size={24} />
+                        <RevealOnScroll key={room.id} delay={index * 50}>
+                            <Link href={`/chat/${room.id}`}>
+                                <div className="group relative p-6 rounded-2xl border border-white/5 bg-slate-900/40 backdrop-blur-md hover:border-cyan-500/30 transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
+                                    {/* Hover Gradient */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none" />
+
+                                    <div className="relative z-10">
+                                        <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 mb-4 group-hover:scale-110 transition-transform duration-300 border border-cyan-500/20">
+                                            <Icon size={24} />
+                                        </div>
+                                        
+                                        <h3 className="text-xl font-bold text-slate-100 mb-2 group-hover:text-cyan-300 transition-colors">
+                                            {room.name}
+                                        </h3>
+                                        
+                                        <p className="text-slate-400 text-sm leading-relaxed mb-6 line-clamp-2">
+                                            {room.description || "A space for medical students to discuss " + room.name}
+                                        </p>
+
+                                        <div className="mt-auto flex items-center text-xs font-bold text-slate-500 uppercase tracking-wider group-hover:text-cyan-400 transition-colors">
+                                            Join Room <ArrowRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
+                                        </div>
+                                    </div>
                                 </div>
-                                <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem", color: "#0f172a" }}>{room.name}</h3>
-                                <p style={{ color: "#475569", fontSize: "0.9rem", flex: 1, marginBottom: "1.5rem" }}>
-                                    {room.description}
-                                </p>
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", color: "var(--primary)", fontWeight: 600, fontSize: "0.9rem" }}>
-                                    <span>Join Room</span>
-                                    <ArrowRight size={16} />
-                                </div>
-                            </div>
-                        </Link>
-                    )
+                            </Link>
+                        </RevealOnScroll>
+                    );
                 })}
             </div>
         </div>

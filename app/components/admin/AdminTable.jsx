@@ -1,6 +1,6 @@
 "use client";
 
-import styles from "../../admin/AdminDashboard.module.css";
+
 
 export default function AdminTable({ notes, onDelete }) {
     if (!notes || notes.length === 0) {
