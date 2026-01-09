@@ -165,7 +165,7 @@ export function AuthProvider({ children }) {
                 */
             }
 
-            return { success: true };
+            return { success: true, data };
         } catch (error) {
             return { success: false, error: error.message };
         }
