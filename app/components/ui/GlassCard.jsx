@@ -6,7 +6,7 @@ const GlassCard = ({ children, className = "", hoverEffect = true }) => {
   return (
     <div className={`
       relative p-8 rounded-[2rem] 
-      border border-white/5 bg-slate-900/40 backdrop-blur-xl 
+      border border-white/10 bg-[#1e293b]/70 backdrop-blur-xl 
       ${hoverEffect ? 'hover:border-cyan-500/20 transition-all duration-500 hover:-translate-y-1 shadow-xl hover:shadow-cyan-500/10' : ''}
       overflow-hidden
       ${className}

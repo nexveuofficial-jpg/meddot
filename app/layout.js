@@ -36,7 +36,10 @@ export default function RootLayout({ children }) {
             {/* Actually, user said "Replace the current Navbar with the Glass Navbar code from the demo". The demo uses a fixed top nav. I will include it, but wrap it so it doesn't overlap excessively or duplicate. */}
             {/* Note: User said "Migrate entire application". A global top nav eliminates the need for sidebars in some designs, or works with them. */ }
              
-            {children}
+            {/* Global Content Wrapper to ensure clickability over background */}
+            <div className="relative z-10">
+                {children}
+            </div>
             <Toaster position="top-center" richColors theme="dark" />
           </FeatureFlagProvider>
         </AuthProvider>

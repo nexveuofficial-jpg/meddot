@@ -10,7 +10,6 @@ export default function MessageBubble({ message, isOwn, onContextMenu, onReplyCl
         time = "Invalid Time";
     }
 
-
     // Determine colors for names (simple hash function for consistency)
     const getNameColor = (name) => {
         const colors = [
@@ -47,99 +46,95 @@ export default function MessageBubble({ message, isOwn, onContextMenu, onReplyCl
         const end = e.changedTouches[0].clientX;
         const distance = end - touchStart.current;
 
-        // Reset transform
-        bubbleRef.current.style.transform = 'translateX(0)';
-        bubbleRef.current.style.transition = 'transform 0.2s ease-out';
-        setTimeout(() => {
-            if (bubbleRef.current) bubbleRef.current.style.transition = '';
-        }, 200);
-
-        // Threshold for reply
-        if (distance > 50) { // Swipe Right
-            onReplyClick(message.id);
-            if (navigator.vibrate) navigator.vibrate(50);
+        if (distance > 50) {
+            if (onReplyClick) onReplyClick(message.id);
         }
 
-        touchStart.current = 0;
+        if (bubbleRef.current) {
+            bubbleRef.current.style.transform = 'translateX(0)';
+        }
     };
 
     return (
-        <div
-            id={`msg-${message.id}`}
-            className={`msg-row ${isOwn ? 'own' : 'other'}`}
+        <div 
+            className={`flex flex-col mb-4 w-full ${isOwn ? 'items-end' : 'items-start'}`}
             onContextMenu={(e) => onContextMenu(e, message)}
-            style={{ paddingLeft: isOwn ? '20%' : '0', paddingRight: isOwn ? '0' : '20%', ...style }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
+            style={style}
         >
-            <div ref={bubbleRef} className={`msg-bubble ${isOwn ? 'own' : 'other'}`}>
-
-                {/* Reply Snippet */}
+            <div 
+                ref={bubbleRef}
+                className={`
+                    max-w-[85%] md:max-w-[70%] lg:max-w-[60%] 
+                    rounded-2xl px-5 py-3 shadow-md relative transition-transform duration-200 ease-out preserve-3d
+                    ${isOwn 
+                        ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white rounded-tr-none' 
+                        : 'bg-slate-800/80 backdrop-blur-sm border border-white/10 text-slate-100 rounded-tl-none hover:bg-slate-800 transition-colors'
+                    }
+                `}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+            >
+                {/* Reply Context */}
                 {message.reply_to && (
-                    <div className="msg-reply-snippet" onClick={() => onReplyClick(message.reply_to.id)}>
-                        <div style={{ fontWeight: 600, fontSize: '0.75rem' }}>{message.reply_to.user_name}</div>
-                        <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                            {message.reply_to.content}
-                        </div>
+                    <div 
+                        className={`
+                            mb-2 p-2 rounded-lg text-xs cursor-pointer border-l-2
+                            ${isOwn 
+                                ? 'bg-white/10 border-white/50 text-white/90' 
+                                : 'bg-slate-900/50 border-cyan-500/50 text-slate-300'
+                            }
+                        `}
+                        onClick={() => onReplyClick(message.reply_to.id)}
+                    >
+                        <div className="font-bold mb-1 opacity-75">{message.reply_to.user_name}</div>
+                        <div className="truncate opacity-75">{message.reply_to.content || 'Attachment'}</div>
                     </div>
                 )}
 
                 {/* Name (for others) */}
                 {!isOwn && (
-                    <div style={{
-                        color: getNameColor(message.user_name),
-                        fontWeight: 600,
-                        fontSize: '0.8rem',
-                        marginBottom: '2px',
-                        cursor: 'pointer'
-                    }}
-                        onClick={() => onUserClick && onUserClick(message.user_id)}>
+                    <div 
+                        className="font-bold text-xs mb-1 cursor-pointer flex items-center hover:underline"
+                        style={{ color: getNameColor(message.user_name) }}
+                        onClick={() => onUserClick && onUserClick(message.user_id)}
+                    >
                         {message.user_name}
-                        {message.role === 'admin' && <span title="Admin" style={{ marginLeft: '4px' }}>★</span>}
-                        {message.author_year && <span style={{ marginLeft: '4px', fontSize: '0.7em', border: '1px solid #ccc', borderRadius: '4px', padding: '0 4px', color: '#666' }}>{message.author_year} Year</span>}
+                        {message.role === 'admin' && <span title="Admin" className="ml-1 text-yellow-400">★</span>}
+                        {message.author_year && (
+                            <span className="ml-2 px-1.5 py-0.5 text-[0.65rem] border border-slate-600 rounded bg-slate-700/50 text-slate-400">
+                                {message.author_year} Yr
+                            </span>
+                        )}
                     </div>
                 )}
 
                 {/* Content */}
-                <div style={{ whiteSpace: 'pre-wrap' }}>
+                <div className="whitespace-pre-wrap break-words text-sm md:text-base leading-relaxed">
                     {message.content}
                 </div>
 
                 {/* Image Attachment */}
                 {message.image_url && (
-                    <div style={{ marginTop: '8px', marginBottom: '4px' }}>
+                    <div className="mt-2 mb-1">
                         <img
                             src={message.image_url}
                             alt="attachment"
-                            style={{
-                                maxWidth: '100%',
-                                maxHeight: '300px',
-                                borderRadius: '8px',
-                                objectFit: 'cover',
-                                cursor: 'pointer'
-                            }}
+                            className="max-w-full max-h-[300px] rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
                             onClick={() => onImageClick && onImageClick(message.image_url)}
                         />
                     </div>
                 )}
 
-                {/* Meta (Time + Status) */}
-                <div className="msg-meta">
-                    {message.is_edited && <span style={{ marginRight: '2px' }}>edited</span>}
+                {/* Metadata */}
+                <div className={`
+                    flex items-center justify-end gap-1 mt-1 text-[0.65rem] font-medium
+                    ${isOwn ? 'text-blue-100/70' : 'text-slate-400/70'}
+                `}>
                     <span>{time}</span>
-                    {isOwn && (
-                        <span style={{ marginLeft: '2px' }}>
-                            <CheckCheck size={14} strokeWidth={2.5} /> {/* Assuming read receipt later, for now just tick */}
-                        </span>
-                    )}
+                    {message.is_edited && <span>(edited)</span>}
+                    {isOwn && <CheckCheck size={14} className="opacity-80" />}
                 </div>
-
-                {/* Tail Graphic (CSS shapes) */}
-                {/* Note: Logic handled by CSS class 'msg-bubble own/other' mostly, 
-                    but we can add an SVG here for pixel perfect telegram tail if we wanted. 
-                    For now, CSS border radius hacks in telegram.css are used.
-                */}
             </div>
         </div>
     );
