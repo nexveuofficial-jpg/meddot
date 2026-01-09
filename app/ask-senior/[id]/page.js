@@ -16,7 +16,7 @@ export default function QuestionDetailPage(props) {
     const [newAnswer, setNewAnswer] = useState("");
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const { user } = useAuth();
+    const { user, profile, isAdmin, isSenior } = useAuth();
 
     const fetchQuestionAndAnswers = async () => {
         if (!params?.id) return;
@@ -172,7 +172,7 @@ export default function QuestionDetailPage(props) {
         if (!newAnswer.trim() || !user) return;
         
         // RBAC Check
-        if (user.role !== 'senior' && user.role !== 'admin') {
+        if (!isSenior && !isAdmin) {
             alert("Only Seniors can post answers.");
             return;
         }
@@ -184,8 +184,8 @@ export default function QuestionDetailPage(props) {
                 question_id: params.id,
                 content: newAnswer,
                 author_id: user.id,
-                author_name: user.full_name || user.email || 'Anonymous',
-                author_role: user.role || 'student', // Fallback
+                author_name: profile?.full_name || user.user_metadata?.full_name || user.email || 'Anonymous',
+                author_role: profile?.role || 'student', // Fallback
                 created_at: new Date().toISOString()
             }]);
 
@@ -302,7 +302,7 @@ export default function QuestionDetailPage(props) {
             </div>
 
             {/* Post Answer Form - ONLY FOR SENIORS/ADMINS */}
-            {user && (user.role === 'senior' || user.role === 'admin') ? (
+            {user && (isSenior || isAdmin) ? (
                 <div style={{
                     background: 'var(--card-bg)',
                     padding: '1.5rem',
