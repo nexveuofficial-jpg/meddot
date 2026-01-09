@@ -1,27 +1,15 @@
 
 import { useRef } from 'react';
-import { CheckCheck } from 'lucide-react';
+import { CheckCheck, Reply } from 'lucide-react';
+import UserAvatar from '../ui/UserAvatar';
 
 export default function MessageBubble({ message, isOwn, onContextMenu, onReplyClick, onImageClick, onUserClick, style }) {
     let time = "";
     try {
         time = new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } catch (e) {
-        time = "Invalid Time";
+        time = "";
     }
-
-    // Determine colors for names (simple hash function for consistency)
-    const getNameColor = (name) => {
-        const colors = [
-            '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981',
-            '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#f43f5e'
-        ];
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return colors[Math.abs(hash) % colors.length];
-    };
 
     const touchStart = useRef(0);
     const bubbleRef = useRef(null);
@@ -36,7 +24,7 @@ export default function MessageBubble({ message, isOwn, onContextMenu, onReplyCl
         const diff = current - touchStart.current;
 
         // Limit swipe to right side only (positive diff) for reply
-        if (diff > 0 && diff < 100) {
+        if (diff > 0 && diff < 80) {
             bubbleRef.current.style.transform = `translateX(${diff}px)`;
         }
     };
@@ -57,85 +45,115 @@ export default function MessageBubble({ message, isOwn, onContextMenu, onReplyCl
 
     return (
         <div 
-            className={`flex flex-col mb-4 w-full ${isOwn ? 'items-end' : 'items-start'}`}
+            className={`flex flex-col mb-4 w-full group ${isOwn ? 'items-end' : 'items-start'}`}
             onContextMenu={(e) => onContextMenu(e, message)}
             style={style}
         >
-            <div 
-                ref={bubbleRef}
-                className={`
-                    max-w-[85%] md:max-w-[70%] lg:max-w-[60%] 
-                    rounded-2xl px-5 py-3 shadow-md relative transition-transform duration-200 ease-out preserve-3d
-                    ${isOwn 
-                        ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white rounded-tr-none' 
-                        : 'bg-slate-800/80 backdrop-blur-sm border border-white/10 text-slate-100 rounded-tl-none hover:bg-slate-800 transition-colors'
-                    }
-                `}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-            >
-                {/* Reply Context */}
-                {message.reply_to && (
-                    <div 
-                        className={`
-                            mb-2 p-2 rounded-lg text-xs cursor-pointer border-l-2
-                            ${isOwn 
-                                ? 'bg-white/10 border-white/50 text-white/90' 
-                                : 'bg-slate-900/50 border-cyan-500/50 text-slate-300'
-                            }
-                        `}
-                        onClick={() => onReplyClick(message.reply_to.id)}
-                    >
-                        <div className="font-bold mb-1 opacity-75">{message.reply_to.user_name}</div>
-                        <div className="truncate opacity-75">{message.reply_to.content || 'Attachment'}</div>
-                    </div>
-                )}
-
-                {/* Name (for others) */}
+            <div className={`flex items-end gap-2 max-w-[90%] md:max-w-[70%] ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+                
                 {!isOwn && (
-                    <div 
-                        className="font-bold text-xs mb-1 cursor-pointer flex items-center hover:underline"
-                        style={{ color: getNameColor(message.user_name) }}
-                        onClick={() => onUserClick && onUserClick(message.user_id)}
-                    >
-                        {message.user_name}
-                        {message.role === 'admin' && <span title="Admin" className="ml-1 text-yellow-400">★</span>}
-                        {message.author_year && (
-                            <span className="ml-2 px-1.5 py-0.5 text-[0.65rem] border border-slate-600 rounded bg-slate-700/50 text-slate-400">
-                                {message.author_year} Yr
-                            </span>
-                        )}
+                    <div onClick={() => onUserClick && onUserClick(message.user_id)} className="cursor-pointer mb-1">
+                        <UserAvatar user={{ full_name: message.user_name, email: 'placeholder' }} size="28px" className="ring-2 ring-white/5" />
                     </div>
                 )}
 
-                {/* Content */}
-                <div className="whitespace-pre-wrap break-words text-sm md:text-base leading-relaxed">
-                    {message.content}
-                </div>
-
-                {/* Image Attachment */}
-                {message.image_url && (
-                    <div className="mt-2 mb-1">
-                        <img
-                            src={message.image_url}
-                            alt="attachment"
-                            className="max-w-full max-h-[300px] rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => onImageClick && onImageClick(message.image_url)}
-                        />
+                <div 
+                    ref={bubbleRef}
+                    className={`
+                        relative px-4 py-2.5 shadow-md flex-1 min-w-[60px] cursor-pointer
+                        transition-all duration-200 ease-out select-none md:select-text
+                        ${isOwn 
+                            ? 'bg-gradient-to-br from-cyan-600 to-blue-600 text-white rounded-2xl rounded-tr-sm shadow-cyan-500/10' 
+                            : 'bg-slate-800/80 backdrop-blur-md border border-white/10 text-slate-100 rounded-2xl rounded-tl-sm hover:bg-slate-800'
+                        }
+                    `}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                >
+                    {/* Reply Indicator (Visible during swipe) */}
+                    <div className="absolute left-[-40px] top-1/2 -translate-y-1/2 text-slate-400 opacity-0 transition-opacity duration-200 -z-10">
+                        <Reply size={20} />
                     </div>
-                )}
 
-                {/* Metadata */}
-                <div className={`
-                    flex items-center justify-end gap-1 mt-1 text-[0.65rem] font-medium
-                    ${isOwn ? 'text-blue-100/70' : 'text-slate-400/70'}
-                `}>
-                    <span>{time}</span>
-                    {message.is_edited && <span>(edited)</span>}
-                    {isOwn && <CheckCheck size={14} className="opacity-80" />}
+                    {/* Reply Context */}
+                    {message.reply_to && (
+                        <div 
+                            className={`
+                                mb-2 p-2 rounded-lg text-xs cursor-pointer border-l-2 mb-2
+                                ${isOwn 
+                                    ? 'bg-black/20 border-white/30 text-white/90' 
+                                    : 'bg-black/20 border-cyan-500/50 text-slate-300'
+                                }
+                            `}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onReplyClick(message.reply_to.id);
+                            }}
+                        >
+                            <div className="font-bold mb-0.5 opacity-90 truncate">{message.reply_to.user_name}</div>
+                            <div className="truncate opacity-75">{message.reply_to.content || 'Attachment'}</div>
+                        </div>
+                    )}
+
+                    {/* Sender Name (Group Chat Only - Not for Own) */}
+                    {!isOwn && (
+                        <div className="flex items-center gap-2 mb-1">
+                             <span 
+                                className="text-[10px] font-bold uppercase tracking-wide cursor-pointer hover:underline"
+                                style={{ color: stringToColor(message.user_name) }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onUserClick && onUserClick(message.user_id);
+                                }}
+                             >
+                                {message.user_name}
+                             </span>
+                             {(message.role === 'admin' || message.role === 'senior') && (
+                                <span className={`
+                                    px-1 py-0.5 rounded-[4px] text-[8px] font-extrabold uppercase
+                                    ${message.role === 'admin' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'}
+                                `}>
+                                    {message.role}
+                                </span>
+                             )}
+                        </div>
+                    )}
+
+                    {/* Content */}
+                    {message.image_url && (
+                        <div className="mb-2 relative group-hover:brightness-110 transition-all rounded-lg overflow-hidden border border-black/10">
+                            <img 
+                                src={message.image_url} 
+                                alt="Shared" 
+                                className="max-w-full rounded-lg object-cover max-h-[300px]"
+                                onClick={() => onImageClick && onImageClick(message.image_url)}
+                            />
+                        </div>
+                    )}
+
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                        {message.content}
+                    </div>
+
+                    {/* Metadata */}
+                    <div className={`mt-1 flex items-center justify-end gap-1 ${isOwn ? 'text-blue-100' : 'text-slate-400'}`}>
+                        <span className="text-[10px] font-medium opacity-75">{time}</span>
+                        {isOwn && <CheckCheck size={12} className="opacity-75" />}
+                    </div>
                 </div>
             </div>
         </div>
     );
+}
+
+// Helper to generate consistent colors from strings
+function stringToColor(str) {
+    if (!str) return '#9ca3af';
+    const colors = ['#f472b6', '#fb7185', '#a78bfa', '#818cf8', '#60a5fa', '#34d399', '#facc15', '#fb923c'];
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
 }

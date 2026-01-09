@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
-import { ArrowLeft, MoreVertical, Search, User } from "lucide-react";
+import { ArrowLeft, MoreVertical, Search, User, Trash2, Shield, Info } from "lucide-react";
 import Loader from "../../components/ui/Loader";
 import Link from "next/link";
 import UserProfileModal from "@/app/components/UserProfileModal";
@@ -14,6 +14,7 @@ import ToastContainer from "@/app/components/ui/Toast";
 import MessageBubble from "@/app/components/chat/MessageBubble";
 import ChatInput from "@/app/components/chat/ChatInput";
 import ContextMenu from "@/app/components/chat/ContextMenu";
+import GlassCard from "@/app/components/ui/GlassCard";
 
 export default function ChatRoomPage(props) {
     const params = use(props.params);
@@ -306,82 +307,123 @@ export default function ChatRoomPage(props) {
         groupedMessages.push({ type: 'msg', data: msg });
     });
 
-    if (loading) return <div className="flex h-full items-center justify-center"><Loader /></div>;
-    if (!room) return <div className="p-10 text-center text-slate-400">Room not found</div>;
+    if (loading) return <div className="flex h-screen items-center justify-center bg-[#0B1120]"><Loader /></div>;
+    if (!room) return <div className="p-10 text-center text-slate-400 bg-[#0B1120] h-screen">Room not found</div>;
 
     return (
-        <div className="flex flex-col h-full bg-[#0B1120]">
-            {/* Header */}
-            <header className="flex items-center gap-4 px-6 py-4 border-b border-white/5 bg-[#0F1623]/80 backdrop-blur-md sticky top-0 z-20">
-                <Link href="/chat" className="md:hidden text-slate-400 hover:text-white transition-colors">
-                    <ArrowLeft size={20} />
-                </Link>
-                
-                <div 
-                    className="flex-1 cursor-pointer flex items-center gap-3" 
-                    onClick={() => setSelectedUserId(room.friendId || room.created_by || null)}
-                >
-                    <div className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden">
-                        {room.image ? (
-                            <img src={room.image} alt="room" className="w-full h-full object-cover" />
-                        ) : (
-                            <User size={18} className="text-slate-400" />
-                        )}
+        <div className="flex flex-col h-[100dvh] bg-[#0B1120] relative overflow-hidden">
+             
+             {/* Sticky Glass Header */}
+            <header className="flex-shrink-0 z-30 px-4 py-3 bg-[#0F1623]/80 backdrop-blur-xl border-b border-white/5 shadow-lg select-none">
+                <div className="max-w-4xl mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Link href="/chat" className="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-all md:hidden">
+                            <ArrowLeft size={22} />
+                        </Link>
+                        
+                        <div 
+                            className="flex items-center gap-3 cursor-pointer group"
+                            onClick={() => setSelectedUserId(room.friendId || room.created_by || null)}
+                        >
+                            <div className="relative">
+                                <div className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 overflow-hidden group-hover:border-cyan-500/50 transition-colors">
+                                    {room.image ? (
+                                        <img src={room.image} alt="room" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="flex items-center justify-center w-full h-full text-slate-500 bg-slate-800">
+                                            <User size={20} />
+                                        </div>
+                                    )}
+                                </div>
+                                {onlineCount > 1 && (
+                                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#0B1120] rounded-full"></div>
+                                )}
+                            </div>
+                            
+                            <div>
+                                <h1 className="text-base font-bold text-slate-100 leading-tight group-hover:text-cyan-400 transition-colors">
+                                    {room.name}
+                                </h1>
+                                <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                                    {room.type === 'dm' ? 'Direct Message' : (
+                                        <>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
+                                            {onlineCount} Online
+                                        </>
+                                    )}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-base font-bold text-white leading-tight">{room.name}</h1>
-                        <span className="text-xs font-medium text-cyan-400">
-                            {room.type === 'dm' ? 'Direct Message' : `${onlineCount} active`}
-                        </span>
-                    </div>
-                </div>
 
-                <div className="flex items-center gap-2 text-slate-400">
-                    <button className="p-2 hover:bg-white/5 rounded-full transition-colors"><Search size={20} /></button>
-                    <button className="p-2 hover:bg-white/5 rounded-full transition-colors"><MoreVertical size={20} /></button>
+                    <div className="flex items-center gap-1">
+                        <button className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-full transition-all">
+                            <Search size={20} />
+                        </button>
+                        <button className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all">
+                            <MoreVertical size={20} />
+                        </button>
+                    </div>
                 </div>
             </header>
 
-            {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-white/20">
-                {groupedMessages.map(item => {
-                    if (item.type === 'date') {
-                        return (
-                            <div key={item.id} className="flex justify-center my-6">
-                                <div className="bg-white/5 text-slate-400 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-white/5">
-                                    {item.date}
-                                </div>
+            {/* Chat Area - Scrollable */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 hover:scrollbar-thumb-slate-600 bg-gradient-to-b from-[#0B1120] to-[#0F1623]">
+                <div className="max-w-4xl mx-auto w-full">
+                    {/* Welcome Message */}
+                    {messages.length < 5 && (
+                        <div className="text-center py-8 mb-4">
+                            <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-500 border border-white/5">
+                                <Info size={32} />
                             </div>
+                            <p className="text-slate-500 text-sm">
+                                Welcome to the start of <span className="font-bold text-slate-300">{room.name}</span>.<br/>
+                                Always happen to be kind and respectful.
+                            </p>
+                        </div>
+                    )}
+
+                    {groupedMessages.map(item => {
+                        if (item.type === 'date') {
+                            return (
+                                <div key={item.id} className="flex justify-center sticky top-2 z-10 pointer-events-none opacity-80">
+                                    <div className="bg-black/40 backdrop-blur-md text-slate-400 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-white/5 shadow-sm">
+                                        {item.date}
+                                    </div>
+                                </div>
+                            );
+                        }
+                        const msg = item.data;
+                        return (
+                            <MessageBubble
+                                key={msg.id}
+                                message={msg}
+                                isOwn={user && msg.user_id === user.id}
+                                onContextMenu={handleContextMenu}
+                                onReplyClick={(replyId) => {
+                                    const target = document.getElementById(`msg-${replyId}`);
+                                    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }}
+                                onImageClick={(url) => setViewedImage(url)}
+                                onUserClick={(uid) => setSelectedUserId(uid)}
+                            />
                         );
-                    }
-                    const msg = item.data;
-                    return (
-                        <MessageBubble
-                            key={msg.id}
-                            message={msg}
-                            isOwn={user && msg.user_id === user.id}
-                            onContextMenu={handleContextMenu}
-                            onReplyClick={(replyId) => {
-                                const target = document.getElementById(`msg-${replyId}`);
-                                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }}
-                            onImageClick={(url) => setViewedImage(url)}
-                            onUserClick={(uid) => setSelectedUserId(uid)}
-                        />
-                    );
-                })}
-                <div ref={messagesEndRef} />
+                    })}
+                    <div ref={messagesEndRef} className="h-2" />
+                </div>
             </div>
 
-            {/* Input */}
-            <ChatInput
-                onSend={handleSendMessage}
-                replyTo={replyTo}
-                onCancelReply={() => setReplyTo(null)}
-                editingMessage={editingMessage}
-                onCancelEdit={() => setEditingMessage(null)}
-                allowImages={isAdmin || isSenior}
-            />
+            {/* Input Area - Sticky Bottom */}
+            <div className="flex-shrink-0 z-30">
+                <ChatInput
+                    onSend={handleSendMessage}
+                    replyTo={replyTo}
+                    onCancelReply={() => setReplyTo(null)}
+                    editingMessage={editingMessage}
+                    onCancelEdit={() => setEditingMessage(null)}
+                    allowImages={isAdmin || isSenior}
+                />
+            </div>
 
             {/* Context Menu Overlay */}
             {contextMenu && (
@@ -396,15 +438,15 @@ export default function ChatRoomPage(props) {
             {/* Image Modal */}
             {viewedImage && (
                 <div 
-                    className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in"
+                    className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 backdrop-blur-xl animate-in fade-in duration-200"
                     onClick={() => setViewedImage(null)}
                 >
-                    <button onClick={() => setViewedImage(null)} className="absolute top-6 right-6 text-white/50 hover:text-white p-2">
-                        <ArrowLeft size={32} className="rotate-45" />
+                    <button onClick={() => setViewedImage(null)} className="absolute top-6 right-6 text-white/50 hover:text-white p-2 z-50 bg-black/50 rounded-full">
+                        <ArrowLeft size={24} />
                     </button>
                     <img
                         src={viewedImage}
-                        className="max-w-full max-h-[90vh] rounded-lg shadow-2xl"
+                        className="max-w-full max-h-[85vh] rounded-lg shadow-2xl border border-white/10"
                         onClick={(e) => e.stopPropagation()}
                     />
                 </div>

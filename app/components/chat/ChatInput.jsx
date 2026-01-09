@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, X, Paperclip, Mic } from 'lucide-react';
+import { Send, X, Paperclip, Smile } from 'lucide-react';
+import GlassButton from '../ui/GlassButton';
 
 export default function ChatInput({ onSend, replyTo, onCancelReply, editingMessage, onCancelEdit, allowImages }) {
     const [text, setText] = useState("");
     const textareaRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     // Sync for Edit
     useEffect(() => {
@@ -17,7 +19,7 @@ export default function ChatInput({ onSend, replyTo, onCancelReply, editingMessa
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = "auto";
-            textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+            textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
         }
     }, [text]);
 
@@ -35,93 +37,89 @@ export default function ChatInput({ onSend, replyTo, onCancelReply, editingMessa
         }
     };
 
-    const fileInputRef = useRef(null);
-
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
-        // Pass file to parent
-        if (onSend) onSend(null, file); // sending text as null to indicate file
-
-        // Reset
+        if (onSend) onSend(null, file); 
         e.target.value = '';
         if (onCancelReply) onCancelReply();
     };
 
     return (
-        <div className="chat-input-area">
-            {/* Attachments (Visual Only) - Restricted to Admin/Senior */}
-            {allowImages && (
-                <>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        style={{ display: 'none' }}
-                        accept="image/*"
-                        onChange={handleFileChange}
-                    />
-                    <button
-                        style={{ color: '#64748b', padding: '8px' }}
-                        title="Send Image"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <Paperclip size={22} />
-                    </button>
-                </>
-            )}
-
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div className="w-full bg-[#0F1623]/90 backdrop-blur-xl border-t border-white/10 p-4 pb-safe-area-bottom">
+            <div className="max-w-4xl mx-auto">
                 {/* Reply / Edit Preview */}
                 {(replyTo || editingMessage) && (
-                    <div className="reply-preview-bar">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span className="reply-preview-name" style={{ color: editingMessage ? 'var(--primary)' : 'var(--primary)' }}>
-                                {editingMessage ? 'Editing Message' : `Reply to ${replyTo.user_name}`}
-                            </span>
-                            <button onClick={() => {
+                    <div className="flex items-center justify-between bg-slate-800/50 border border-white/5 rounded-t-xl p-3 mb-2 animate-in slide-in-from-bottom-2 fade-in">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <div className={`w-1 h-8 rounded-full ${editingMessage ? 'bg-amber-500' : 'bg-cyan-500'}`} />
+                            <div className="flex flex-col overflow-hidden">
+                                <span className={`text-xs font-bold uppercase tracking-wider ${editingMessage ? 'text-amber-500' : 'text-cyan-500'}`}>
+                                    {editingMessage ? 'Editing Message' : `Replying to ${replyTo.user_name}`}
+                                </span>
+                                <span className="text-sm text-slate-400 truncate max-w-[200px] md:max-w-md">
+                                    {editingMessage ? editingMessage.content : (replyTo.content || 'Attachment')}
+                                </span>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => {
                                 if (editingMessage) { onCancelEdit(); setText(""); }
                                 else onCancelReply();
-                            }} style={{ padding: '2px' }}>
-                                <X size={14} color="#64748b" />
-                            </button>
-                        </div>
-                        <div className="reply-preview-content">
-                            {editingMessage ? editingMessage.content : (replyTo.content || 'Photo')}
-                        </div>
+                            }} 
+                            className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
+                        >
+                            <X size={16} className="text-slate-400" />
+                        </button>
                     </div>
                 )}
 
-                <div className="chat-input-wrapper">
+                <div className="flex items-end gap-3 bg-slate-900/50 border border-slate-700/50 rounded-[1.5rem] p-2 pr-2 shadow-lg ring-1 ring-white/5 focus-within:ring-cyan-500/50 focus-within:border-cyan-500/50 transition-all duration-300">
+                    {/* Attachments */}
+                    {allowImages && (
+                        <>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                            />
+                            <button
+                                className="p-2.5 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-full transition-all"
+                                title="Attach Image"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <Paperclip size={20} strokeWidth={2} />
+                            </button>
+                        </>
+                    )}
+
                     <textarea
                         ref={textareaRef}
-                        className="chat-textarea"
-                        placeholder="Message..."
+                        className="flex-1 bg-transparent border-none focus:ring-0 text-slate-200 placeholder-slate-500 py-3 px-2 resize-none max-h-[120px] scrollbar-hide text-sm md:text-base leading-relaxed"
+                        placeholder="Type a message..."
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         onKeyDown={handleKeyDown}
                         rows={1}
+                        style={{ minHeight: '44px' }}
                     />
+
+                    <button
+                        onClick={handleSend}
+                        disabled={!text.trim()}
+                        className={`
+                            p-2.5 rounded-full transition-all duration-300 shadow-lg flex-shrink-0
+                            ${text.trim() 
+                                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:scale-105 hover:shadow-cyan-500/25' 
+                                : 'bg-slate-800 text-slate-500 cursor-not-allowed'}
+                        `}
+                    >
+                        <Send size={18} strokeWidth={2.5} className={text.trim() ? "ml-0.5" : ""} />
+                    </button>
                 </div>
             </div>
-
-            {text.trim() ? (
-                <button
-                    onClick={handleSend}
-                    style={{
-                        color: 'var(--primary)',
-                        padding: '8px',
-                        transform: 'rotate(0deg)',
-                        transition: 'transform 0.2s'
-                    }}
-                >
-                    <Send size={24} fill="currentColor" />
-                </button>
-            ) : (
-                <button style={{ color: '#64748b', padding: '8px' }}>
-                    <Mic size={24} />
-                </button>
-            )}
         </div>
     );
 }
