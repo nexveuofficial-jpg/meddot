@@ -186,7 +186,7 @@ export default function ProfilePage() {
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>Year of Study</label>
-                                    <input type="text" value={formData.year_of_study} onChange={(e) => setFormData({ ...formData, year_of_study: e.target.value })}
+                                    <input type="number" min="1" max="6" value={formData.year_of_study} onChange={(e) => setFormData({ ...formData, year_of_study: e.target.value })}
                                         style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#f8fafc' }} />
                                 </div>
                             </div>

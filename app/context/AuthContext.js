@@ -136,7 +136,7 @@ export function AuthProvider({ children }) {
     };
 
     // Signup
-    const signup = async (name, email, password) => {
+    const signup = async (name, email, password, studyYear) => {
         try {
             // 1. Create Auth User
             const { data, error } = await supabase.auth.signUp({
@@ -145,6 +145,7 @@ export function AuthProvider({ children }) {
                 options: {
                     data: {
                         full_name: name,
+                        year_of_study: studyYear,
                     },
                     emailRedirectTo: `${window.location.origin}/auth/callback`,
                 },
@@ -153,16 +154,16 @@ export function AuthProvider({ children }) {
             if (error) throw error;
 
             if (data?.user) {
-                // 2. Manual Profile Creation (If no trigger exists)
-                // Just in case, we can try to insert. If trigger handles it, this might fail or conflict, but 'upsert' is safer.
-                /*
+                // 2. Manual Profile Creation (Ensure data is saved)
                 const { error: profileError } = await supabase.from('profiles').upsert([{
                     id: data.user.id,
                     full_name: name,
                     email: email,
-                    role: 'student'
+                    role: 'student',
+                    year_of_study: studyYear
                 }]);
-                */
+                
+                if (profileError) console.error("Manual profile creation failed:", profileError);
             }
 
             return { success: true, data };

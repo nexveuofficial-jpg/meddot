@@ -10,13 +10,14 @@ export default function SignupPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [studyYear, setStudyYear] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const { signup } = useAuth();
     const router = useRouter();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const result = await signup(name, email, password);
+        const result = await signup(name, email, password, studyYear);
         if (result.success) {
             // Check if we have a session (immediate login)
             if (result.data?.session) {
@@ -76,6 +77,27 @@ export default function SignupPage() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            required
+                            style={{
+                                width: "100%",
+                                padding: "0.75rem",
+                                borderRadius: "0.5rem",
+                                border: "1px solid #cbd5e1",
+                                background: "#f8fafc",
+                                color: "#0f172a"
+                            }}
+                        />
+                    </div>
+
+                    <div>
+                        <label style={{ display: "block", marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Study Year</label>
+                        <input
+                            type="number"
+                            min="1"
+                            max="6"
+                            placeholder="e.g. 1 (for 1st year)"
+                            value={studyYear}
+                            onChange={(e) => setStudyYear(e.target.value)}
                             required
                             style={{
                                 width: "100%",
