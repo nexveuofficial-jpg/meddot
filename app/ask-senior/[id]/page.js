@@ -5,9 +5,13 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
-import { ArrowLeft, Send, CheckCircle, ThumbsUp, Trash2, Edit2 } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle, ThumbsUp, Trash2, Edit2, Shield, GraduationCap, Clock } from "lucide-react";
 import Loader from "../../components/ui/Loader";
 import RichTextEditor from "../../components/ui/RichTextEditor";
+import GlassCard from "../../components/ui/GlassCard";
+import GlassButton from "../../components/ui/GlassButton";
+import RevealOnScroll from "../../components/ui/RevealOnScroll";
+import UserAvatar from "../../components/ui/UserAvatar";
 
 export default function QuestionDetailPage(props) {
     const params = use(props.params);
@@ -211,10 +215,9 @@ export default function QuestionDetailPage(props) {
     };
 
     const handleAnswerSubmit = async () => {
-        // e.preventDefault() is not needed as this is triggered from RichTextEditor parent (div not form, or custom button)
         if (!newAnswer.trim() || !user) return;
         
-        // RBAC Check
+        // RBAC Check (Admin is already Senior via AuthContext, but explicit check is safe)
         if (!isSenior && !isAdmin) {
             alert("Only Seniors can post answers.");
             return;
@@ -242,194 +245,237 @@ export default function QuestionDetailPage(props) {
         setSubmitting(false);
     };
 
-    if (loading) return <div className="flex justify-center p-20"><Loader /></div>;
-    if (!question) return <div className="p-20 text-center">Question not found</div>;
+    const getCategoryBadgeStyle = (cat) => {
+        switch(cat) {
+            case 'Exam Strategy': return 'bg-red-500/10 text-red-400 border-red-500/20';
+            case 'Anatomy': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+            case 'Physiology': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+            case 'Clinical Postings': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            default: return 'bg-slate-700/30 text-slate-400 border-slate-600/30';
+        }
+    };
+
+    if (loading) return <div className="flex justify-center items-center min-h-screen"><Loader /></div>;
+    if (!question) return <div className="p-20 text-center text-slate-400">Question not found</div>;
 
     return (
-        <div style={{ padding: "2rem 4rem", maxWidth: "1000px", margin: "0 auto", minHeight: "100vh" }}>
-            <Link href="/ask-senior" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--muted-foreground)', textDecoration: 'none', marginBottom: '2rem' }}>
-                <ArrowLeft size={18} />
-                Back to Q&A
-            </Link>
+        <div className="max-w-4xl mx-auto p-4 md:p-8 min-h-screen pb-32">
+            <RevealOnScroll>
+                <Link href="/ask-senior" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors">
+                    <ArrowLeft size={18} />
+                    Back to Q&A
+                </Link>
 
                 {/* Question Section */}
-            <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--card-border)', marginBottom: '2rem', boxShadow: 'var(--shadow-sm)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                    <span style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", color: "var(--primary)", background: "var(--accent)", padding: "0.25rem 0.75rem", borderRadius: "99px" }}>
-                        {question.category || question.topic || 'General'}
-                    </span>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>
-                        {new Date(question.created_at).toLocaleDateString()}
-                    </span>
-                </div>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '1rem', lineHeight: 1.3 }}>{question.title || question.content}</h1>
-                {question.body && <p style={{ fontSize: '1rem', color: 'var(--foreground)', marginBottom: '1.5rem', lineHeight: 1.6 }}>{question.body}</p>}
+                <GlassCard className="mb-8 p-8 border-slate-700/50 bg-slate-900/40">
+                    <div className="flex justify-between items-start mb-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${getCategoryBadgeStyle(question.category || question.topic)}`}>
+                            {question.category || question.topic || 'General'}
+                        </span>
+                        <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                             <Clock size={14} />
+                             {new Date(question.created_at).toLocaleDateString()}
+                        </div>
+                    </div>
+                    
+                    <h1 className="text-2xl md:text-3xl font-extrabold text-white mb-6 leading-tight">
+                        {question.title || question.content}
+                    </h1>
+                    
+                    {question.body && (
+                        <div className="text-slate-300 text-lg leading-relaxed mb-8 prose prose-invert max-w-none">
+                            {question.body}
+                        </div>
+                    )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
-                    <p style={{ color: 'var(--muted-foreground)', fontWeight: 500, margin: 0 }}>
-                        Asked by {question.display_name}
-                        {question.author_year && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '2px 6px', color: '#4b5563' }}>Year {question.author_year}</span>}
-                    </p>
-                    {isAdmin && (
-                        <button
-                            onClick={handleDeleteQuestion}
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '0.5rem', padding: '0.5rem 1rem', background: 'transparent', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
-                        >
-                            <Trash2 size={16} /> Delete Question (Admin)
-                        </button>
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 pt-6 border-t border-white/5">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 font-bold border border-white/5">
+                                {question.display_name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div className="text-sm font-semibold text-white">
+                                    {question.display_name}
+                                </div>
+                                {question.author_year && (
+                                    <div className="text-xs text-slate-500">
+                                        Year {question.author_year} Student
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {isAdmin && (
+                            <button
+                                onClick={handleDeleteQuestion}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all text-xs font-bold"
+                            >
+                                <Trash2 size={14} /> Delete Question
+                            </button>
+                        )}
+                    </div>
+                </GlassCard>
+            </RevealOnScroll>
+
+            {/* Answers Section */}
+            <div className="mb-12">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                    Answers <span className="bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full text-sm">{answers.length}</span>
+                </h3>
+                
+                <div className="space-y-6">
+                    {answers.map((answer, index) => (
+                        <RevealOnScroll key={answer.id} delay={index * 50}>
+                            <GlassCard 
+                                className={`
+                                    p-6 relative transition-all duration-300
+                                    ${answer.is_accepted ? 'border-green-500/30 bg-green-500/5 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-slate-700/30 bg-slate-900/30'}
+                                `}
+                                hoverEffect={false}
+                            >
+                                {answer.is_accepted && (
+                                    <div className="absolute -top-3 right-6 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-green-500/20">
+                                        <CheckCircle size={12} strokeWidth={3} /> Accepted Answer
+                                    </div>
+                                )}
+
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <UserAvatar user={{ full_name: answer.display_name, email: 'placeholder' }} size="36px" className="ring-2 ring-white/5" />
+                                        <div>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-sm font-bold text-slate-200">
+                                                    {answer.display_name}
+                                                </span>
+                                                {(answer.profiles?.role === 'senior' || answer.profiles?.role === 'admin') && (
+                                                    <span className={`
+                                                        px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border
+                                                        ${answer.profiles?.role === 'admin' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'}
+                                                    `}>
+                                                        {answer.display_role || 'Senior'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="text-xs text-slate-500 mt-0.5">
+                                                {new Date(answer.created_at).toLocaleDateString()}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col items-end gap-2">
+                                         {/* Mark as Accepted */}
+                                         {user?.id === question.author_id && !answer.is_accepted && (
+                                            <button 
+                                                onClick={() => handleAcceptAnswer(answer.id)}
+                                                className="text-xs font-bold text-green-400 hover:bg-green-500/10 px-2 py-1 rounded border border-green-500/20 transition-colors"
+                                            >
+                                                Mark as Best
+                                            </button>
+                                         )}
+                                         
+                                         {/* Actions */}
+                                         {user && (
+                                            <div className="flex items-center gap-1">
+                                                {editingAnswerId !== answer.id && isSenior && user.id === answer.author_id && (
+                                                    <button onClick={() => handleStartEdit(answer)} className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors" title="Edit">
+                                                        <Edit2 size={14} />
+                                                    </button>
+                                                )}
+                                                {((isSenior && user.id === answer.author_id) || isAdmin) && (
+                                                    <button onClick={() => handleDeleteAnswer(answer.id)} className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete">
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                         )}
+                                    </div>
+                                </div>
+                                
+                                {/* Content */}
+                                {editingAnswerId === answer.id ? (
+                                    <div className="mt-4 bg-slate-900/50 rounded-xl p-4 border border-slate-700">
+                                        <RichTextEditor content={editContent} onChange={setEditContent} />
+                                        <div className="flex justify-end gap-3 mt-4">
+                                            <GlassButton size="sm" variant="ghost" onClick={() => setEditingAnswerId(null)}>Cancel</GlassButton>
+                                            <GlassButton size="sm" variant="primary" onClick={() => handleSaveEdit(answer.id)}>Save Changes</GlassButton>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div 
+                                        className="prose prose-sm prose-invert max-w-none text-slate-300 leading-relaxed mb-4"
+                                        dangerouslySetInnerHTML={{ __html: answer.content }}
+                                    />
+                                )}
+
+                                <div className="flex items-center gap-4 pt-4 border-t border-white/5">
+                                    <button 
+                                        onClick={() => handleUpvote(answer.id, answer.upvotes || 0)}
+                                        className="flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-cyan-400 transition-colors"
+                                    >
+                                        <ThumbsUp size={16} className={answer.upvotes > 0 ? "text-cyan-400 fill-cyan-400/20" : ""} /> 
+                                        {answer.upvotes || 0} Helpful
+                                    </button>
+                                </div>
+                            </GlassCard>
+                        </RevealOnScroll>
+                    ))}
+                    {answers.length === 0 && (
+                        <div className="text-center py-12 border border-dashed border-slate-700 rounded-2xl bg-slate-900/20">
+                            <GraduationCap size={32} className="mx-auto text-slate-600 mb-3" />
+                            <p className="text-slate-500 font-medium italic">No answers yet. Seniors will respond soon!</p>
+                        </div>
                     )}
                 </div>
             </div>
 
-            {/* Answers Section */}
-            <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Answers ({answers.length})</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {answers.map(answer => (
-                        <div key={answer.id} style={{
-                            background: answer.is_accepted ? '#f0fdf4' : 'var(--card-bg)',
-                            border: answer.is_accepted ? '2px solid #22c55e' : '1px solid var(--card-border)',
-                            padding: '1.5rem',
-                            borderRadius: '1rem',
-                            position: 'relative'
-                        }}>
-                            {answer.is_accepted && (
-                                <div style={{ position: 'absolute', top: '-10px', right: '20px', background: '#22c55e', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                    <CheckCircle size={12} /> Accepted Answer
-                                </div>
-                            )}
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0369a1', fontWeight: 700 }}>
-                                        {answer.display_name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <div style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            {answer.display_name}
-                                            {/* Senior Badge */}
-                                            {(answer.profiles?.role === 'senior' || answer.profiles?.role === 'admin') && (
-                                                <span style={{ fontSize: '0.75rem', background: '#dbeafe', color: '#1e40af', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
-                                                    {answer.display_role || 'Senior'}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>
-                                            {new Date(answer.created_at).toLocaleDateString()}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                                     {/* Mark as Accepted (Visible to Question Author Only) */}
-                                     {user?.id === question.author_id && !answer.is_accepted && (
-                                        <button 
-                                            onClick={() => handleAcceptAnswer(answer.id)}
-                                            style={{ fontSize: '0.75rem', color: '#16a34a', border: '1px solid #16a34a', borderRadius: '4px', padding: '2px 6px' }}
-                                        >
-                                            Mark as Best Answer
-                                        </button>
-                                     )}
-                                     
-                                     {/* Answer Actions: Edit/Delete */}
-                                     {user && (
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            {/* Edit: Own Answer + Senior */}
-                                            {editingAnswerId !== answer.id && isSenior && user.id === answer.author_id && (
-                                                <button onClick={() => handleStartEdit(answer)} style={{ color: 'var(--muted-foreground)', padding: '4px' }} title="Edit">
-                                                    <Edit2 size={14} />
-                                                </button>
-                                            )}
-                                            {/* Delete: Own Answer (Senior) OR Admin */}
-                                            {((isSenior && user.id === answer.author_id) || isAdmin) && (
-                                                <button onClick={() => handleDeleteAnswer(answer.id)} style={{ color: '#ef4444', padding: '4px' }} title="Delete">
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            )}
-                                        </div>
-                                     )}
-                                </div>
-                            </div>
-                            
-                            {/* Content - Rich Text Supported OR Editor Mode */}
-                            {editingAnswerId === answer.id ? (
-                                <div style={{ marginTop: '1rem' }}>
-                                    <RichTextEditor content={editContent} onChange={setEditContent} />
-                                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
-                                        <button onClick={() => setEditingAnswerId(null)} style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'transparent' }}>Cancel</button>
-                                        <button onClick={() => handleSaveEdit(answer.id)} style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', background: 'var(--primary)', color: 'white', border: 'none' }}>Save Changes</button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div 
-                                    className="prose prose-sm"
-                                    style={{ lineHeight: 1.6, color: 'var(--foreground)' }}
-                                    dangerouslySetInnerHTML={{ __html: answer.content }}
-                                />
-                            )}
-
-                            <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <button 
-                                    onClick={() => handleUpvote(answer.id, answer.upvotes || 0)}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--muted-foreground)', fontWeight: 500, fontSize: '0.9rem' }}
-                                >
-                                    <ThumbsUp size={16} /> 
-                                    {answer.upvotes || 0} Helpful
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                    {answers.length === 0 && <p style={{ color: 'var(--muted-foreground)', fontStyle: 'italic' }}>No answers yet. Seniors will respond soon!</p>}
-                </div>
-            </div>
-
-            {/* Post Answer Form - ONLY FOR SENIORS/ADMINS */}
+            {/* Post Answer Sticky Card */}
             {user && (isSenior || isAdmin) ? (
-                <div style={{
-                    background: 'var(--card-bg)',
-                    padding: '1.5rem',
-                    borderRadius: '1rem',
-                    border: '1px solid var(--card-border)',
-                    boxShadow: 'var(--shadow-lg)',
-                    position: 'sticky',
-                    bottom: '2rem'
-                }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Post your Answer (Senior)</label>
-                    <RichTextEditor 
-                        content={newAnswer} 
-                        onChange={setNewAnswer} 
-                        placeholder="Write a detailed explanation..." 
-                    />
-                    
-                    <button
-                        onClick={handleAnswerSubmit}
-                        disabled={submitting}
-                        style={{
-                            marginTop: '1rem',
-                            background: 'var(--primary)',
-                            color: 'white',
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: '0.5rem',
-                            fontWeight: 600,
-                            border: 'none',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            float: 'right'
-                        }}
-                    >
-                        {submitting ? <Loader size={16} /> : <Send size={16} />}
-                        Post Answer
-                    </button>
-                    <div style={{ clear: 'both' }}></div>
+                <div className="fixed bottom-0 left-0 right-0 p-4 z-40 flex justify-center pointer-events-none">
+                    <div className="w-full max-w-4xl pointer-events-auto">
+                        <GlassCard className="p-4 bg-[#0F1623]/90 backdrop-blur-xl border-t border-cyan-500/20 shadow-2xl shadow-black/50 rounded-2xl md:rounded-b-none mb-4 md:mb-0 border-x border-b border-slate-800">
+                            <div className="flex flex-col gap-4">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-sm font-bold text-cyan-400 flex items-center gap-2">
+                                        <GraduationCap size={16} />
+                                        Post your Answer (Senior)
+                                    </label>
+                                    <button 
+                                        onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+                                        className="md:hidden text-xs text-slate-400"
+                                    >
+                                        Expand
+                                    </button>
+                                </div>
+                                
+                                <RichTextEditor 
+                                    content={newAnswer} 
+                                    onChange={setNewAnswer} 
+                                    placeholder="Write a detailed explanation..." 
+                                />
+                                
+                                <div className="flex justify-end">
+                                    <GlassButton
+                                        onClick={handleAnswerSubmit}
+                                        disabled={submitting}
+                                        variant="primary"
+                                        className="shadow-lg shadow-cyan-500/20"
+                                        loading={submitting}
+                                    >
+                                        <Send size={16} className="mr-2" />
+                                        Post Answer
+                                    </GlassButton>
+                                </div>
+                            </div>
+                        </GlassCard>
+                    </div>
                 </div>
             ) : user ? (
-                <div style={{ textAlign: 'center', padding: '2rem', background: 'var(--muted)', borderRadius: '1rem' }}>
-                    <p style={{ fontWeight: 600, color: 'var(--muted-foreground)' }}>Waiting for a Senior to answer...</p>
+                <div className="text-center py-8 bg-slate-900/30 rounded-2xl border border-white/5 mx-auto max-w-2xl">
+                    <p className="font-medium text-slate-400">Waiting for a Senior student to answer...</p>
                 </div>
             ) : (
-                <div style={{ textAlign: 'center', padding: '2rem', background: 'var(--muted)', borderRadius: '1rem' }}>
-                    <Link href="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>Login</Link> to view.
+                <div className="text-center py-8 bg-slate-900/30 rounded-2xl border border-white/5 mx-auto max-w-2xl">
+                    <Link href="/login" className="text-cyan-400 hover:underline">Login</Link> <span className="text-slate-500">to view answers.</span>
                 </div>
             )}
         </div>
