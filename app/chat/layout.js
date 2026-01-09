@@ -4,17 +4,18 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useFeature } from "@/app/context/FeatureFlagContext";
-import { Hash, ArrowLeft } from "lucide-react";
+import { Hash, ArrowLeft, MessageSquare, User } from "lucide-react";
 import Loader from "../components/ui/Loader";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
+import GlassCard from "../components/ui/GlassCard"; 
 
 export default function ChatLayout({ children }) {
     const [rooms, setRooms] = useState([]);
-    const [dms, setDms] = useState([]); // Separate state for DMs
+    const [dms, setDms] = useState([]); 
     const [loading, setLoading] = useState(true);
     const { isEnabled, loading: flagsLoading } = useFeature();
-    const { user } = useAuth(); // Need user to fetch DMs
+    const { user } = useAuth(); 
     const pathname = usePathname();
     const isChatActive = pathname && pathname !== '/chat';
 
@@ -31,7 +32,7 @@ export default function ChatLayout({ children }) {
                     .from("chat_rooms")
                     .select("*")
                     .eq("is_active", true)
-                    .neq("type", "dm") // Exclude DMs
+                    .neq("type", "dm") 
                     .order("name", { ascending: true });
 
                 setRooms(publicRooms || []);
@@ -44,9 +45,6 @@ export default function ChatLayout({ children }) {
                         .eq("type", "dm")
                         .contains("participants", [user.id]);
 
-                    // For DMs, we probably want to fetch the OTHER user's name to display instead of "DM"
-                    // But for MVP, let's just list them. Ideally we map participants to names.
-                    // Doing a clientside fetch for names for now to be quick.
                     if (myDms && myDms.length > 0) {
                         const enrichedDms = await Promise.all(myDms.map(async (dm) => {
                             const otherUserId = dm.participants.find(id => id !== user.id);
@@ -60,7 +58,7 @@ export default function ChatLayout({ children }) {
 
                             return {
                                 ...dm,
-                                displayName: profile ? (profile.username || profile.full_name) : 'Unknown User'
+                                displayName: profile ? (profile.full_name || profile.username) : 'Unknown User'
                             };
                         }));
                         setDms(enrichedDms);
@@ -80,98 +78,122 @@ export default function ChatLayout({ children }) {
         }
     }, [isEnabled, flagsLoading, user]);
 
-    // ... (rest of code) ...
+    if (flagsLoading) return <div className="flex h-screen items-center justify-center bg-[#0B1120]"><Loader /></div>;
+
+    if (!isEnabled('enable_chat')) {
+        return (
+            <div className="flex flex-col h-screen items-center justify-center bg-[#0B1120] text-slate-400">
+                <div className="bg-slate-900/50 p-8 rounded-2xl border border-white/5 text-center">
+                    <MessageSquare size={48} className="mx-auto mb-4 opacity-50" />
+                    <h2 className="text-xl font-bold text-white mb-2">Chat Disabled</h2>
+                    <p className="mb-4">Chat is currently disabled by the administrator.</p>
+                    <Link href="/dashboard" className="text-cyan-400 hover:text-cyan-300 transition-colors">Return to Dashboard</Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div style={{ display: "flex", height: "100vh", maxHeight: "100vh", overflow: "hidden" }}>
+        <div className="flex h-[100dvh] bg-[#0B1120] overflow-hidden">
             {/* Sidebar */}
-            <aside className={`chat-sidebar ${isChatActive ? 'hidden-mobile' : ''}`}>
-                <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--border)" }}>
-                    <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--muted-foreground)', textDecoration: 'none', marginBottom: '1rem' }}>
+            {/* Hidden on mobile if chat is active, otherwise shown. Always shown on Desktop. */}
+            <aside 
+                className={`
+                    w-full md:w-80 lg:w-96 flex-shrink-0 flex flex-col border-r border-white/5 bg-[#0F1623]/50 backdrop-blur-xl z-20
+                    ${isChatActive ? 'hidden md:flex' : 'flex'}
+                `}
+            >
+                <div className="p-6 border-b border-white/5">
+                    <Link href="/dashboard" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium mb-6">
                         <ArrowLeft size={16} /> Back
                     </Link>
-                    <h2 style={{ fontSize: "1.5rem", fontWeight: 800 }}>Messages</h2>
+                    <h2 className="text-2xl font-extrabold text-white tracking-tight">Messages</h2>
                 </div>
 
-                <div style={{ flex: 1, overflowY: "auto", padding: "1rem" }}>
+                <div className="flex-1 overflow-y-auto p-4 space-y-8 scrollbar-thin scrollbar-thumb-slate-800">
                     {loading ? (
-                        <div className="flex justify-center p-4"><Loader size={20} /></div>
+                        <div className="flex justify-center p-4"><Loader size={24} /></div>
                     ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-
+                        <>
                             {/* DMs Section */}
-                            {dms.length > 0 && (
+                            {user && dms.length > 0 && (
                                 <div>
-                                    <h3 style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted-foreground)', marginBottom: '0.5rem', paddingLeft: '0.5rem' }}>Direct Messages</h3>
-                                    <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                                        {dms.map(dm => {
-                                            const isActive = pathname === `/chat/${dm.id}`;
-                                            return (
-                                                <Link
-                                                    key={dm.id}
-                                                    href={`/chat/${dm.id}`}
-                                                    style={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        gap: "0.75rem",
-                                                        padding: "0.5rem 1rem",
-                                                        borderRadius: "0.5rem",
-                                                        textDecoration: "none",
-                                                        color: isActive ? "var(--primary)" : "var(--foreground)",
-                                                        background: isActive ? "var(--accent)" : "transparent",
-                                                        fontWeight: isActive ? 600 : 400,
-                                                        transition: "all 0.2s"
-                                                    }}
-                                                >
-                                                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700 }}>
-                                                        {dm.displayName?.[0] || 'U'}
+                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 px-2">Direct Messages</h3>
+                                    <div className="space-y-1">
+                                        {dms.map(room => (
+                                            <Link 
+                                                key={room.id} 
+                                                href={`/chat/${room.id}`}
+                                                className={`
+                                                    flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group
+                                                    ${pathname === `/chat/${room.id}` ? 'bg-cyan-500/10 border border-cyan-500/20' : 'hover:bg-white/5 border border-transparent'}
+                                                `}
+                                            >
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-slate-400 bg-slate-800 group-hover:bg-slate-700 transition-colors ${pathname === `/chat/${room.id}` ? 'bg-cyan-500/20 text-cyan-400' : ''}`}>
+                                                    <User size={18} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className={`text-sm font-bold truncate ${pathname === `/chat/${room.id}` ? 'text-cyan-400' : 'text-slate-200 group-hover:text-white'}`}>
+                                                        {room.displayName}
                                                     </div>
-                                                    <span>{dm.displayName}</span>
-                                                </Link>
-                                            )
-                                        })}
+                                                </div>
+                                            </Link>
+                                        ))}
                                     </div>
                                 </div>
                             )}
 
-                            {/* Rooms Section */}
+                            {/* Public Rooms Section */}
                             <div>
-                                <h3 style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted-foreground)', marginBottom: '0.5rem', paddingLeft: '0.5rem' }}>Study Rooms</h3>
-                                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                                    {rooms.map(room => {
-                                        const isActive = pathname === `/chat/${room.id}`;
-                                        return (
-                                            <Link
-                                                key={room.id}
-                                                href={`/chat/${room.id}`}
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "0.75rem",
-                                                    padding: "0.5rem 1rem",
-                                                    borderRadius: "0.5rem",
-                                                    textDecoration: "none",
-                                                    color: isActive ? "var(--primary)" : "var(--foreground)",
-                                                    background: isActive ? "var(--accent)" : "transparent",
-                                                    fontWeight: isActive ? 600 : 400,
-                                                    transition: "all 0.2s"
-                                                }}
-                                            >
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 px-2">Study Rooms</h3>
+                                <div className="space-y-1">
+                                    {rooms.map(room => (
+                                        <Link 
+                                            key={room.id} 
+                                            href={`/chat/${room.id}`}
+                                            className={`
+                                                flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group
+                                                ${pathname === `/chat/${room.id}` ? 'bg-cyan-500/10 border border-cyan-500/20' : 'hover:bg-white/5 border border-transparent'}
+                                            `}
+                                        >
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-slate-400 bg-slate-800 group-hover:bg-slate-700 transition-colors ${pathname === `/chat/${room.id}` ? 'bg-cyan-500/20 text-cyan-400' : ''}`}>
                                                 <Hash size={18} />
-                                                <span>{room.name}</span>
-                                            </Link>
-                                        );
-                                    })}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className={`text-sm font-bold truncate ${pathname === `/chat/${room.id}` ? 'text-cyan-400' : 'text-slate-200 group-hover:text-white'}`}>
+                                                    {room.name}
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    ))}
                                 </div>
                             </div>
-
-                        </div>
+                        </>
                     )}
                 </div>
+                
+                {/* User Status Bar (Optional Polish) */}
+                {user && (
+                    <div className="p-4 border-t border-white/5 bg-[#0F1623]/80 backdrop-blur-md">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-xs font-bold border border-cyan-500/30">
+                                {user.email?.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xs font-bold text-white truncate">
+                                    {user.user_metadata?.full_name || 'Student'}
+                                </div>
+                                <div className="text-[10px] text-green-400 flex items-center gap-1">
+                                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Online
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </aside>
 
-            {/* Main Chat Area */}
-            <main className={`chat-main ${!isChatActive ? 'hidden-mobile' : ''}`}>
+            {/* Main Content Area - Expands to fill remaining width */}
+            <main className={`flex-1 relative h-full overflow-hidden ${!isChatActive ? 'hidden md:block' : 'block'}`}>
                 {children}
             </main>
         </div>
