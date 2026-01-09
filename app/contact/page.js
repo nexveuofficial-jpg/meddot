@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import { sendEmail } from '../lib/email';
+import { sendEmail } from '../../lib/email';
 import { useAuth } from '../context/AuthContext';
 import BrandLogo from '../components/BrandLogo';
 
