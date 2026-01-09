@@ -19,6 +19,11 @@ export default function AskSeniorError({ error, reset }) {
             <p style={{ marginBottom: "2rem", color: "#6b7280" }}>
                 Something went wrong while loading the Ask Senior questions.
             </p>
+            {error.message && (
+                <div style={{ padding: "1rem", background: "#fee2e2", color: "#b91c1c", borderRadius: "0.5rem", marginBottom: "2rem", maxWidth: "80%", wordBreak: "break-word" }}>
+                    <strong>Error:</strong> {error.message}
+                </div>
+            )}
             <button
                 onClick={() => reset()}
                 style={{
