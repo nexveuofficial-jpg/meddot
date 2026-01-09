@@ -206,6 +206,31 @@
     z-index: 50;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     color: white;
+    transform: translateX(-100%);
+}
+
+.sidebarOpen {
+    transform: translateX(0);
+}
+
+@media (min-width: 1024px) {
+    .sidebar {
+        transform: translateX(0) !important;
+    }
+
+    .mobileOnly {
+        display: none !important;
+    }
+
+    .desktopOnly {
+        display: block !important;
+    }
+}
+
+@media (max-width: 1023px) {
+    .desktopOnly {
+        display: none !important;
+    }
 }
 
 .sidebarHeader {

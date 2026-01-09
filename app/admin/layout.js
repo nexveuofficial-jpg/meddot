@@ -112,7 +112,8 @@ export default function AdminLayout({ children }) {
     return (
         <div style={{ background: "#f1f5f9", minHeight: "100vh", color: "#0f172a", display: "flex", flexDirection: "column" }}>
             {/* Mobile Header */}
-            <header className={`${styles.mobileHeader} lg:hidden`}>
+            {/* Mobile Header */}
+            <header className={`${styles.mobileHeader} ${styles.mobileOnly}`}>
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -129,12 +130,12 @@ export default function AdminLayout({ children }) {
                 {sidebarOpen && (
                     <div
                         onClick={() => setSidebarOpen(false)}
-                        className={`${styles.mobileOverlay} lg:hidden`}
+                        className={`${styles.mobileOverlay} ${styles.mobileOnly}`}
                     />
                 )}
 
                 <aside
-                    className={`${styles.sidebar} ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+                    className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}
                 >
                     <div className={styles.sidebarHeader}>
                         <div style={{ background: 'linear-gradient(135deg, #38bdf8, #818cf8)', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex' }}>
@@ -144,7 +145,7 @@ export default function AdminLayout({ children }) {
 
                         {/* Close button mobile only */}
                         <button
-                            className="lg:hidden"
+                            className={styles.mobileOnly}
                             onClick={() => setSidebarOpen(false)}
                             style={{ background: 'none', border: 'none', color: 'gray', marginLeft: 'auto', cursor: 'pointer' }}
                         >
@@ -181,7 +182,7 @@ export default function AdminLayout({ children }) {
                 </aside>
 
                 {/* Main Content Spacer for Desktop Sidebar */}
-                <div className="hidden lg:block" style={{ width: "280px", flexShrink: 0 }}></div>
+                <div className={styles.desktopOnly} style={{ width: "280px", flexShrink: 0 }}></div>
 
                 <main style={{ flex: 1, padding: "1.5rem", overflowX: "hidden" }}>
                     {children}
