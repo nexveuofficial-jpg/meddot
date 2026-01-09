@@ -19,6 +19,7 @@ export default function AskSeniorPage() {
     const { isEnabled } = useFeature();
     const [selectedCategory, setSelectedCategory] = useState("All");
     const categories = ["All", "Exam Strategy", "Anatomy", "Physiology", "Clinical Postings"];
+    const [selectedUserId, setSelectedUserId] = useState(null);
 
     useEffect(() => {
         const fetchQuestions = async () => {
