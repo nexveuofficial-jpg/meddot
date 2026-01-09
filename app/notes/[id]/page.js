@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import SecureNotesViewer from "../../components/notes/SecureNotesViewer";
+import SecureReader from "../../components/notes/SecureReader";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Loader from "../../components/ui/Loader";
@@ -67,5 +67,5 @@ export default function NotePage(props) {
         );
     }
 
-    return <SecureNotesViewer note={note} />;
+    return <SecureReader note={note} />;
 }
