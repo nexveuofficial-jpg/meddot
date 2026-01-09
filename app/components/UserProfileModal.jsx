@@ -6,6 +6,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import { X, MessageCircle, UserPlus, Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import UserAvatar from "./ui/UserAvatar";
 
 export default function UserProfileModal({ userId, isOpen, onClose }) {
     const [profile, setProfile] = useState(null);
@@ -158,18 +159,8 @@ export default function UserProfileModal({ userId, isOpen, onClose }) {
                 ) : profile ? (
                     <div style={{ textAlign: 'center' }}>
                         {/* Avatar */}
-                        <div style={{
-                            width: '96px', height: '96px', borderRadius: '50%', margin: '0 auto 1.5rem',
-                            background: '#e2e8f0', overflow: 'hidden', border: '4px solid white',
-                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
-                        }}>
-                            {profile.avatar_url ? (
-                                <img src={profile.avatar_url} alt={profile.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            ) : (
-                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: '#94a3b8' }}>
-                                    {profile.full_name?.[0] || 'U'}
-                                </div>
-                            )}
+                        <div style={{ margin: '0 auto 1.5rem', width: 'fit-content' }}>
+                            <UserAvatar user={profile} size="96px" style={{ border: '4px solid white', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
                         </div>
 
                         {/* Name & Role */}

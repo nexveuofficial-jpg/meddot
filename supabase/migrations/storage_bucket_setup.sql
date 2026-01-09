@@ -3,8 +3,8 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('answer_attachments', 'answer_attachments', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Enable RLS
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- Enable RLS (Commented out as this often causes permission errors and is enabled by default)
+-- ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access to the bucket
 DROP POLICY IF EXISTS "Public can view answer attachments" ON storage.objects;

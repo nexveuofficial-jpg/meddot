@@ -9,6 +9,7 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import Link from "next/link";
 import Loader from "../components/ui/Loader";
 import BrandLogo from "../components/BrandLogo";
+import UserAvatar from "../components/ui/UserAvatar";
 
 export default function DashboardLayout({ children }) {
     const { user, loading, initialized, logout, isAdmin, isSenior, profile } = useAuth();
@@ -78,19 +79,9 @@ export default function DashboardLayout({ children }) {
 
             <aside className={`${styles.sidebar} ${isMobileMenuOpen ? styles.open : ''}`}>
                 <div className={styles.header}>
-                    {profile?.avatar_url ? (
-                        <div style={{
-                            width: '60px',
-                            height: '60px',
-                            borderRadius: '50%',
-                            overflow: 'hidden',
-                            border: '3px solid white',
-                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                            marginBottom: '1rem'
-                        }}>
-                            <img src={profile.avatar_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
-                    ) : null}
+                    <div style={{ marginBottom: '1rem' }}>
+                         <UserAvatar user={profile || user} size="60px" style={{ border: '3px solid white', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
+                    </div>
                     <BrandLogo size="1.5rem" subtitle="Student Portal" />
                 </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import styles from "./profile.module.css";
+import UserAvatar from "../components/ui/UserAvatar";
 
 export default function ProfilePage() {
     const { user, profile } = useAuth();
@@ -114,13 +115,12 @@ export default function ProfilePage() {
                 {/* Left Column: Identity Card */}
                 <div className={`${styles.card} ${styles.leftCard}`}>
                     <div className={styles.avatarContainer}>
-                        {previewUrl ? (
-                            <img src={previewUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', color: '#94a3b8' }}>
-                                {formData.full_name?.[0] || 'U'}
-                            </div>
-                        )}
+                         <UserAvatar 
+                            user={profile} 
+                            src={previewUrl} 
+                            size="100%" 
+                            style={{ width: '100%', height: '100%' }}
+                        />
                     </div>
 
                     <label style={{

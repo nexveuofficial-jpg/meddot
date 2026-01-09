@@ -6,6 +6,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
 import Loader from "../components/ui/Loader";
 import { MessageSquare, Search } from "lucide-react";
+import UserAvatar from "../components/ui/UserAvatar";
 
 export default function MessagesInbox() {
     const { user } = useAuth();
@@ -142,14 +143,7 @@ export default function MessagesInbox() {
                                 gap: "1rem",
                                 transition: "all 0.2s"
                             }} className="hover:shadow-md hover:border-blue-300">
-                                <div style={{
-                                    width: "48px", height: "48px", borderRadius: "50%",
-                                    background: "var(--accent)", color: "var(--primary)",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    fontWeight: 700, fontSize: "1.2rem"
-                                }}>
-                                    {partner.full_name?.[0]?.toUpperCase() || '?'}
-                                </div>
+                                <UserAvatar user={partner} size="48px" />
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
                                         <h3 style={{ fontWeight: 600, color: "var(--foreground)" }}>{partner.full_name}</h3>

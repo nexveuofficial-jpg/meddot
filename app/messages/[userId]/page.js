@@ -6,6 +6,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import { Send, ArrowLeft } from "lucide-react";
 import Loader from "../../components/ui/Loader";
 import Link from "next/link";
+import UserAvatar from "../../components/ui/UserAvatar";
 
 export default function DirectMessageChat(props) {
     const params = use(props.params);
@@ -111,9 +112,7 @@ export default function DirectMessageChat(props) {
                     <ArrowLeft size={20} />
                 </Link>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--accent)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
-                        {recipient.full_name?.[0]}
-                    </div>
+                    <UserAvatar user={recipient} size="36px" />
                     <div>
                         <h1 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, color: "#0f172a" }}>{recipient.full_name}</h1>
                         <span style={{ fontSize: "0.8rem", color: "#64748b", textTransform: "capitalize" }}>{recipient.role}</span>
