@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import BrandLogo from "./components/BrandLogo";
 
+import Loader from "./components/ui/Loader";
+
 export default function Home() {
   const { user, loading, debugStatus } = useAuth();
   const router = useRouter();
@@ -31,7 +33,7 @@ export default function Home() {
         {/* Professional Loader */}
         <div className="flex flex-col items-center gap-4">
           <BrandLogo size="2rem" />
-          <div style={{ width: "40px", height: "40px", border: "3px solid #e2e8f0", borderTopColor: "#0ea5e9", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
+          <Loader />
         </div>
 
         {showLongLoadingMessage && (

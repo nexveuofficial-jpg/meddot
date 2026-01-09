@@ -1,7 +1,7 @@
 "use client";
 
 export default function Loader({ fullScreen = false, size = 48, className = "" }) {
-    const loaderContent = (
+    return (
         <div
             className={className}
             style={{
@@ -59,47 +59,6 @@ export default function Loader({ fullScreen = false, size = 48, className = "" }
                     />
                 </svg>
             </div>
-
-            <style jsx>{`
-                .svg-loader {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    animation: rotate 2s linear infinite;
-                    will-change: transform; /* GPU Optimization */
-                }
-
-                .spinner-ring {
-                    stroke-dasharray: 125; /* Approx Circumference 2*pi*20 ~= 125.6 */
-                    stroke-dashoffset: 0;
-                    transform-origin: center;
-                    animation: dash 1.5s ease-in-out infinite;
-                    will-change: stroke-dashoffset; /* GPU Optimization */
-                }
-
-                @keyframes rotate {
-                    100% {
-                        transform: rotate(360deg);
-                    }
-                }
-
-                @keyframes dash {
-                    0% {
-                        stroke-dasharray: 1, 150;
-                        stroke-dashoffset: 0;
-                    }
-                    50% {
-                        stroke-dasharray: 90, 150;
-                        stroke-dashoffset: -35;
-                    }
-                    100% {
-                        stroke-dasharray: 90, 150;
-                        stroke-dashoffset: -124;
-                    }
-                }
-            `}</style>
         </div>
     );
-
-    return loaderContent;
 }
