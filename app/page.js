@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAuth } from "./context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import BrandLogo from "./components/BrandLogo";
 
 export default function Home() {
   const { user, loading, debugStatus } = useAuth();
@@ -29,7 +30,7 @@ export default function Home() {
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc', padding: '2rem', textAlign: 'center' }}>
         {/* Professional Loader */}
         <div className="flex flex-col items-center gap-4">
-          <h1 style={{ fontSize: "2rem", fontWeight: "800", color: "#0ea5e9", marginBottom: "0.5rem" }}>Meddot.</h1>
+          <BrandLogo size="2rem" />
           <div style={{ width: "40px", height: "40px", border: "3px solid #e2e8f0", borderTopColor: "#0ea5e9", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
         </div>
 
@@ -75,17 +76,9 @@ export default function Home() {
         border: "1px solid rgba(255, 255, 255, 0.5)",
         boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)"
       }}>
-        <h1 style={{
-          fontSize: "3.5rem",
-          fontWeight: 800,
-          marginBottom: "1rem",
-          background: "linear-gradient(135deg, #0ea5e9, #6366f1)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          letterSpacing: "-0.02em"
-        }}>
-          Meddot
-        </h1>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+            <BrandLogo size="3.5rem" />
+        </div>
         <p style={{
           fontSize: "1.25rem",
           color: "#64748b",

@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
+import BrandLogo from "../components/BrandLogo";
 
 export default function SignupPage() {
     const [name, setName] = useState("");
@@ -50,7 +51,10 @@ export default function SignupPage() {
                 boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                 color: "#0f172a"
             }}>
-                <h1 style={{ marginBottom: "1.5rem", textAlign: "center", color: "#0ea5e9" }}>Join Meddot</h1>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
+                    <BrandLogo size="2rem" />
+                </div>
+                <h2 style={{ textAlign: "center", marginBottom: "1.5rem", fontSize: "1.2rem", fontWeight: 600, color: "#64748b" }}>Create your account</h2>
 
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                     <div>

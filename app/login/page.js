@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
+import BrandLogo from "../components/BrandLogo";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -54,7 +55,10 @@ export default function LoginPage() {
                 boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                 color: "#0f172a" // Force Dark Text
             }}>
-                <h1 style={{ marginBottom: "1.5rem", textAlign: "center", color: "var(--primary)" }}>Login to Meddot</h1>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
+                    <BrandLogo size="2rem" />
+                </div>
+                <h2 style={{ textAlign: "center", marginBottom: "1.5rem", fontSize: "1.2rem", fontWeight: 600, color: "#64748b" }}>Welcome back</h2>
 
                 {error && <p style={{ color: "red", marginBottom: "1rem", fontSize: "0.875rem", textAlign: "center" }}>{error}</p>}
 

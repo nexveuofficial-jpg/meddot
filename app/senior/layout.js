@@ -7,6 +7,7 @@ import styles from "./SeniorDashboard.module.css";
 import Link from "next/link";
 import { LayoutDashboard, MessageSquare, LogOut, ArrowLeft } from "lucide-react";
 import Loader from "../components/ui/Loader";
+import BrandLogo from "../components/BrandLogo";
 
 export default function SeniorLayout({ children }) {
     const { user, loading, initialized, isSenior, isAdmin, logout } = useAuth();
@@ -61,11 +62,7 @@ export default function SeniorLayout({ children }) {
                 color: "white"
             }}>
                 <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--border)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#3b82f6" }}></div>
-                        <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>Senior Panel</span>
-                    </div>
-                    <h2 style={{ fontSize: "1.25rem", fontWeight: 800 }}>Meddot.</h2>
+                     <BrandLogo subtitle="Senior Panel" />
                 </div>
 
                 <nav style={{ flex: 1, padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>

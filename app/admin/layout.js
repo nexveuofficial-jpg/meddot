@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import styles from "./AdminDashboard.module.css";
 import { Users, FileText, MessageSquare, Megaphone, Home, LogOut, Shield, Menu, X } from "lucide-react";
+import BrandLogo from "../components/BrandLogo";
 
 const SidebarLink = ({ href, icon: Icon, label, onClick }) => (
     <a
@@ -121,7 +122,7 @@ export default function AdminLayout({ children }) {
                     >
                         <Menu size={24} />
                     </button>
-                    <span className={styles.brand} style={{ fontSize: "1.25rem" }}>Meddot Admin</span>
+                    <BrandLogo size="1.25rem" subtitle="Admin" showIcon={false} />
                 </div>
             </header>
 
@@ -138,10 +139,7 @@ export default function AdminLayout({ children }) {
                     className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}
                 >
                     <div className={styles.sidebarHeader}>
-                        <div style={{ background: 'linear-gradient(135deg, #38bdf8, #818cf8)', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex' }}>
-                            <Shield size={24} color="white" />
-                        </div>
-                        <h2 className={styles.brand}>Meddot</h2>
+                        <BrandLogo subtitle="Admin Panel" />
 
                         {/* Close button mobile only */}
                         <button

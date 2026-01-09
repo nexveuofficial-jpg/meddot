@@ -8,6 +8,7 @@ import { Menu, X } from "lucide-react";
 import ErrorBoundary from "../components/ErrorBoundary";
 import Link from "next/link";
 import Loader from "../components/ui/Loader";
+import BrandLogo from "../components/BrandLogo";
 
 export default function DashboardLayout({ children }) {
     const { user, loading, initialized, logout, isAdmin, isSenior, profile } = useAuth();
@@ -90,8 +91,7 @@ export default function DashboardLayout({ children }) {
                             <img src={profile.avatar_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                     ) : null}
-                    <h2 className={styles.title}>Meddot.</h2>
-                    <p className={styles.subtitle}>Student Portal</p>
+                    <BrandLogo size="1.5rem" subtitle="Student Portal" />
                 </div>
 
                 <nav style={{ display: "flex", flexDirection: "column", gap: '0.5rem', marginTop: "2rem" }}>
