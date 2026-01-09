@@ -1,6 +1,5 @@
 import { FileText, Bookmark, Eye, ShieldCheck, Clock, GraduationCap } from "lucide-react";
 import Loader from "../ui/Loader";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "../../context/AuthContext";
@@ -20,15 +19,13 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
     const [viewerOpen, setViewerOpen] = useState(false);
     const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
 
-    // Initial check (if isBookmarked prop isn't fully reliable or need self-check)
     useEffect(() => {
-        // Here we rely on prop typically, but could fetch status if needed. 
-        // For list views, passing isBookmarked is better performance.
-    }, []);
+        setBookmarked(isBookmarked);
+    }, [isBookmarked]);
 
     const handleBookmark = async (e) => {
         e.preventDefault();
-        e.stopPropagation(); // prevent card click
+        e.stopPropagation();
         if (!user) return alert("Login to bookmark");
 
         const wasBookmarked = bookmarked;
@@ -36,29 +33,21 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
 
         try {
             if (wasBookmarked) {
-                // Remove bookmark
                 const { error } = await supabase
                     .from("bookmarks")
                     .delete()
                     .eq("user_id", user.id)
                     .eq("note_id", note.id);
-
                 if (error) throw error;
             } else {
-                // Add bookmark
                 const { error } = await supabase
                     .from("bookmarks")
-                    .insert([{
-                        user_id: user.id,
-                        note_id: note.id,
-                        created_at: new Date().toISOString()
-                    }]);
-
+                    .insert([{ user_id: user.id, note_id: note.id }]);
                 if (error) throw error;
             }
         } catch (error) {
             console.error("Error toggling bookmark:", error);
-            setBookmarked(wasBookmarked); // Revert
+            setBookmarked(wasBookmarked);
         }
     };
 
@@ -71,37 +60,22 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
             await supabase.rpc('increment_note_views', { note_id: note.id });
         } catch (err) {
             console.error("Failed to increment views:", err);
-            // Don't block opening the note
         }
 
         try {
             let signedUrl = null;
 
-            // 1. Get Signed URL
-            // Priority 1: Try generating a Signed URL (Secure)
             if (note.file_path) {
-                console.log("Attempting Signed URL for:", note.file_path);
-                const { data, error } = await supabase
-                    .storage
+                const { data, error } = await supabase.storage
                     .from('notes_documents')
                     .createSignedUrl(note.file_path, 60);
 
-                if (error) {
-                    console.warn("Signed URL generation failed:", error.message);
-                } else if (data?.signedUrl) {
-                    signedUrl = data.signedUrl;
-                }
+                if (!error && data?.signedUrl) signedUrl = data.signedUrl;
             }
 
-            // Priority 2: Fallback to Public URL
-            if (!signedUrl && note.file_url) {
-                console.log("Falling back to Public URL:", note.file_url);
-                signedUrl = note.file_url;
-            }
-
+            if (!signedUrl && note.file_url) signedUrl = note.file_url;
             if (!signedUrl) throw new Error("Could not resolve a document link.");
 
-            // 2. Fetch Content as Blob (Prevents direct URL access)
             const response = await fetch(signedUrl);
             if (!response.ok) throw new Error("Failed to fetch document content");
 
@@ -121,162 +95,96 @@ export default function NoteCard({ note, isBookmarked = false, onBookmarkToggle 
 
     const handleCloseViewer = () => {
         setViewerOpen(false);
-        // Clean up blob URL to free memory
         if (pdfBlobUrl) {
             URL.revokeObjectURL(pdfBlobUrl);
             setPdfBlobUrl(null);
         }
     };
 
+    const isVerified = note.profiles?.role === 'admin' || note.profiles?.role === 'senior';
+
     return (
         <>
-            <div
+            <div 
                 onClick={handleNoteClick}
-                style={{
-                    textDecoration: "none",
-                    color: "inherit",
-                    display: "block",
-                    cursor: downloading ? "wait" : "pointer",
-                    position: "relative"
-                }}
+                className={`
+                    group relative p-6 rounded-2xl cursor-pointer
+                    border border-white/5 bg-slate-900/40 backdrop-blur-md 
+                    hover:border-cyan-500/20 transition-all duration-300 
+                    hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10
+                    overflow-hidden flex flex-col h-full
+                    ${downloading ? 'opacity-70 cursor-wait' : ''}
+                `}
             >
-                {/* ... (Existing Card UI) ... */}
-                <div style={{
-                    background: "var(--card-bg, #ffffff)",
-                    border: "1px solid var(--card-border, #e2e8f0)",
-                    borderRadius: "1rem",
-                    overflow: "hidden",
-                    transition: "all 0.3s ease",
-                    position: "relative",
-                    display: "flex",
-                    flexDirection: "column",
-                    height: "100%",
-                    boxShadow: "var(--shadow-sm)",
-                    opacity: downloading ? 0.7 : 1
-                }}
-                    onMouseEnter={e => {
-                        if (!downloading) {
-                            e.currentTarget.style.transform = "translateY(-4px)";
-                            e.currentTarget.style.boxShadow = "var(--shadow-lg)";
-                            e.currentTarget.style.borderColor = "var(--primary-light, #bae6fd)";
-                        }
-                    }}
-                    onMouseLeave={e => {
-                        e.currentTarget.style.transform = "none";
-                        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
-                        e.currentTarget.style.borderColor = "var(--card-border, #e2e8f0)";
-                    }}
-                >
-                    {/* Loading Overlay */}
-                    {downloading && (
-                        <div style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: 'rgba(255,255,255,0.8)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            zIndex: 10,
-                            flexDirection: 'column',
-                            gap: '0.5rem',
-                            color: 'var(--primary)',
-                            fontWeight: 600
-                        }}>
-                            <Loader size={24} />
-                            <span style={{ fontSize: '0.85rem' }}>Fetching Securely...</span>
-                        </div>
+                {/* Hover Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"/>
+
+                {/* Loading Shield */}
+                {downloading && (
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm text-cyan-400 font-semibold gap-2">
+                        <Loader size={24} />
+                        <span className="text-xs tracking-wider uppercase">Opening Securely...</span>
+                    </div>
+                )}
+
+                {/* Header: Icon & Metadata */}
+                <div className="relative z-10 flex justify-between items-start mb-4">
+                    <div className={`
+                        w-12 h-12 rounded-xl flex items-center justify-center border
+                        ${isVerified 
+                            ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' 
+                            : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}
+                    `}>
+                        <FileText size={24} strokeWidth={1.5} />
+                    </div>
+                    
+                    <button 
+                        onClick={handleBookmark}
+                        className={`p-2 rounded-full hover:bg-white/10 transition-colors z-20 ${bookmarked ? 'text-amber-400' : 'text-slate-500'}`}
+                    >
+                         <Bookmark size={20} fill={bookmarked ? "currentColor" : "none"} />
+                    </button>
+                </div>
+
+                {/* Content */}
+                <div className="relative z-10 flex-1 flex flex-col">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-white/5">
+                            {note.subject}
+                        </span>
+                        {isVerified && (
+                             <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center gap-1">
+                                {note.profiles?.role === 'admin' ? 'Official' : 'Senior'} <ShieldCheck size={10} />
+                            </span>
+                        )}
+                    </div>
+
+                    <h3 className="text-lg font-bold text-slate-200 group-hover:text-cyan-400 transition-colors mb-2 line-clamp-2 leading-tight">
+                        {note.title}
+                    </h3>
+                    
+                    {note.description && (
+                        <p className="text-sm text-slate-500 line-clamp-2 mb-4">
+                            {note.description}
+                        </p>
                     )}
 
-                    {/* Decorative Top Accent */}
-                    <div style={{ height: "4px", background: "var(--primary)" }}></div>
-
-                    <div style={{ padding: "1.5rem", flex: 1, display: "flex", flexDirection: "column" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
-                            <span style={{
-                                fontSize: "0.7rem",
-                                fontWeight: 700,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.05em",
-                                color: "var(--primary)",
-                                background: "var(--accent)",
-                                padding: "0.25rem 0.6rem",
-                                borderRadius: "99px"
-                            }}>
-                                {note.subject} | {note.profiles?.username || note.author || 'Unknown'}
-                                {(note.profiles?.role === 'admin' || note.profiles?.role === 'senior') && (
-                                    <span style={{
-                                        marginLeft: '0.5rem',
-                                        background: 'rgba(255,255,255,0.3)',
-                                        padding: '0 0.4rem',
-                                        borderRadius: '4px'
-                                    }}>
-                                        {note.profiles?.role === 'admin' ? '🛡️' : '🎓'}
-                                    </span>
-                                )}
-                            </span>
-
-                            <button
-                                onClick={handleBookmark}
-                                style={{
-                                    background: "transparent",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    color: bookmarked ? "var(--primary)" : "var(--muted-foreground)",
-                                    padding: "4px",
-                                    zIndex: 5
-                                }}
-                            >
-                                <Bookmark
-                                    size={18}
-                                    fill={bookmarked ? "currentColor" : "none"}
-                                />
-                            </button>
+                    <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between text-xs text-slate-500 font-medium">
+                        <div className="flex items-center gap-2">
+                             <span className="w-1.5 h-1.5 rounded-full bg-slate-600 group-hover:bg-cyan-500 transition-colors"></span>
+                             <span>{new Date(note.created_at).getFullYear()}</span>
                         </div>
-
-                        <h3 style={{
-                            fontSize: "1.25rem",
-                            fontWeight: 700,
-                            marginBottom: "0.75rem",
-                            lineHeight: 1.3,
-                            color: "var(--foreground)"
-                        }}>
-                            {note.title}
-                        </h3>
-
-                        {note.description && (
-                            <p style={{
-                                fontSize: "0.9rem",
-                                color: "var(--muted-foreground)",
-                                marginBottom: "1.5rem",
-                                lineHeight: 1.5,
-                                display: "-webkit-box",
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: "vertical",
-                                overflow: "hidden"
-                            }}>
-                                {note.description}
-                            </p>
-                        )}
-
-                        <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: "1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                                <GraduationCap size={14} />
-                                <span>{new Date(note.created_at).getFullYear()}</span>
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                                <Eye size={14} />
-                                {/* Mock read time or views */}
-                                <span>{note.views || 0} views</span>
-                            </div>
+                        <div className="flex items-center gap-1.5">
+                            <Eye size={12} />
+                            <span>{note.views || 0}</span>
+                        </div>
+                        <div className="text-slate-400 ml-auto">
+                             {note.profiles?.username}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Secure PDF Reader Modal */}
             <SecurePDFReader
                 isOpen={viewerOpen}
                 onClose={handleCloseViewer}
