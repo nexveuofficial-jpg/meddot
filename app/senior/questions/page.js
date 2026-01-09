@@ -17,7 +17,7 @@ export default function SeniorQuestionsPage() {
             try {
                 let query = supabase
                     .from("questions")
-                    .select("*")
+                    .select("*, profiles(username, full_name, email)")
                     .order("created_at", { ascending: false });
 
                 if (filter === "unanswered") {
@@ -26,7 +26,16 @@ export default function SeniorQuestionsPage() {
 
                 const { data, error } = await query;
                 if (error) throw error;
-                setQuestions(data || []);
+
+                const mappedData = (data || []).map(q => {
+                    const p = Array.isArray(q.profiles) ? q.profiles[0] : q.profiles;
+                    return {
+                        ...q,
+                        display_name: p?.username || p?.full_name || (p?.email?.split('@')[0]) || q.author_name || 'Anonymous'
+                    };
+                });
+                
+                setQuestions(mappedData);
             } catch (error) {
                 console.error("Error fetching questions:", error);
             }
@@ -102,7 +111,7 @@ export default function SeniorQuestionsPage() {
                                         {q.body || q.content || "No details provided."}
                                     </p>
                                     <div style={{ marginTop: "1rem", paddingTop: "0.75rem", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
-                                        <span>Asked by {q.author_name && q.author_name.includes('@') ? q.author_name.split('@')[0] : (q.author_name || 'Anonymous')}</span>
+                                        <span>Asked by {q.display_name}</span>
                                         <span style={{ color: "var(--primary)", fontWeight: 600 }}>Click to Answer →</span>
                                     </div>
                                 </div>

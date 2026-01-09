@@ -24,7 +24,7 @@ export default function QuestionDetailPage(props) {
             // Fetch Question
             const { data: qData, error: qError } = await supabase
                 .from("questions")
-                .select("*")
+                .select("*, profiles(username, full_name, email)")
                 .eq("id", params.id)
                 .single();
 
@@ -35,27 +35,38 @@ export default function QuestionDetailPage(props) {
                 return;
             }
 
+            // Safe profile access
+            const profile = Array.isArray(qData.profiles) ? qData.profiles[0] : qData.profiles;
+            const authorName = profile?.username || profile?.full_name || (profile?.email?.split('@')[0]) || qData.author_name || 'Anonymous';
+
             setQuestion({
                 ...qData,
-                profiles: { full_name: qData.author_name || 'Anonymous' }
+                profiles: profile || { full_name: 'Anonymous' },
+                display_name: authorName
             });
 
             // Fetch Answers
             const { data: aData, error: aError } = await supabase
                 .from("answers")
-                .select("*")
+                .select("*, profiles(username, full_name, email, role)")
                 .eq("question_id", params.id)
                 .order("created_at", { ascending: true });
 
             if (aError) throw aError;
 
-            const mappedAnswers = (aData || []).map(d => ({
-                ...d,
-                profiles: {
-                    full_name: d.author_name || 'Anonymous',
-                    role: d.author_role || 'student'
-                }
-            }));
+            const mappedAnswers = (aData || []).map(d => {
+                const p = Array.isArray(d.profiles) ? d.profiles[0] : d.profiles;
+                const dName = p?.username || p?.full_name || (p?.email?.split('@')[0]) || d.author_name || 'Anonymous';
+                
+                return {
+                    ...d,
+                    profiles: p || {
+                        full_name: d.author_name || 'Anonymous',
+                        role: d.author_role || 'student'
+                    },
+                    display_name: dName
+                };
+            });
 
             setAnswers(mappedAnswers);
 
@@ -149,7 +160,7 @@ export default function QuestionDetailPage(props) {
                 {question.body && <p style={{ fontSize: '1rem', color: 'var(--foreground)', marginBottom: '1.5rem', lineHeight: 1.6 }}>{question.body}</p>}
 
                 <p style={{ color: 'var(--muted-foreground)', fontWeight: 500 }}>
-                    Asked by {question.profiles?.full_name && question.profiles.full_name.includes('@') ? question.profiles.full_name.split('@')[0] : (question.profiles?.full_name || 'Anonymous')}
+                    Asked by {question.display_name}
                 </p>
             </div>
 
@@ -167,7 +178,7 @@ export default function QuestionDetailPage(props) {
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                                 <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                                    {answer.profiles?.full_name && answer.profiles.full_name.includes('@') ? answer.profiles.full_name.split('@')[0] : (answer.profiles?.full_name || 'Anonymous')}
+                                    {answer.display_name}
                                     {answer.profiles?.role !== 'student' && <span style={{ marginLeft: '0.5rem', fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 6px', borderRadius: '4px' }}>{answer.profiles?.role}</span>}
                                 </span>
                                 <span style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{new Date(answer.created_at).toLocaleDateString()}</span>
