@@ -276,3 +276,7 @@ button:active {
     stroke-dashoffset: -124;
   }
 }
+
+.animate-spin {
+  animation: rotate 1s linear infinite;
+}
