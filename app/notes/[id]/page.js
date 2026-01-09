@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import NotesViewer from "../../components/notes/NotesViewer";
+import SecureNotesViewer from "../../components/notes/SecureNotesViewer";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Loader from "../../components/ui/Loader";
@@ -28,7 +28,7 @@ export default function NotePage(props) {
                     setNote({
                         ...data,
                         author: data.author_name || 'Unknown', // Use denormalized name
-                        content: <div dangerouslySetInnerHTML={{ __html: data.description || "<p>No content provided.</p>" }} />
+                        content: data.description // Pass description directly
                     });
                 } else {
                     console.error("Note not found");
@@ -67,5 +67,5 @@ export default function NotePage(props) {
         );
     }
 
-    return <NotesViewer note={note} />;
+    return <SecureNotesViewer note={note} />;
 }
