@@ -140,7 +140,10 @@ export default function ProfilePage() {
                     </label>
 
                     <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>{formData.full_name || 'Your Name'}</h2>
-                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>{profile.role || 'Member'} • {formData.college || 'College'}</p>
+                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                        {profile.role || 'Member'} • {formData.college || 'College'}
+                        {formData.year_of_study ? ` • Year ${formData.year_of_study}` : ''}
+                    </p>
 
                     <div style={{ textAlign: 'left', marginTop: '1.5rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
                         <p style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>About Me</p>

@@ -20,7 +20,7 @@ import "@/app/chat/telegram.css";
 
 export default function ChatRoomPage(props) {
     const params = use(props.params);
-    const { user, isAdmin, isSenior } = useAuth();
+    const { user, profile, isAdmin, isSenior } = useAuth();
     const router = useRouter();
 
     const [room, setRoom] = useState(null);
@@ -103,12 +103,24 @@ export default function ChatRoomPage(props) {
                 // Messages
                 const { data: msgs, error: msgError } = await supabase
                     .from("chat_messages")
-                    .select("*, image_url")
+                    .select("*, image_url, profiles(username, full_name, email, role, year_of_study)")
                     .eq("room_id", params.roomId)
                     .order("created_at", { ascending: true });
 
                 if (msgError) throw msgError;
-                setMessages(msgs || []);
+                
+                // Map profile data to message structure for consistency
+                const mappedMsgs = (msgs || []).map(m => {
+                     const p = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
+                     return {
+                         ...m,
+                         user_name: p?.username || p?.full_name || (p?.email?.split('@')[0]) || m.user_name || 'Anonymous',
+                         author_year: p?.year_of_study,
+                         role: p?.role || m.role
+                     };
+                });
+                
+                setMessages(mappedMsgs);
 
             } catch (error) {
                 console.error("Error fetching room/messages:", error);
@@ -223,8 +235,9 @@ export default function ChatRoomPage(props) {
             id: optimisticId,
             room_id: params.roomId,
             user_id: user.id,
-            user_name: user.user_metadata?.full_name || user.email || 'You',
-            role: user.role || 'student',
+            user_name: profile?.username || profile?.full_name || user.email || 'You',
+            role: profile?.role || user.role || 'student',
+            author_year: profile?.year_of_study,
             content: text || (file ? ' Sent an image' : ''),
             image_url: file ? URL.createObjectURL(file) : null, // Optimistic preview
             created_at: new Date().toISOString(),

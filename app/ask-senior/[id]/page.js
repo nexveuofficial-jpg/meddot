@@ -24,7 +24,7 @@ export default function QuestionDetailPage(props) {
             // Fetch Question
             const { data: qData, error: qError } = await supabase
                 .from("questions")
-                .select("*, profiles(username, full_name, email)")
+                .select("*, profiles(username, full_name, email, role, year_of_study)")
                 .eq("id", params.id)
                 .single();
 
@@ -42,13 +42,14 @@ export default function QuestionDetailPage(props) {
             setQuestion({
                 ...qData,
                 profiles: profile || { full_name: 'Anonymous' },
-                display_name: authorName
+                display_name: authorName,
+                author_year: profile?.year_of_study
             });
 
             // Fetch Answers
             const { data: aData, error: aError } = await supabase
                 .from("answers")
-                .select("*, profiles(username, full_name, email, role)")
+                .select("*, profiles(username, full_name, email, role, year_of_study)")
                 .eq("question_id", params.id)
                 .order("created_at", { ascending: true });
 
@@ -64,7 +65,8 @@ export default function QuestionDetailPage(props) {
                         full_name: d.author_name || 'Anonymous',
                         role: d.author_role || 'student'
                     },
-                    display_name: dName
+                    display_name: dName,
+                    author_year: p?.year_of_study
                 };
             });
 
@@ -161,6 +163,7 @@ export default function QuestionDetailPage(props) {
 
                 <p style={{ color: 'var(--muted-foreground)', fontWeight: 500 }}>
                     Asked by {question.display_name}
+                    {question.author_year && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '2px 6px', color: '#4b5563' }}>Year {question.author_year}</span>}
                 </p>
             </div>
 
@@ -177,9 +180,10 @@ export default function QuestionDetailPage(props) {
                             position: 'relative'
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                                <span style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     {answer.display_name}
-                                    {answer.profiles?.role !== 'student' && <span style={{ marginLeft: '0.5rem', fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 6px', borderRadius: '4px' }}>{answer.profiles?.role}</span>}
+                                    {answer.profiles?.role !== 'student' && <span style={{ fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 6px', borderRadius: '4px' }}>{answer.profiles?.role}</span>}
+                                    {answer.author_year && <span style={{ fontSize: '0.7rem', background: '#f3f4f6', border: '1px solid #e5e7eb', padding: '2px 6px', borderRadius: '4px', color: '#4b5563' }}>Year {answer.author_year}</span>}
                                 </span>
                                 <span style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{new Date(answer.created_at).toLocaleDateString()}</span>
                             </div>

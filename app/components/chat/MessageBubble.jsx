@@ -97,6 +97,7 @@ export default function MessageBubble({ message, isOwn, onContextMenu, onReplyCl
                         onClick={() => onUserClick && onUserClick(message.user_id)}>
                         {message.user_name}
                         {message.role === 'admin' && <span title="Admin" style={{ marginLeft: '4px' }}>★</span>}
+                        {message.author_year && <span style={{ marginLeft: '4px', fontSize: '0.7em', border: '1px solid #ccc', borderRadius: '4px', padding: '0 4px', color: '#666' }}>{message.author_year} Year</span>}
                     </div>
                 )}
 
