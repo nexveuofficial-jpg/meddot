@@ -166,27 +166,14 @@ export default function DashboardPage() {
             <div className={styles.grid}>
                 {cards.map((card, index) => (
                     <div key={index} className={styles.cardContainer} style={{ animation: `fadeInUp 0.6s ease-out ${index * 0.1}s backwards` }}>
-                        {card.href ? (
-                            <Link href={card.href} style={{ display: 'block', height: '100%', textDecoration: 'none' }}>
-                                <DashboardCard
-                                    title={card.title}
-                                    description={card.description}
-                                    icon={card.icon}
-                                    accentColor={card.accent}
-                                    delay={index * 0.1}
-                                />
-                            </Link>
-                        ) : (
-                            <div style={{ height: '100%' }}>
-                                <DashboardCard
-                                    title={card.title}
-                                    description={card.description}
-                                    icon={card.icon}
-                                    accentColor={card.accent}
-                                    delay={index * 0.1}
-                                />
-                            </div>
-                        )}
+                        <DashboardCard
+                            title={card.title}
+                            description={card.description}
+                            icon={card.icon}
+                            accentColor={card.accent}
+                            href={card.href}
+                            delay={index * 0.1}
+                        />
                     </div>
                 ))}
             </div>
