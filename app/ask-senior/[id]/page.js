@@ -344,7 +344,7 @@ export default function QuestionDetailPage(props) {
                 </div>
             ) : user ? (
                 <div style={{ textAlign: 'center', padding: '2rem', background: 'var(--muted)', borderRadius: '1rem' }}>
-                    <p style={{ fontWeight: 600, color: 'var(--muted-foreground)' }}>Only Seniors can post answers.</p>
+                    <p style={{ fontWeight: 600, color: 'var(--muted-foreground)' }}>Waiting for a Senior to answer...</p>
                 </div>
             ) : (
                 <div style={{ textAlign: 'center', padding: '2rem', background: 'var(--muted)', borderRadius: '1rem' }}>
