@@ -135,7 +135,7 @@ export default function QuestionDetailPage(props) {
                 Back to Q&A
             </Link>
 
-            {/* Question Section */}
+                {/* Question Section */}
             <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--card-border)', marginBottom: '2rem', boxShadow: 'var(--shadow-sm)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                     <span style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", color: "var(--primary)", background: "var(--accent)", padding: "0.25rem 0.75rem", borderRadius: "99px" }}>
@@ -149,7 +149,7 @@ export default function QuestionDetailPage(props) {
                 {question.body && <p style={{ fontSize: '1rem', color: 'var(--foreground)', marginBottom: '1.5rem', lineHeight: 1.6 }}>{question.body}</p>}
 
                 <p style={{ color: 'var(--muted-foreground)', fontWeight: 500 }}>
-                    Asked by {question.profiles?.full_name || 'Anonymous'}
+                    Asked by {question.profiles?.full_name && question.profiles.full_name.includes('@') ? question.profiles.full_name.split('@')[0] : (question.profiles?.full_name || 'Anonymous')}
                 </p>
             </div>
 
@@ -167,7 +167,7 @@ export default function QuestionDetailPage(props) {
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                                 <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                                    {answer.profiles?.full_name || 'Anonymous'}
+                                    {answer.profiles?.full_name && answer.profiles.full_name.includes('@') ? answer.profiles.full_name.split('@')[0] : (answer.profiles?.full_name || 'Anonymous')}
                                     {answer.profiles?.role !== 'student' && <span style={{ marginLeft: '0.5rem', fontSize: '0.7rem', background: '#dbeafe', color: '#1e40af', padding: '2px 6px', borderRadius: '4px' }}>{answer.profiles?.role}</span>}
                                 </span>
                                 <span style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{new Date(answer.created_at).toLocaleDateString()}</span>

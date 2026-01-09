@@ -102,7 +102,7 @@ export default function SeniorQuestionsPage() {
                                         {q.body || q.content || "No details provided."}
                                     </p>
                                     <div style={{ marginTop: "1rem", paddingTop: "0.75rem", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
-                                        <span>Asked by {q.author_name || 'Anonymous'}</span>
+                                        <span>Asked by {q.author_name && q.author_name.includes('@') ? q.author_name.split('@')[0] : (q.author_name || 'Anonymous')}</span>
                                         <span style={{ color: "var(--primary)", fontWeight: 600 }}>Click to Answer →</span>
                                     </div>
                                 </div>
