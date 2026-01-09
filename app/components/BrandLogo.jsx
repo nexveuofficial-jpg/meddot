@@ -1,4 +1,5 @@
-import { Shield } from "lucide-react";
+import LogoIcon from "./LogoIcon";
+
 
 export default function BrandLogo({ size = "2rem", showIcon = true, subtitle = "", className = "" }) {
     // Gradient matching the "Meddot.online" aesthetic (Blue -> Cyan/Teal)
@@ -12,21 +13,15 @@ export default function BrandLogo({ size = "2rem", showIcon = true, subtitle = "
         fontSize: size,
         display: "inline-flex",
         alignItems: "center",
-        gap: "0.5rem",
+        gap: "0.75rem", // Increased gap for the wider M logo
         letterSpacing: "-0.03em"
-    };
-
-    const iconStyle = {
-        color: "#3b82f6", // Fallback color or match gradient start
-        // To make icon gradient is harder with SVG, usually fill with url(#gradient) or plain color.
-        // Let's stick to a solid blue/cyan that matches.
-        color: "#0ea5e9" 
     };
 
     return (
         <div className={className} style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
             <div style={gradientStyle}>
-                {showIcon && <Shield size={parseFloat(size) * 16 || 24} style={iconStyle} strokeWidth={2.5} />}
+                {showIcon && <LogoIcon size={parseFloat(size) ? `calc(${size} * 1.2)` : size} />} 
+                {/* Scale icon slightly up relative to text height */}
                 Meddot
             </div>
             {subtitle && (
@@ -35,7 +30,7 @@ export default function BrandLogo({ size = "2rem", showIcon = true, subtitle = "
                     color: "#64748b", 
                     fontWeight: 600, 
                     marginTop: "0.2rem",
-                    marginLeft: showIcon ? "2.5rem" : "0" // Align with text if icon exists
+                    marginLeft: showIcon ? `calc(${size} * 1.5)` : "0" // Approx alignment
                 }}>
                     {subtitle}
                 </span>
