@@ -1,5 +1,7 @@
 "use client";
 import { useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { sendEmail } from '../../lib/email';
 import { useAuth } from '../context/AuthContext';
 import BrandLogo from '../components/BrandLogo';
@@ -38,7 +40,9 @@ export default function ContactPage() {
 
             if (result.error) {
                 console.error("Email error:", result.error);
-                setStatus("Error sending message. Please try again later or email directly.");
+                // Try to extract a readable error message
+                const errorMsg = result.error.message || JSON.stringify(result.error);
+                setStatus(`Error: ${errorMsg}`);
             } else {
                 setStatus("Message sent successfully! We will get back to you soon.");
                 setSubject('');
@@ -54,12 +58,33 @@ export default function ContactPage() {
 
     return (
         <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-                <BrandLogo size="2.5rem" />
-                <h1 style={{ fontSize: '2rem', fontWeight: 700, margin: '1rem 0' }}>Contact Us</h1>
-                <p style={{ color: '#64748b', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
-                    Have a question, feedback, or feature request? We'd love to hear from you.
-                </p>
+            <div style={{ marginBottom: '2rem' }}>
+                <Link 
+                    href="/dashboard" 
+                    style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem', 
+                        color: '#64748b', 
+                        textDecoration: 'none',
+                        marginBottom: '1rem',
+                        fontWeight: 500,
+                        transition: 'color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+                >
+                    <ArrowLeft size={20} />
+                    Back to Dashboard
+                </Link>
+
+                <div style={{ textAlign: 'center' }}>
+                    <BrandLogo size="2.5rem" />
+                    <h1 style={{ fontSize: '2rem', fontWeight: 700, margin: '1rem 0' }}>Contact Us</h1>
+                    <p style={{ color: '#64748b', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
+                        Have a question, feedback, or feature request? We'd love to hear from you.
+                    </p>
+                </div>
             </div>
 
             <div style={{ 
