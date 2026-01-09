@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-import { Edit2, Trash2, Plus, Users, Shield, Save, X } from "lucide-react";
+import { Edit2, Trash2, Plus, Users, Shield, BookOpen, X } from "lucide-react";
 import Loader from "../ui/Loader";
 import { toast } from "sonner";
 import ConfirmationModal from "../ui/ConfirmationModal";
@@ -13,14 +13,14 @@ export default function AdminChatRooms() {
     const [loading, setLoading] = useState(true);
 
     // Modal / Form State
-    const [isEditing, setIsEditing] = useState(false); // false = hidden, 'new' = create, 'edit' = update
+    const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState({
         id: null,
         name: "",
         subject: "",
         description: "",
         icon: "MessageCircle",
-        allowed_roles: [] // Array of strings e.g. ['senior']
+        allowed_roles: []
     });
 
     // Delete State
@@ -87,7 +87,6 @@ export default function AdminChatRooms() {
                 is_active: true
             };
 
-            // Fix empty string arrays if any
             if (!payload.allowed_roles) payload.allowed_roles = [];
 
             let error;
@@ -149,93 +148,77 @@ export default function AdminChatRooms() {
     };
 
     return (
-        <div className={styles.section} style={{ minHeight: '300px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <h2 className={styles.title} style={{ marginBottom: 0 }}>Study Rooms</h2>
-                    <button
-                        onClick={handleCreate}
-                        style={{
-                            background: 'var(--primary)',
-                            color: 'white',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '0.5rem',
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            border: 'none',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            boxShadow: 'var(--shadow-sm)'
-                        }}
-                    >
-                        <Plus size={16} /> New Room
-                    </button>
+        <div className="bg-[#1F2937]/30 backdrop-blur-md border border-white/5 rounded-2xl p-6 min-h-[300px]">
+            <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                    <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                         <BookOpen size={20} className="text-cyan-400" /> Study Rooms
+                    </h2>
                 </div>
+                <button
+                    onClick={handleCreate}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition-all shadow-lg hover:shadow-cyan-500/20"
+                >
+                    <Plus size={16} /> New Room
+                </button>
             </div>
 
             {loading ? (
                 <div className="p-10 flex justify-center"><Loader /></div>
             ) : rooms.length === 0 ? (
-                <div className={styles.emptyState}>No chat rooms found.</div>
+                <div className="text-center py-12 text-slate-400 bg-white/5 rounded-xl border border-dashed border-white/10">
+                    No chat rooms found.
+                </div>
             ) : (
-                <div className={styles.tableContainer}>
-                    <table className={styles.table}>
+                <div className="overflow-x-auto rounded-xl border border-white/5">
+                    <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Subject</th>
-                                <th>Access</th>
-                                <th>Actions</th>
+                            <tr className="bg-white/5">
+                                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-white/10">Name</th>
+                                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-white/10">Subject</th>
+                                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-white/10">Access</th>
+                                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-white/10 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-white/5">
                             {rooms.map((room) => {
                                 const isRestricted = (room.allowed_roles && room.allowed_roles.length > 0);
                                 return (
-                                    <tr key={room.id}>
-                                        <td>
-                                            <div style={{ fontWeight: 600 }}>{room.name}</div>
-                                            <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{room.description?.substring(0, 50)}</div>
+                                    <tr key={room.id} className="hover:bg-white/5 transition-colors group">
+                                        <td className="p-4">
+                                            <div className="font-semibold text-white">{room.name}</div>
+                                            <div className="text-xs text-slate-400 mt-0.5 md:hidden truncate max-w-[100px]">{room.description}</div>
+                                            <div className="text-xs text-slate-400 mt-0.5 hidden md:block truncate max-w-[200px]">{room.description}</div>
                                         </td>
-                                        <td>{room.subject}</td>
-                                        <td>
+                                        <td className="p-4 text-sm text-slate-300">{room.subject}</td>
+                                        <td className="p-4">
                                             {isRestricted ? (
-                                                <span style={{
-                                                    background: '#fee2e2', color: '#991b1b', padding: '0.2rem 0.6rem',
-                                                    borderRadius: '99px', fontSize: '0.75rem', fontWeight: 700,
-                                                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem'
-                                                }}>
+                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-bold uppercase tracking-wide">
                                                     <Shield size={10} /> Senior Only
                                                 </span>
                                             ) : (
-                                                <span style={{
-                                                    background: '#dcfce7', color: '#166534', padding: '0.2rem 0.6rem',
-                                                    borderRadius: '99px', fontSize: '0.75rem', fontWeight: 700,
-                                                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem'
-                                                }}>
+                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/20 text-[10px] font-bold uppercase tracking-wide">
                                                     <Users size={10} /> Public
                                                 </span>
                                             )}
                                         </td>
-                                        <td style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button
-                                                onClick={() => handleEdit(room)}
-                                                className={styles.actionButton}
-                                                style={{ background: '#e0f2fe', color: '#0369a1' }}
-                                                title="Edit"
-                                            >
-                                                <Edit2 size={14} />
-                                            </button>
-                                            <button
-                                                onClick={() => confirmDelete(room)}
-                                                className={styles.actionButton}
-                                                style={{ background: '#fee2e2', color: '#991b1b' }}
-                                                title="Delete"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+                                        <td className="p-4">
+                                            <div className="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => handleEdit(room)}
+                                                    className="p-1.5 rounded bg-white/5 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors"
+                                                    title="Edit"
+                                                >
+                                                    <Edit2 size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={() => confirmDelete(room)}
+                                                    className="p-1.5 rounded bg-white/5 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -245,90 +228,85 @@ export default function AdminChatRooms() {
                 </div>
             )}
 
-            {/* Modal - Rendered Inline to prevent focus loss */}
+            {/* Glass Modal for Editing */}
             {isEditing && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    zIndex: 50, backdropFilter: 'blur(4px)'
-                }}>
-                    <div style={{
-                        background: 'white', padding: '2rem', borderRadius: '1rem', width: '90%', maxWidth: '500px',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b' }}>{isEditing === 'new' ? 'Create Room' : 'Edit Room'}</h3>
-                            <button onClick={() => setIsEditing(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-[#0F1623] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/5">
+                            <h3 className="text-xl font-bold text-white">{isEditing === 'new' ? 'Create Room' : 'Edit Room'}</h3>
+                            <button onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-white transition-colors">
                                 <X size={24} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <form onSubmit={handleSave} className="p-6 space-y-4">
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem', color: '#475569' }}>Room Name</label>
+                                <label className="block text-sm font-medium text-slate-400 mb-1.5">Room Name</label>
                                 <input
                                     type="text"
                                     required
                                     value={editData.name}
                                     onChange={e => setEditData({ ...editData, name: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#fff', color: '#0f172a' }}
+                                    className="w-full bg-[#1F2937] border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder:text-slate-600"
                                     placeholder="e.g. Anatomy Hall"
                                     autoFocus
                                 />
                             </div>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem', color: '#475569' }}>Subject / Category</label>
+                                <label className="block text-sm font-medium text-slate-400 mb-1.5">Subject / Category</label>
                                 <input
                                     type="text"
                                     required
                                     value={editData.subject}
                                     onChange={e => setEditData({ ...editData, subject: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#fff', color: '#0f172a' }}
+                                    className="w-full bg-[#1F2937] border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder:text-slate-600"
                                     placeholder="e.g. Anatomy"
                                 />
                             </div>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem', color: '#475569' }}>Description</label>
+                                <label className="block text-sm font-medium text-slate-400 mb-1.5">Description</label>
                                 <textarea
                                     value={editData.description}
                                     onChange={e => setEditData({ ...editData, description: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', background: '#fff', color: '#0f172a' }}
-                                    rows={3}
+                                    className="w-full bg-[#1F2937] border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all min-h-[100px] placeholder:text-slate-600"
                                     placeholder="What is this room for?"
                                 />
                             </div>
 
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.5rem', color: '#475569' }}>Access Control</label>
-                                <div style={{
-                                    display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem',
-                                    border: '1px solid #cbd5e1', borderRadius: '0.5rem', background: '#f8fafc', cursor: 'pointer'
-                                }} onClick={() => toggleRole('senior')}>
-                                    <input
-                                        type="checkbox"
-                                        checked={(editData.allowed_roles || []).includes('senior')}
-                                        onChange={() => { }} // Handled by div click
-                                        style={{ width: '1.2rem', height: '1.2rem' }}
-                                    />
-                                    <span style={{ fontWeight: 500, color: '#334155' }}>Restrict to Seniors & Admins Only</span>
+                                <label className="block text-sm font-medium text-slate-400 mb-2">Access Control</label>
+                                <div 
+                                    className={`
+                                        flex items-center gap-3 p-3 rounded-xl border border-white/10 cursor-pointer transition-all
+                                        ${(editData.allowed_roles || []).includes('senior') ? 'bg-cyan-500/10 border-cyan-500/50' : 'bg-white/5 hover:bg-white/10'}
+                                    `}
+                                    onClick={() => toggleRole('senior')}
+                                >
+                                    <div className={`
+                                        w-5 h-5 rounded border flex items-center justify-center transition-colors
+                                        ${(editData.allowed_roles || []).includes('senior') ? 'bg-cyan-500 border-cyan-500 text-white' : 'border-slate-500'}
+                                    `}>
+                                        {(editData.allowed_roles || []).includes('senior') && <Plus size={12} strokeWidth={4} />}
+                                    </div>
+                                    <span className="text-sm font-medium text-slate-200">Restrict to Seniors & Admins Only</span>
                                 </div>
-                                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>
-                                    If unchecked, the room is public for all students.
+                                <p className="text-xs text-slate-500 mt-2 px-1">
+                                    {(editData.allowed_roles || []).includes('senior') ? 'Only verified seniors can access this room.' : 'This room is currently public for all students.'}
                                 </p>
                             </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                            <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
                                 <button
                                     type="button"
                                     onClick={() => setIsEditing(false)}
-                                    style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', background: '#f1f5f9', color: '#475569', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+                                    className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 font-medium transition-colors border border-white/5"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}
+                                    className="px-6 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all shadow-lg hover:shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {saving ? 'Saving...' : 'Save Room'}
                                 </button>

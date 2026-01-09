@@ -11,7 +11,7 @@ import ConfirmationModal from "../ui/ConfirmationModal";
 export default function AdminNotes() {
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('pending'); // Default to pending for better workflow
+    const [filter, setFilter] = useState('pending');
 
     // Delete State
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -46,7 +46,6 @@ export default function AdminNotes() {
 
     useEffect(() => {
         fetchNotes();
-        // Setup realtime listener for 'notes' table
         const subscription = supabase
             .channel('admin_notes_changes')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'notes' }, () => {
@@ -85,10 +84,8 @@ export default function AdminNotes() {
         setDeleting(true);
 
         try {
-            // Step 1: Get File Path (Already in note object, but good to double check or use existing)
-            const filePath = noteToDelete.file_path; // 'user_id/filename.pdf' typically
+            const filePath = noteToDelete.file_path;
 
-            // Step 2: Delete from Storage
             if (filePath) {
                 const { error: storageError } = await supabase
                     .storage
@@ -97,11 +94,9 @@ export default function AdminNotes() {
 
                 if (storageError) {
                     console.warn("Storage delete warning:", storageError.message);
-                    // Don't block DB delete if file missing, but log it
                 }
             }
 
-            // Step 3: Delete from Database
             const { error: dbError } = await supabase
                 .from("notes")
                 .delete()
@@ -109,7 +104,6 @@ export default function AdminNotes() {
 
             if (dbError) throw dbError;
 
-            // Step 4: Update UI Immediately
             setNotes(prev => prev.filter(n => n.id !== noteToDelete.id));
             toast.success("Note and file permanently deleted.");
             setDeleteModalOpen(false);
@@ -124,26 +118,18 @@ export default function AdminNotes() {
     };
 
     return (
-        <div className={styles.section} style={{ minHeight: '400px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <h2 className={styles.title} style={{ marginBottom: 0 }}>Content Moderation</h2>
-                    <a href="/notes/upload" style={{
-                        background: 'var(--primary)',
-                        color: 'white',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '0.5rem',
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                        textDecoration: 'none',
-                        boxShadow: 'var(--shadow-sm)'
-                    }}>+ Upload Official Note</a>
+        <div className="bg-[#1F2937]/30 backdrop-blur-md border border-white/5 rounded-2xl p-6 min-h-[400px]">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div className="flex flex-wrap gap-4 items-center">
+                    <h2 className="text-xl font-bold text-white tracking-tight">Content Moderation</h2>
+                    <a href="/notes/upload" className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-lg hover:shadow-cyan-500/20">
+                        + Upload Official Note
+                    </a>
                 </div>
                 <select
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
-                    className={styles.select}
-                    style={{ width: 'auto' }}
+                    className="bg-[#0F1623] border border-white/10 text-slate-200 text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 block p-2.5 outline-none min-w-[150px]"
                 >
                     <option value="all">All Notes</option>
                     <option value="pending">Pending Review</option>
@@ -155,103 +141,102 @@ export default function AdminNotes() {
             {loading ? (
                 <div className="p-10 flex justify-center"><Loader /></div>
             ) : notes.length === 0 ? (
-                <div className={styles.emptyState}>No notes found in this category.</div>
+                <div className="text-center py-12 text-slate-400 bg-white/5 rounded-xl border border-dashed border-white/10">
+                    No notes found in this category.
+                </div>
             ) : (
-                <div className={styles.tableContainer}>
-                    <table className={styles.table}>
+                <div className="overflow-x-auto rounded-xl border border-white/5">
+                    <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Subject</th>
-                                <th>Author</th>
-                                <th>Status</th>
-                                <th>Category</th>
-                                <th>Actions</th>
+                            <tr className="bg-white/5">
+                                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-white/10">Title</th>
+                                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-white/10">Subject</th>
+                                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-white/10">Author</th>
+                                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-white/10">Status</th>
+                                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-white/10">Category</th>
+                                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-white/10 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-white/5">
                             {notes.map((note) => (
-                                <tr key={note.id}>
-                                    <td>
-                                        <div style={{ fontWeight: 600 }}>{note.title}</div>
-                                        <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{new Date(note.created_at).toLocaleDateString()}</div>
+                                <tr key={note.id} className="hover:bg-white/5 transition-colors">
+                                    <td className="p-4">
+                                        <div className="font-semibold text-white">{note.title}</div>
+                                        <div className="text-xs text-slate-500 mt-1">{new Date(note.created_at).toLocaleDateString()}</div>
                                     </td>
-                                    <td>{note.subject}</td>
-                                    <td>{note.profiles?.username || note.profiles?.full_name || note.author_name || 'Anonymous'}</td>
-                                    <td>
-                                        <span className={styles.badge} style={{
-                                            background: note.status === 'published' ? '#dcfce7' : note.status === 'pending' ? '#fef9c3' : '#fee2e2',
-                                            color: note.status === 'published' ? '#166534' : note.status === 'pending' ? '#854d0e' : '#991b1b',
-                                            border: `1px solid ${note.status === 'published' ? '#bbf7d0' : note.status === 'pending' ? '#fde047' : '#fecaca'}`
-                                        }}>
+                                    <td className="p-4 text-sm text-slate-300">{note.subject}</td>
+                                    <td className="p-4 text-sm text-slate-300 font-medium">
+                                        {note.profiles?.username || note.profiles?.full_name || note.author_name || 'Anonymous'}
+                                    </td>
+                                    <td className="p-4">
+                                        <span className={`
+                                            px-2.5 py-1 rounded-md text-xs font-bold border
+                                            ${note.status === 'published' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
+                                              note.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : 
+                                              'bg-red-500/10 text-red-400 border-red-500/20'}
+                                        `}>
                                             {note.status}
                                         </span>
                                     </td>
-                                    <td>
-                                        <span style={{ fontSize: '0.85rem', background: '#f1f5f9', padding: '0.2rem 0.6rem', borderRadius: '0.4rem', color: '#475569' }}>
+                                    <td className="p-4">
+                                        <span className="bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs border border-white/5">
                                             {note.category || 'Other'}
                                         </span>
                                     </td>
-                                    <td style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <a
-                                            href={note.file_url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={styles.actionButton}
-                                            style={{ background: 'var(--muted)', color: 'var(--foreground)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                                            title="View PDF"
-                                        >
-                                            <Eye size={14} />
-                                        </a>
-                                        {note.status === 'pending' && (
-                                            <>
-                                                <button
-                                                    onClick={() => updateStatus(note.id, 'published')}
-                                                    className={styles.actionButton}
-                                                    style={{ background: '#dcfce7', color: '#166534' }}
-                                                    title="Approve & Publish"
-                                                >
-                                                    <Check size={14} />
-                                                </button>
+                                    <td className="p-4">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <a
+                                                href={note.file_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
+                                                title="View PDF"
+                                            >
+                                                <Eye size={16} />
+                                            </a>
+                                            {note.status === 'pending' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => updateStatus(note.id, 'published')}
+                                                        className="p-2 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 transition-colors"
+                                                        title="Approve"
+                                                    >
+                                                        <Check size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => updateStatus(note.id, 'rejected')}
+                                                        className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors"
+                                                        title="Reject"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                </>
+                                            )}
+                                            {note.status === 'published' && (
                                                 <button
                                                     onClick={() => updateStatus(note.id, 'rejected')}
-                                                    className={styles.actionButton}
-                                                    style={{ background: '#fee2e2', color: '#991b1b' }}
-                                                    title="Reject"
+                                                    className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors"
+                                                    title="Unpublish"
                                                 >
-                                                    <X size={14} />
+                                                    <X size={16} />
                                                 </button>
-                                            </>
-                                        )}
-                                        {note.status === 'published' && (
+                                            )}
                                             <button
-                                                onClick={() => updateStatus(note.id, 'rejected')}
-                                                className={styles.actionButton}
-                                                style={{ background: '#fee2e2', color: '#991b1b' }}
-                                                title="Unpublish"
+                                                onClick={() => confirmDelete(note)}
+                                                className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors ml-2"
+                                                title="Delete Permanently"
                                             >
-                                                <X size={14} />
+                                                <Trash2 size={16} />
                                             </button>
-                                        )}
-                                        {/* Hard Delete Button */}
-                                        <button
-                                            onClick={() => confirmDelete(note)}
-                                            className={styles.actionButton}
-                                            style={{ background: '#ef4444', color: 'white', marginLeft: 'auto' }}
-                                            title="Permanently Delete"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
-            )
-            }
+            )}
 
-            {/* Confirmation Modal */}
             <ConfirmationModal
                 isOpen={deleteModalOpen}
                 onClose={() => setDeleteModalOpen(false)}
@@ -262,6 +247,6 @@ export default function AdminNotes() {
                 isDestructive={true}
                 isLoading={deleting}
             />
-        </div >
+        </div>
     );
 }

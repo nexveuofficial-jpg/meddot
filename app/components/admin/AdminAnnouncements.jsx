@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
-import { Plus, Trash2, Megaphone } from "lucide-react";
+import { Plus, Trash2, Megaphone, AlertCircle } from "lucide-react";
 import Loader from "../ui/Loader";
 
 export default function AdminAnnouncements() {
@@ -75,51 +75,61 @@ export default function AdminAnnouncements() {
     };
 
     return (
-        <div className={styles.section}>
-            <h2 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Megaphone size={20} /> Announcements
+        <div className="bg-[#1F2937]/30 backdrop-blur-md border border-white/5 rounded-2xl p-6 h-full flex flex-col">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <Megaphone size={20} className="text-cyan-400" /> Announcements
             </h2>
 
-            <form onSubmit={handlePost} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+            <form onSubmit={handlePost} className="flex gap-2 mb-6">
                 <input
                     type="text"
                     value={newContent}
                     onChange={e => setNewContent(e.target.value)}
                     placeholder="New announcement..."
-                    style={{ flex: 1, minWidth: '200px', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }}
+                    className="flex-1 min-w-[150px] bg-[#0F1623] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-all placeholder:text-slate-600 text-sm"
                 />
                 <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
-                    style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--background)' }}
+                    className="bg-[#0F1623] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
                 >
                     <option value="normal">Normal</option>
-                    <option value="urgent">Urgent 🚨</option>
+                    <option value="urgent">Urgent</option>
                 </select>
-                <button type="submit" style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '0.5rem', padding: '0 1rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                    <Plus size={18} />
+                <button 
+                    type="submit" 
+                    className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg px-3 flex items-center justify-center transition-colors shadow-lg hover:shadow-cyan-500/20"
+                >
+                    <Plus size={20} />
                 </button>
             </form>
 
-            {loading ? <Loader /> : (
-                <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {loading ? <div className="flex justify-center p-4"><Loader /></div> : (
+                <ul className="space-y-3 overflow-y-auto pr-1 flex-1 scrollbar-thin scrollbar-thumb-white/10">
                     {announcements.map(item => (
-                        <li key={item.id} style={{
-                            background: 'var(--muted)',
-                            padding: '0.75rem',
-                            borderRadius: '0.5rem',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            fontSize: '0.9rem'
-                        }}>
-                            <span>{item.content}</span>
-                            <button onClick={() => handleDelete(item.id)} style={{ color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                                <Trash2 size={16} />
+                        <li key={item.id} className={`
+                            relative flex justify-between items-start p-3 rounded-xl border transition-all group
+                            ${item.priority === 'urgent' 
+                                ? 'bg-red-500/5 border-red-500/20 hover:border-red-500/30' 
+                                : 'bg-white/5 border-white/5 hover:border-white/10'}
+                        `}>
+                            <div className="flex gap-3">
+                                {item.priority === 'urgent' && <AlertCircle size={16} className="text-red-400 mt-0.5 shrink-0" />}
+                                <span className={`text-sm ${item.priority === 'urgent' ? 'text-red-100' : 'text-slate-300'}`}>{item.content}</span>
+                            </div>
+                            <button 
+                                onClick={() => handleDelete(item.id)} 
+                                className="text-slate-500 hover:text-red-400 transition-colors p-1 opacity-0 group-hover:opacity-100"
+                            >
+                                <Trash2 size={14} />
                             </button>
                         </li>
                     ))}
-                    {announcements.length === 0 && <li style={{ color: 'var(--muted-foreground)', fontStyle: 'italic', fontSize: '0.9rem' }}>No active announcements</li>}
+                    {announcements.length === 0 && (
+                        <li className="text-center py-8 text-slate-500 text-sm italic border border-dashed border-white/10 rounded-xl">
+                            No active announcements
+                        </li>
+                    )}
                 </ul>
             )}
         </div>

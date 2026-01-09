@@ -4,28 +4,32 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useFeature } from "@/app/context/FeatureFlagContext";
+import Link from 'next/link';
 
 import { Users, FileText, MessageSquare, Megaphone, Home, LogOut, Shield, Menu, X } from "lucide-react";
 import BrandLogo from "../components/BrandLogo";
+import UserAvatar from "../components/ui/UserAvatar";
 
 const SidebarLink = ({ href, icon: Icon, label, onClick }) => (
     <a
         href={href}
         onClick={onClick}
-        className={styles.navLink}
+        className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200 group"
     >
-        <span className={styles.navLinkIcon}><Icon size={20} /></span>
-        <span>{label}</span>
+        <span className="p-1 rounded-lg bg-white/5 text-slate-400 group-hover:text-cyan-400 group-hover:bg-cyan-500/10 transition-colors">
+            <Icon size={18} />
+        </span>
+        <span className="font-medium">{label}</span>
     </a>
 );
 
 export default function AdminLayout({ children }) {
-    const { user, loading, initialized, isAdmin } = useAuth();
+    const { user, loading, initialized, isAdmin, profile } = useAuth();
     const router = useRouter();
-    const [isAuthorized, setIsAuthorized] = useState(null); // null = unknown, false = denied, true = allowed
+    const [isAuthorized, setIsAuthorized] = useState(null);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
-        // Wait for auth to be fully initialized
         if (!initialized || loading) return;
 
         if (!user) {
@@ -33,77 +37,48 @@ export default function AdminLayout({ children }) {
             return;
         }
 
-        // Use the robust isAdmin check from context
         if (isAdmin) {
             setIsAuthorized(true);
         } else {
-            // console.warn("Access Denied: User is not admin. Role:", user.role, "Meta:", user.user_metadata);
             setIsAuthorized(false);
         }
     }, [user, loading, initialized, isAdmin, router]);
 
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-
-    // Close sidebar when route changes (mobile)
     useEffect(() => {
         setSidebarOpen(false);
     }, [router]);
 
     if (!initialized || loading || isAuthorized === null) {
         return (
-            <div style={{
-                minHeight: "100vh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "#0f172a",
-                color: "white"
-            }}>
-                <p>Loading Admin Panel...</p>
+            <div className="min-h-screen flex items-center justify-center bg-[#0B1120] text-white">
+                <div className="flex flex-col items-center gap-4">
+                     <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"/>
+                     <p className="text-slate-400 text-sm font-medium animate-pulse">Initializing Admin Core...</p>
+                </div>
             </div>
         );
     }
 
     if (isAuthorized === false) {
         return (
-            <div style={{
-                minHeight: "100vh",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "#0f172a",
-                color: "white",
-                gap: "1rem"
-            }}>
-                <h1 style={{ fontSize: "2rem", color: "#ef4444" }}>Access Denied</h1>
-                <p style={{ color: "#94a3b8" }}>You do not have permission to view this page.</p>
-                <div style={{ display: "flex", gap: "1rem" }}>
+            <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B1120] text-white gap-6 p-4">
+                <Shield size={64} className="text-red-500 mb-4" />
+                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-orange-400">Access Denied</h1>
+                <p className="text-slate-400 text-center max-w-md">
+                    You do not have the required clearance level (Admin) to access this secure terminal.
+                </p>
+                <div className="flex gap-4 mt-4">
                     <button
                         onClick={() => router.push("/dashboard")}
-                        style={{
-                            padding: "0.5rem 1rem",
-                            borderRadius: "0.5rem",
-                            background: "#3b82f6",
-                            color: "white",
-                            border: "none",
-                            cursor: "pointer"
-                        }}
+                        className="px-6 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition-colors shadow-lg shadow-cyan-500/20"
                     >
-                        Go to Dashboard
+                        Return to Dashboard
                     </button>
                     <button
                         onClick={() => router.push("/login")}
-                        style={{
-                            padding: "0.5rem 1rem",
-                            borderRadius: "0.5rem",
-                            background: "#334155",
-                            color: "white",
-                            border: "none",
-                            cursor: "pointer"
-                        }}
+                        className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors border border-white/10"
                     >
-                        Back to Login
+                        Sign Out
                     </button>
                 </div>
             </div>
@@ -111,14 +86,13 @@ export default function AdminLayout({ children }) {
     }
 
     return (
-        <div style={{ background: "#f1f5f9", minHeight: "100vh", color: "#0f172a", display: "flex", flexDirection: "column" }}>
+        <div className="min-h-screen bg-[#0B1120] text-slate-200 flex overflow-hidden font-sans selection:bg-cyan-500/30">
             {/* Mobile Header */}
-            {/* Mobile Header */}
-            <header className={`${styles.mobileHeader} ${styles.mobileOnly}`}>
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#0F1623]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 z-40">
+                <div className="flex items-center gap-3">
                     <button
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
-                        style={{ background: "none", border: "none", color: "white", cursor: "pointer" }}
+                        onClick={() => setSidebarOpen(true)}
+                        className="p-2 -ml-2 text-slate-400 hover:text-white"
                     >
                         <Menu size={24} />
                     </button>
@@ -126,78 +100,71 @@ export default function AdminLayout({ children }) {
                 </div>
             </header>
 
-            <div style={{ display: "flex", flex: 1, position: "relative" }}>
-                {/* Sidebar Overlay (Mobile) */}
-                {sidebarOpen && (
-                    <div
-                        onClick={() => setSidebarOpen(false)}
-                        className={`${styles.mobileOverlay} ${styles.mobileOnly}`}
-                    />
-                )}
+            {/* Mobile Sidebar Overlay */}
+            {sidebarOpen && (
+                <div
+                    onClick={() => setSidebarOpen(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden animate-in fade-in duration-200"
+                />
+            )}
 
-                <aside
-                    className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}
-                >
-                    <div className={styles.sidebarHeader}>
-                        <BrandLogo subtitle="Admin Panel" />
+            {/* Sidebar */}
+            <aside
+                className={`
+                    fixed lg:static inset-y-0 left-0 w-72 bg-[#0F1623]/50 backdrop-blur-2xl border-r border-white/5 z-50 flex flex-col
+                    transform transition-transform duration-300 ease-out
+                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                `}
+            >
+                <div className="p-6 h-20 flex items-center justify-between border-b border-white/5 bg-[#0F1623]/50">
+                    <BrandLogo subtitle="Admin Panel" />
+                    <button className="lg:hidden text-slate-400" onClick={() => setSidebarOpen(false)}>
+                        <X size={20} />
+                    </button>
+                </div>
 
-                        {/* Close button mobile only */}
-                        <button
-                            className={styles.mobileOnly}
-                            onClick={() => setSidebarOpen(false)}
-                            style={{ background: 'none', border: 'none', color: 'gray', marginLeft: 'auto', cursor: 'pointer' }}
-                        >
-                            <X size={20} />
-                        </button>
+                <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+                    <div className="px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
+                        Application
                     </div>
+                    <SidebarLink href="/dashboard" icon={Home} label="Return to App" onClick={() => setSidebarOpen(false)} />
+                    
+                    <div className="my-4 h-px bg-white/5 mx-4" />
+                    
+                    <div className="px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
+                        Management
+                    </div>
+                    <SidebarLink href="#users" icon={Users} label="User Database" onClick={() => setSidebarOpen(false)} />
+                    <SidebarLink href="#moderation" icon={FileText} label="Content Moderation" onClick={() => setSidebarOpen(false)} />
+                    <SidebarLink href="#announcements" icon={Megaphone} label="Announcements" onClick={() => setSidebarOpen(false)} />
+                    <SidebarLink href="#rooms" icon={MessageSquare} label="Chat Rooms" onClick={() => setSidebarOpen(false)} />
+                </nav>
 
-                    <nav className={styles.nav}>
-                        <SidebarLink href="/dashboard" icon={Home} label="Return to App" onClick={() => setSidebarOpen(false)} />
-
-                        <div style={{ height: '1px', background: '#1e293b', margin: '0.5rem 0' }}></div>
-
-                        <SidebarLink href="#users" icon={Users} label="User Management" onClick={() => setSidebarOpen(false)} />
-                        <SidebarLink href="#moderation" icon={FileText} label="Content Moderation" onClick={() => setSidebarOpen(false)} />
-                        <SidebarLink href="#announcements" icon={Megaphone} label="Announcements" onClick={() => setSidebarOpen(false)} />
-                        <SidebarLink href="#rooms" icon={MessageSquare} label="Chat Rooms" onClick={() => setSidebarOpen(false)} />
-                    </nav>
-
-                    <div className={styles.sidebarFooter}>
-                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', padding: '0 0.5rem' }}>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                                {user?.email?.[0].toUpperCase()}
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{user?.full_name?.split(' ')[0] || 'Admin'}</span>
-                                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Administrator</span>
-                            </div>
+                <div className="p-4 border-t border-white/5 bg-[#0F1623]/30">
+                    <div className="flex items-center gap-3 mb-4 px-2">
+                        <UserAvatar user={profile || user} size="36px" className="ring-2 ring-white/10" />
+                        <div className="flex flex-col overflow-hidden">
+                             <span className="text-sm font-bold text-white truncate">{user?.full_name || 'Administrator'}</span>
+                             <span className="text-xs text-cyan-400 font-medium uppercase tracking-wider">Super Admin</span>
                         </div>
-                        <button onClick={() => router.push('/login')} className={styles.logoutButton}>
-                            <LogOut size={18} />
-                            <span>Sign Out</span>
-                        </button>
                     </div>
-                </aside>
+                    <button 
+                        onClick={() => router.push('/login')} 
+                        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-white/5 hover:bg-red-500/10 hover:text-red-400 border border-white/5 hover:border-red-500/20 text-slate-400 transition-all duration-200 text-sm font-medium"
+                    >
+                        <LogOut size={16} />
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </aside>
 
-                {/* Main Content Spacer for Desktop Sidebar */}
-                <div className={styles.desktopOnly} style={{ width: "280px", flexShrink: 0 }}></div>
-
-                <main style={{ flex: 1, padding: "1.5rem", overflowX: "hidden" }}>
+            {/* Main Content */}
+            <main className="flex-1 bg-[#0B1120] relative flex flex-col h-screen overflow-hidden">
+                {/* Scrollable Content Area */}
+                <div className="flex-1 overflow-y-auto p-4 lg:p-8 pt-20 lg:pt-8 scroll-smooth">
                     {children}
-                </main>
-            </div>
-
-            {/* Add global styles for Tailwind-like utility classes used above if not present, primarily for media queries */}
-            <style jsx global>{`
-                @media (min-width: 1024px) {
-                    .lg\\:hidden { display: none !important; }
-                    .lg\\:block { display: block !important; }
-                    .lg\\:translate-x-0 { transform: translateX(0) !important; }
-                }
-                @media (max-width: 1023px) {
-                    .hidden { display: none !important; }
-                }
-            `}</style>
+                </div>
+            </main>
         </div>
     );
 }
