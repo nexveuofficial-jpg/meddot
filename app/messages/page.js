@@ -13,9 +13,7 @@ import GlassButton from "@/app/components/ui/GlassButton";
 export default function InboxPage() {
     const { user } = useAuth();
     const [conversations, setConversations] = useState([]);
-    const [mentors, setMentors] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         if (!user) return;
@@ -39,16 +37,6 @@ export default function InboxPage() {
                  setConversations(enriched);
             }
 
-            // 2. Fetch Suggested Mentors (Seniors & Admins)
-            // Excluding current user
-            const { data: mentorsData } = await supabase
-                .from('profiles')
-                .select('*')
-                .in('role', ['senior', 'admin'])
-                .neq('id', user.id)
-                .limit(6);
-            
-            setMentors(mentorsData || []);
             setLoading(false);
         };
 
@@ -66,29 +54,9 @@ export default function InboxPage() {
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-white mb-6">Messages</h1>
-                        <p className="text-slate-400">Manage your direct messages and mentor connections.</p>
+                        <p className="text-slate-400">Manage your direct messages.</p>
                     </div>
                 </div>
-
-                {/* Suggested Mentors Section */}
-                <section className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex items-center gap-2 mb-6">
-                        <Shield className="text-cyan-400" size={20} />
-                        <h2 className="text-lg font-bold text-white uppercase tracking-wider">Suggested Mentors</h2>
-                    </div>
-                    
-                    {mentors.length > 0 ? (
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                            {mentors.map(mentor => (
-                                <ProfileCard key={mentor.id} profile={mentor} />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="p-8 border border-white/5 rounded-2xl bg-white/5 text-center text-slate-400">
-                            No mentors found at the moment.
-                        </div>
-                    )}
-                </section>
 
                 {/* Conversations Section */}
                 <section className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
@@ -126,7 +94,7 @@ export default function InboxPage() {
                             <div className="text-center py-12 border-2 border-dashed border-slate-800 rounded-3xl">
                                 <MessageCircle size={48} className="mx-auto text-slate-700 mb-4" />
                                 <h3 className="text-slate-300 font-bold mb-2">No messages yet</h3>
-                                <p className="text-slate-500">Connect with a mentor above to start a conversation!</p>
+                                <p className="text-slate-500">Visit a profile to start a conversation!</p>
                             </div>
                         )}
                     </div>
