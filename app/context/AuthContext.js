@@ -86,7 +86,25 @@ export function AuthProvider({ children }) {
 
         initializeAuth();
 
-        // 2. Listen for changes
+        // 2. Realtime Profile Sync
+        const channel = supabase
+            .channel(`profile_updates_${user?.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'profiles',
+                    filter: user ? `id=eq.${user.id}` : undefined
+                },
+                (payload) => {
+                    console.log("Realtime Profile Update:", payload.new);
+                    setProfile(payload.new);
+                }
+            )
+            .subscribe();
+
+        // 3. Listen for Auth State Changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             console.log("Auth Event:", event);
             if (!mounted) return;
@@ -94,7 +112,9 @@ export function AuthProvider({ children }) {
             if (session?.user) {
                 setUser(session.user);
                 // Optimistic update to prevent flicker, but fetch profile
-                await fetchProfile(session.user.id);
+                if (event === 'SIGNED_IN') {
+                    await fetchProfile(session.user.id);
+                }
             } else {
                 setUser(null);
                 setProfile(null);
@@ -106,8 +126,9 @@ export function AuthProvider({ children }) {
         return () => {
             mounted = false;
             subscription.unsubscribe();
+            supabase.removeChannel(channel);
         };
-    }, []);
+    }, [user]); // Re-run if user changes to update subscription filter
 
     // Safety Valve: Force loading to false after 7 seconds max to prevent infinite "Initializing..." screen
     useEffect(() => {
