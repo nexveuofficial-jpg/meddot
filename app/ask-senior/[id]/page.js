@@ -428,45 +428,43 @@ export default function QuestionDetailPage(props) {
                 </div>
             </div>
 
-            {/* Post Answer Sticky Card */}
+            {/* Post Answer Sticky Card - Refactored to Docked Bar */}
             {user && (isSenior || isAdmin) ? (
-                <div className="fixed bottom-0 left-0 right-0 p-4 z-40 flex justify-center pointer-events-none">
-                    <div className="w-full max-w-4xl pointer-events-auto">
-                        <GlassCard className="p-4 bg-[#0F1623]/90 backdrop-blur-xl border-t border-cyan-500/20 shadow-2xl shadow-black/50 rounded-2xl md:rounded-b-none mb-4 md:mb-0 border-x border-b border-slate-800">
-                            <div className="flex flex-col gap-4">
-                                <div className="flex justify-between items-center">
-                                    <label className="text-sm font-bold text-cyan-400 flex items-center gap-2">
-                                        <GraduationCap size={16} />
-                                        Post your Answer (Senior)
-                                    </label>
-                                    <button 
-                                        onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
-                                        className="md:hidden text-xs text-slate-400"
-                                    >
-                                        Expand
-                                    </button>
-                                </div>
-                                
-                                <RichTextEditor 
-                                    content={newAnswer} 
-                                    onChange={setNewAnswer} 
-                                    placeholder="Write a detailed explanation..." 
-                                />
-                                
-                                <div className="flex justify-end">
-                                    <GlassButton
-                                        onClick={handleAnswerSubmit}
-                                        disabled={submitting}
-                                        variant="primary"
-                                        className="shadow-lg shadow-cyan-500/20"
-                                        loading={submitting}
-                                    >
-                                        <Send size={16} className="mr-2" />
-                                        Post Answer
-                                    </GlassButton>
-                                </div>
+                <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0F1623]/95 backdrop-blur-xl border-t border-cyan-500/20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)]">
+                    <div className="w-full max-w-4xl mx-auto p-4 md:p-6">
+                        <div className="flex flex-col gap-4">
+                            <div className="flex justify-between items-center">
+                                <label className="text-sm font-bold text-cyan-400 flex items-center gap-2">
+                                    <GraduationCap size={16} />
+                                    Post your Answer (Senior)
+                                </label>
+                                <button 
+                                    onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+                                    className="md:hidden text-xs text-slate-400"
+                                >
+                                    Expand
+                                </button>
                             </div>
-                        </GlassCard>
+                            
+                            <RichTextEditor 
+                                content={newAnswer} 
+                                onChange={setNewAnswer} 
+                                placeholder="Write a detailed explanation..." 
+                            />
+                            
+                            <div className="flex justify-end">
+                                <GlassButton
+                                    onClick={handleAnswerSubmit}
+                                    disabled={submitting}
+                                    variant="primary"
+                                    className="shadow-lg shadow-cyan-500/20 w-full md:w-auto"
+                                    loading={submitting}
+                                >
+                                    <Send size={16} className="mr-2" />
+                                    Post Answer
+                                </GlassButton>
+                            </div>
+                        </div>
                     </div>
                 </div>
             ) : user ? (
