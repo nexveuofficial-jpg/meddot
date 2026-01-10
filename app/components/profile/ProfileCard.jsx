@@ -77,9 +77,8 @@ export default function ProfileCard({ profile, stats = { notesCount: 0, answersC
         );
     }
 
-    // Full Card (Matches Demo Interactive Profile)
     return (
-        <div className="relative rounded-[2.5rem] overflow-hidden border border-white/10 bg-[#0F1623]/80 backdrop-blur-xl shadow-2xl ring-1 ring-white/5 mb-8">
+        <div className="relative rounded-[2.5rem] overflow-hidden border border-white/10 bg-[#0F1623]/80 backdrop-blur-xl shadow-2xl ring-1 ring-white/5">
             
             {/* Banner Gradient */}
             <div className="h-64 bg-gradient-to-r from-cyan-900/40 via-blue-900/40 to-indigo-900/40 relative overflow-hidden">
