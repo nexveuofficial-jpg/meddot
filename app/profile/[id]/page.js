@@ -7,6 +7,7 @@ import UserAvatar from "@/app/components/ui/UserAvatar";
 import NoteCard from "@/app/components/notes/NoteCard";
 import GlassButton from "@/app/components/ui/GlassButton";
 import { MessageCircle, Edit2, Calendar, MapPin, Link as LinkIcon, BookOpen, GraduationCap, Award, School, Shield } from "lucide-react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Loader from "@/app/components/ui/Loader";
 import RevealOnScroll from "@/app/components/ui/RevealOnScroll";
@@ -21,6 +22,32 @@ export default function PublicProfilePage(props) {
     const [loadingProfile, setLoadingProfile] = useState(true);
     const [loadingNotes, setLoadingNotes] = useState(true);
     const [activeTab, setActiveTab] = useState("notes"); // 'notes' | 'about'
+    
+    // Message Logic
+    const [loadingMessage, setLoadingMessage] = useState(false);
+    const router = useRouter();
+
+    const handleMessage = async () => {
+        if (!currentUser) {
+            router.push('/login');
+            return;
+        }
+        
+        try {
+            setLoadingMessage(true);
+            const { data: roomId, error } = await supabase.rpc('get_or_create_dm_room', { 
+                other_user_id: profile.id 
+            });
+
+            if (error) throw error;
+            router.push(`/chat/${roomId}`);
+        } catch (error) {
+            console.error("Error creating DM:", error);
+            alert("Failed to start chat. " + error.message);
+        } finally {
+            setLoadingMessage(false);
+        }
+    };
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -168,12 +195,15 @@ export default function PublicProfilePage(props) {
                                 </GlassButton>
                             </Link>
                         ) : (
-                            <Link href={`/messages/${profile.id}`}>
-                                <GlassButton variant="primary" className="shadow-lg shadow-cyan-500/20">
-                                    <MessageCircle size={18} className="mr-2" />
-                                    Message
-                                </GlassButton>
-                            </Link>
+                            <GlassButton 
+                                onClick={handleMessage} 
+                                disabled={loadingMessage}
+                                variant="primary" 
+                                className="shadow-lg shadow-cyan-500/20"
+                            >
+                                {loadingMessage ? <Loader size={16} /> : <MessageCircle size={18} className="mr-2" />}
+                                {loadingMessage ? 'Opening...' : 'Message'}
+                            </GlassButton>
                         )}
                     </div>
                 </div>
