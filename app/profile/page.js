@@ -87,6 +87,18 @@ export default function ProfilePage() {
 
             if (updateError) throw updateError;
 
+            // 3. Sync with Auth Metadata (Crucial for Avatar/Name consistency)
+            const { error: authError } = await supabase.auth.updateUser({
+                data: {
+                    full_name: formData.full_name,
+                    avatar_url: avatar_url
+                }
+            });
+
+            if (authError) console.warn("Auth metadata sync failed:", authError);
+
+            if (updateError) throw updateError;
+
             alert("Profile updated successfully!");
             window.location.reload();
 
