@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, X, Home, Book, Clock, User, HelpCircle, Shield, Mail, LogOut, Users } from "lucide-react";
+import { Menu, X, Home, Book, Clock, User, HelpCircle, Shield, Mail, LogOut, Users, MessageCircle } from "lucide-react";
 import ErrorBoundary from "../components/ErrorBoundary";
 import Link from "next/link";
 import Loader from "../components/ui/Loader";
@@ -113,6 +113,7 @@ export default function DashboardLayout({ children }) {
                         
                         <NavLink href="/ask-senior" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen} icon={HelpCircle}>Ask Senior</NavLink>
                         <NavLink href="/chat" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen} icon={Users}>Study Groups</NavLink>
+                        <NavLink href="/messages" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen} icon={MessageCircle}>Messages</NavLink>
                         <NavLink href="/focus" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen} icon={Clock}>Focus Mode</NavLink>
                         
                         <div className="my-2 h-px bg-white/5 mx-2"></div>
@@ -127,7 +128,7 @@ export default function DashboardLayout({ children }) {
                             </>
                         )}
                         
-                        {isSenior && !isAdmin && (
+                        {(isSenior || isAdmin) && (
                             <>
                                 <div className="my-2 h-px bg-white/5 mx-2"></div>
                                 <NavLink href="/senior" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen} icon={Shield}>Senior Panel</NavLink>
