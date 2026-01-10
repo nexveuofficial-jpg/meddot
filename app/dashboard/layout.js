@@ -95,14 +95,9 @@ export default function DashboardLayout({ children }) {
                     ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
                 `}>
                     <div className="p-6 border-b border-white/5 bg-[#0F1623]">
-                        <div className="flex items-center gap-4 mb-6">
-                             <UserAvatar user={profile || user} size="48px" className="ring-2 ring-white/10 shadow-lg" />
-                             <div className="overflow-hidden">
-                                 <h3 className="text-white font-bold truncate">{profile?.full_name?.split(' ')[0] || 'Student'}</h3>
-                                 <span className="text-xs text-cyan-400 font-medium uppercase tracking-wider">{profile?.role || 'Member'}</span>
-                             </div>
-                        </div>
-                        <BrandLogo size="1.25rem" subtitle="Portal" />
+                        <Link href="/" className="group block focus:outline-none">
+                            <BrandLogo size="1.5rem" subtitle="Portal" className="group-hover:opacity-90 transition-opacity" />
+                        </Link>
                     </div>
 
                     <nav className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-white/10">
@@ -137,6 +132,13 @@ export default function DashboardLayout({ children }) {
                     </nav>
 
                     <div className="p-4 border-t border-white/5 bg-[#0F1623]">
+                        <Link href="/profile" className="flex items-center gap-3 mb-4 px-2 hover:bg-white/5 p-2 rounded-lg transition-colors group">
+                             <UserAvatar user={profile || user} size="40px" className="ring-2 ring-white/10 shadow-lg" />
+                             <div className="overflow-hidden">
+                                 <h3 className="text-white text-sm font-bold truncate group-hover:text-cyan-400 transition-colors">{profile?.full_name?.split(' ')[0] || 'Student'}</h3>
+                                 <span className="text-xs text-slate-500 group-hover:text-cyan-500/80 font-medium uppercase tracking-wider block transition-colors">{profile?.role || 'Member'}</span>
+                             </div>
+                        </Link>
                         <button 
                             onClick={logout} 
                             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-white/5 bg-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-colors"

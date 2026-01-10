@@ -11,25 +11,20 @@ export default function LogoIcon({ size = 24, className = "", style = {} }) {
         >
             <defs>
                 <linearGradient id="logoGradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#3b82f6" />
-                    <stop offset="100%" stopColor="#06b6d4" />
+                    <stop offset="0%" stopColor="#22d3ee" /> {/* Cyan-400 */}
+                    <stop offset="100%" stopColor="#2563eb" /> {/* Blue-600 */}
                 </linearGradient>
             </defs>
             
-            {/* The M Pulse Shape */}
-            {/* Starts bottom left, goes up, down middle, up right, down right - forming an M, then transitions to a pulse and flat line ending in a dot */}
-            {/* Actually, let's keep it simple: A Pulse line that looks like an M */}
-            
+            {/* The "M" Shape (Matching app/icon.tsx logic but in SVG) */}
+            {/* A thick, modern M. */}
             <path
-                d="M4 16 H8 L12 6 L16 26 L20 6 L24 16 H26"
+                d="M6 26 V6 L16 16 L26 6 V26"
                 stroke="url(#logoGradient)"
-                strokeWidth="3"
+                strokeWidth="5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
             />
-            
-            {/* The Dot at the end */}
-            <circle cx="28" cy="16" r="3" fill="url(#logoGradient)" />
         </svg>
     );
 }
