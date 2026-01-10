@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
-import { ArrowLeft, Send, CheckCircle, ThumbsUp, Trash2, Edit2, Shield, GraduationCap, Clock } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle, ThumbsUp, Trash2, Edit2, Shield, GraduationCap, Clock, PenTool, X } from "lucide-react";
 import Loader from "../../components/ui/Loader";
 import RichTextEditor from "../../components/ui/RichTextEditor";
 import GlassCard from "../../components/ui/GlassCard";
@@ -20,6 +20,7 @@ export default function QuestionDetailPage(props) {
     const [newAnswer, setNewAnswer] = useState("");
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [isAnswerModalOpen, setIsAnswerModalOpen] = useState(false);
     const { user, profile, isAdmin, isSenior } = useAuth();
     const router = useRouter();
     const [editingAnswerId, setEditingAnswerId] = useState(null);
@@ -238,6 +239,7 @@ export default function QuestionDetailPage(props) {
             if (error) throw error;
 
             setNewAnswer("");
+            setIsAnswerModalOpen(false);
         } catch (error) {
             alert("Error posting answer: " + error.message);
         }
@@ -428,52 +430,83 @@ export default function QuestionDetailPage(props) {
                 </div>
             </div>
 
-            {/* Post Answer Sticky Card - Refactored to Docked Bar */}
-            {user && (isSenior || isAdmin) ? (
-                <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0F1623]/95 backdrop-blur-xl border-t border-cyan-500/20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)]">
-                    <div className="w-full max-w-4xl mx-auto p-4 md:p-6">
-                        <div className="flex flex-col gap-4">
-                            <div className="flex justify-between items-center">
-                                <label className="text-sm font-bold text-cyan-400 flex items-center gap-2">
-                                    <GraduationCap size={16} />
-                                    Post your Answer (Senior)
-                                </label>
-                                <button 
-                                    onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
-                                    className="md:hidden text-xs text-slate-400"
-                                >
-                                    Expand
-                                </button>
-                            </div>
+            {/* Floating Action Button for Posting Answer */}
+            {user && (isSenior || isAdmin) && (
+                <>
+                    <button
+                        onClick={() => setIsAnswerModalOpen(true)}
+                        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-cyan-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center justify-center hover:bg-cyan-400 transition-all hover:scale-110 active:scale-95 group"
+                        title="Post an Answer"
+                    >
+                        <PenTool size={24} className="fill-current" />
+                        <span className="absolute right-full mr-4 bg-slate-900 text-cyan-400 px-3 py-1.5 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-cyan-500/20 pointer-events-none">
+                            Post Answer
+                        </span>
+                    </button>
+
+                    {/* Answer Modal */}
+                    {isAnswerModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                             {/* Backdrop click to close */}
+                            <div className="absolute inset-0" onClick={() => setIsAnswerModalOpen(false)} />
                             
-                            <RichTextEditor 
-                                content={newAnswer} 
-                                onChange={setNewAnswer} 
-                                placeholder="Write a detailed explanation..." 
-                            />
-                            
-                            <div className="flex justify-end">
-                                <GlassButton
-                                    onClick={handleAnswerSubmit}
-                                    disabled={submitting}
-                                    variant="primary"
-                                    className="shadow-lg shadow-cyan-500/20 w-full md:w-auto"
-                                    loading={submitting}
-                                >
-                                    <Send size={16} className="mr-2" />
-                                    Post Answer
-                                </GlassButton>
+                            <div className="w-full max-w-3xl bg-[#0F1623] border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-200">
+                                {/* Header */}
+                                <div className="flex justify-between items-center p-4 sm:p-6 border-b border-white/5 bg-slate-900/50">
+                                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                        <GraduationCap className="text-cyan-400" />
+                                        Post your Answer
+                                    </h3>
+                                    <button 
+                                        onClick={() => setIsAnswerModalOpen(false)}
+                                        className="text-slate-400 hover:text-white transition-colors"
+                                    >
+                                        <X size={24} />
+                                    </button>
+                                </div>
+
+                                {/* Body */}
+                                <div className="p-4 sm:p-6 bg-[#0F1623]">
+                                    <div className="mb-6">
+                                        <RichTextEditor 
+                                            content={newAnswer} 
+                                            onChange={setNewAnswer} 
+                                            placeholder="Write a detailed explanation for this student..." 
+                                            className="min-h-[300px]"
+                                        />
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 pt-2">
+                                        <GlassButton 
+                                            variant="ghost" 
+                                            onClick={() => setIsAnswerModalOpen(false)}
+                                            className="text-slate-300"
+                                        >
+                                            Cancel
+                                        </GlassButton>
+                                        <GlassButton
+                                            onClick={handleAnswerSubmit}
+                                            disabled={submitting}
+                                            variant="primary"
+                                            className="shadow-lg shadow-cyan-500/20 px-8"
+                                            loading={submitting}
+                                        >
+                                            <Send size={16} className="mr-2" />
+                                            Post Answer
+                                        </GlassButton>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            ) : user ? (
-                <div className="text-center py-8 bg-slate-900/30 rounded-2xl border border-white/5 mx-auto max-w-2xl">
-                    <p className="font-medium text-slate-400">Waiting for a Senior student to answer...</p>
-                </div>
-            ) : (
-                <div className="text-center py-8 bg-slate-900/30 rounded-2xl border border-white/5 mx-auto max-w-2xl">
-                    <Link href="/login" className="text-cyan-400 hover:underline">Login</Link> <span className="text-slate-500">to view answers.</span>
+                    )}
+                </>
+            )}
+
+            {/* Login Prompt for non-logged in users (retained but styled to float or just stay inline) */}
+            {!user && (
+                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/90 backdrop-blur-md border border-white/10 px-6 py-3 rounded-full shadow-2xl flex items-center gap-2">
+                    <span className="text-slate-400 text-sm">Want to see answers?</span>
+                    <Link href="/login" className="text-cyan-400 hover:text-cyan-300 font-bold text-sm">Login to Meddot</Link> 
                 </div>
             )}
         </div>
