@@ -159,16 +159,19 @@ export default function ProfileCard({ profile, stats = { notesCount: 0, answersC
                         
                         {/* Stats Row */}
                         <div className="flex gap-8 mt-8 pb-8 border-b border-white/5">
+                            {/* Hidden for now as we don't track followers yet */}
+                            {/* 
                             <div className="flex flex-col gap-1">
-                                <span className="text-white font-bold text-xl">1.2k</span>
+                                <span className="text-white font-bold text-xl">0</span>
                                 <span className="text-slate-500 text-xs uppercase tracking-wide font-bold">Followers</span>
-                            </div>
+                            </div> 
+                            */}
                             <div className="flex flex-col gap-1">
-                                <span className="text-white font-bold text-xl">{stats.notesCount}</span>
+                                <span className="text-white font-bold text-xl">{stats.notesCount || 0}</span>
                                 <span className="text-slate-500 text-xs uppercase tracking-wide font-bold">Notes</span>
                             </div>
                             <div className="flex flex-col gap-1">
-                                <span className="text-white font-bold text-xl">{stats.answersCount * 10 + 890}</span>
+                                <span className="text-white font-bold text-xl">{(stats.answersCount || 0) * 10}</span>
                                 <span className="text-slate-500 text-xs uppercase tracking-wide font-bold">Reputation</span>
                             </div>
                         </div>
@@ -182,31 +185,38 @@ export default function ProfileCard({ profile, stats = { notesCount: 0, answersC
                     <div className="bg-slate-900/40 rounded-3xl p-8 border border-white/5 backdrop-blur-sm">
                         <h4 className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-6">Achievements</h4>
                         <div className="flex flex-wrap gap-3">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 p-[2px] shadow-lg shadow-orange-500/10" title="Top Contributor">
-                                <div className="w-full h-full bg-[#0B1120] rounded-full flex items-center justify-center">
-                                    <Star size={20} className="text-yellow-500 fill-yellow-500/80 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
+                            {/* Dynamic Badges */}
+                            {profile.role === 'senior' && (
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 p-[2px] shadow-lg shadow-cyan-500/10" title="Verified Senior">
+                                    <div className="w-full h-full bg-[#0B1120] rounded-full flex items-center justify-center">
+                                        <ShieldCheck size={20} className="text-cyan-500 fill-cyan-500/20 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 p-[2px] shadow-lg shadow-cyan-500/10" title="Verified Senior">
-                                <div className="w-full h-full bg-[#0B1120] rounded-full flex items-center justify-center">
-                                    <ShieldCheck size={20} className="text-cyan-500 fill-cyan-500/20 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                            )}
+                            {(stats.notesCount > 0) && (
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 p-[2px] shadow-lg shadow-emerald-500/10" title="Contributor">
+                                    <div className="w-full h-full bg-[#0B1120] rounded-full flex items-center justify-center">
+                                        <FileText size={20} className="text-green-500 fill-green-500/20 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 p-[2px] shadow-lg shadow-emerald-500/10" title="Note Writer">
-                                <div className="w-full h-full bg-[#0B1120] rounded-full flex items-center justify-center">
-                                    <FileText size={20} className="text-green-500 fill-green-500/20 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                                </div>
-                            </div>
+                            )}
+                            {/* Show placeholder if no badges */}
+                            {profile.role !== 'senior' && !stats.notesCount && (
+                                <span className="text-slate-600 italic text-sm">No badges yet.</span>
+                            )}
                         </div>
                         
+                        {/* Hidden Focus Areas until real data */}
+                        {/* 
                         <h4 className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-8 mb-4">Focus Areas</h4>
                         <div className="flex flex-wrap gap-2">
-                            {['Anatomy', 'Surgery', 'Research'].map(tag => (
+                            {['General'].map(tag => (
                                 <span key={tag} className="text-xs text-slate-300 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors cursor-default max-w-full truncate">
                                     {tag}
                                 </span>
                             ))}
-                        </div>
+                        </div> 
+                        */}
                     </div>
                 </div>
             </div>
