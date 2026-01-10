@@ -113,7 +113,7 @@ export default function DashboardLayout({ children }) {
                         
                         <NavLink href="/ask-senior" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen} icon={HelpCircle}>Ask Senior</NavLink>
                         <NavLink href="/chat" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen} icon={Users}>Study Groups</NavLink>
-                        <NavLink href="/chat" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen} icon={MessageCircle}>Inbox</NavLink>
+                        <NavLink href="/messages" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen} icon={MessageCircle}>Inbox</NavLink>
                         <NavLink href="/focus" pathname={pathname} setIsMobileMenuOpen={setIsMobileMenuOpen} icon={Clock}>Focus Mode</NavLink>
                         
                         <div className="my-2 h-px bg-white/5 mx-2"></div>

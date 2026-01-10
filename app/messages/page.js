@@ -4,171 +4,133 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
-import Loader from "../components/ui/Loader";
-import { MessageSquare, Search } from "lucide-react";
-import UserAvatar from "../components/ui/UserAvatar";
+import Loader from "@/app/components/ui/Loader";
+import { MessageCircle, Search, User, Shield, Award } from "lucide-react";
+import UserAvatar from "@/app/components/ui/UserAvatar";
+import ProfileCard from "@/app/components/profile/ProfileCard";
+import GlassButton from "@/app/components/ui/GlassButton";
 
-export default function MessagesInbox() {
+export default function InboxPage() {
     const { user } = useAuth();
     const [conversations, setConversations] = useState([]);
+    const [mentors, setMentors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const [searchResults, setSearchResults] = useState([]);
-    const [searching, setSearching] = useState(false);
 
     useEffect(() => {
         if (!user) return;
 
-        const fetchConversations = async () => {
-            try {
-                // Get unique users interacted with
-                const { data, error } = await supabase
-                    .from("direct_messages")
-                    .select("*, sender:profiles!sender_id(id, full_name, email, role), receiver:profiles!receiver_id(id, full_name, email, role)")
-                    .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-                    .order("created_at", { ascending: false });
+        const fetchData = async () => {
+             // 1. Fetch Conversations (DMs)
+            const { data: rooms, error: roomsError } = await supabase
+                .from("chat_rooms")
+                .select("*")
+                .eq("type", "dm")
+                .contains("participants", [user.id])
+                .neq("last_message_at", null) 
+                .order("last_message_at", { ascending: false });
 
-                if (error) throw error;
-
-                const convos = {};
-                data.forEach(msg => {
-                    const partner = msg.sender_id === user.id ? msg.receiver : msg.sender;
-                    if (!partner) return;
-                    if (!convos[partner.id]) {
-                        convos[partner.id] = {
-                            partner,
-                            lastMessage: msg,
-                            unreadCount: (!msg.is_read && msg.receiver_id === user.id) ? 1 : 0
-                        };
-                    } else {
-                        if (!msg.is_read && msg.receiver_id === user.id) {
-                            convos[partner.id].unreadCount++;
-                        }
-                    }
-                });
-
-                setConversations(Object.values(convos));
-
-            } catch (error) {
-                console.error(error);
+            if (!roomsError && rooms) {
+                 const enriched = await Promise.all(rooms.map(async (room) => {
+                     const otherId = room.participants.find(id => id !== user.id);
+                     const { data: profile } = await supabase.from('profiles').select('*').eq('id', otherId).single();
+                     return { ...room, partner: profile };
+                 }));
+                 setConversations(enriched);
             }
+
+            // 2. Fetch Suggested Mentors (Seniors & Admins)
+            // Excluding current user
+            const { data: mentorsData } = await supabase
+                .from('profiles')
+                .select('*')
+                .in('role', ['senior', 'admin'])
+                .neq('id', user.id)
+                .limit(6);
+            
+            setMentors(mentorsData || []);
             setLoading(false);
         };
 
-        fetchConversations();
-
-        // Subscribe to new DMs to update inbox
-        const channel = supabase
-            .channel('dm-inbox')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'direct_messages', filter: `receiver_id=eq.${user.id}` }, () => {
-                fetchConversations();
-            })
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'direct_messages', filter: `sender_id=eq.${user.id}` }, () => {
-                fetchConversations();
-            })
-            .subscribe();
-
-        return () => { supabase.removeChannel(channel); };
+        fetchData();
     }, [user]);
 
-
-
-    const handleSearch = async (term) => {
-        setSearchTerm(term);
-        if (term.length < 2) {
-            setSearchResults([]);
-            return;
-        }
-        setSearching(true);
-        const { data } = await supabase
-            .from('profiles')
-            .select('id, full_name, role')
-            .ilike('full_name', `%${term}%`)
-            .limit(5);
-
-        // Filter out self
-        const filtered = (data || []).filter(p => p.id !== user?.id);
-        setSearchResults(filtered);
-        setSearching(false);
-    };
-
-    if (loading) return <div className="flex justify-center p-20"><Loader /></div>;
+    if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#0F1623]"><Loader /></div>;
 
     return (
-        <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto", background: "var(--background)", minHeight: "100vh" }}>
-            <h1 style={{ fontSize: "2rem", fontWeight: 800, marginBottom: "2rem" }}>Messages</h1>
-
-            {/* User Search */}
-            <div style={{ marginBottom: "2rem", position: "relative" }}>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'var(--card-bg)', border: '1px solid var(--card-border)', padding: '0.75rem', borderRadius: '0.75rem' }}>
-                    <Search size={20} className="text-muted-foreground" />
-                    <input
-                        type="text"
-                        placeholder="Search users to chat with..."
-                        value={searchTerm}
-                        onChange={e => handleSearch(e.target.value)}
-                        style={{ background: 'transparent', border: 'none', outline: 'none', width: '100%', color: 'var(--foreground)' }}
-                    />
+        <div className="min-h-screen bg-[#0F1623] p-6 pb-20 md:pl-80"> 
+             {/* Note: The main layout padding might need adjustment, assuming this renders in the main slot */}
+            <div className="max-w-7xl mx-auto">
+                
+                {/* Header */}
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">Inbox</h1>
+                        <p className="text-slate-400">Manage your messages and connect with mentors.</p>
+                    </div>
                 </div>
-                {searchResults.length > 0 && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '0.75rem', marginTop: '0.5rem', boxShadow: 'var(--shadow-lg)', zIndex: 10 }}>
-                        {searchResults.map(p => (
-                            <Link key={p.id} href={`/messages/${p.id}`} style={{ display: 'block', padding: '1rem', textDecoration: 'none', color: 'var(--foreground)', borderBottom: '1px solid var(--border)' }}>
-                                <div style={{ fontWeight: 600 }}>{p.full_name}</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', textTransform: 'capitalize' }}>{p.role}</div>
-                            </Link>
-                        ))}
-                    </div>
-                )}
-            </div>
 
-            {/* Conversation List */}
-            <div style={{ display: "grid", gap: "1rem" }}>
-                {conversations.length === 0 && !searchTerm ? (
-                    <div style={{ textAlign: "center", padding: "4rem", color: "var(--muted-foreground)" }}>
-                        <MessageSquare size={48} style={{ marginBottom: "1rem", opacity: 0.5 }} />
-                        <p>No messages yet.</p>
-                        <p style={{ fontSize: "0.9rem" }}>Search for a user above to start chatting.</p>
+                {/* Suggested Mentors Section */}
+                <section className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center gap-2 mb-6">
+                        <Shield className="text-cyan-400" size={20} />
+                        <h2 className="text-lg font-bold text-white uppercase tracking-wider">Suggested Mentors</h2>
                     </div>
-                ) : (
-                    conversations.map(({ partner, lastMessage, unreadCount }) => (
-                        <Link key={partner.id} href={`/messages/${partner.id}`} style={{ textDecoration: 'none' }}>
-                            <div style={{
-                                background: "var(--card-bg)",
-                                padding: "1.25rem",
-                                borderRadius: "1rem",
-                                border: "1px solid var(--card-border)",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "1rem",
-                                transition: "all 0.2s"
-                            }} className="hover:shadow-md hover:border-blue-300">
-                                <UserAvatar user={partner} size="48px" />
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
-                                        <h3 style={{ fontWeight: 600, color: "var(--foreground)" }}>{partner.full_name}</h3>
-                                        <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                                            {new Date(lastMessage.created_at).toLocaleDateString()}
-                                        </span>
+                    
+                    {mentors.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {mentors.map(mentor => (
+                                <ProfileCard key={mentor.id} profile={mentor} compact={true} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="p-8 border border-white/5 rounded-2xl bg-white/5 text-center text-slate-400">
+                            No mentors found at the moment.
+                        </div>
+                    )}
+                </section>
+
+                {/* Conversations Section */}
+                <section className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+                    <div className="flex items-center gap-2 mb-6">
+                        <MessageCircle className="text-indigo-400" size={20} />
+                        <h2 className="text-lg font-bold text-white uppercase tracking-wider">Your Conversations</h2>
+                    </div>
+
+                    <div className="grid gap-4">
+                        {conversations.length > 0 ? (
+                            conversations.map(convo => (
+                                <Link href={`/chat/${convo.id}`} key={convo.id}>
+                                    <div className="group bg-[#151e2e]/50 backdrop-blur-md border border-white/5 rounded-2xl p-4 flex items-center gap-4 hover:bg-white/5 hover:border-cyan-500/30 transition-all cursor-pointer">
+                                        <UserAvatar user={convo.partner} size="56px" />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <h3 className="text-white font-bold group-hover:text-cyan-400 transition-colors truncate">
+                                                    {convo.partner?.full_name}
+                                                </h3>
+                                                <span className="text-xs text-slate-500">
+                                                    {convo.last_message_at ? new Date(convo.last_message_at).toLocaleDateString() : ''}
+                                                </span>
+                                            </div>
+                                            <p className="text-slate-400 text-sm truncate">
+                                                Click to continue chatting...
+                                            </p>
+                                        </div>
+                                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 group-hover:bg-cyan-500/20 group-hover:text-cyan-400 transition-all">
+                                            <MessageCircle size={16} />
+                                        </div>
                                     </div>
-                                    <p style={{
-                                        color: unreadCount > 0 ? "var(--foreground)" : "var(--muted-foreground)",
-                                        fontWeight: unreadCount > 0 ? 600 : 400,
-                                        fontSize: "0.95rem",
-                                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "250px"
-                                    }}>
-                                        {lastMessage.sender_id === user.id ? 'You: ' : ''}{lastMessage.content}
-                                    </p>
-                                </div>
-                                {unreadCount > 0 && (
-                                    <div style={{ background: "var(--primary)", color: "white", borderRadius: "99px", padding: "2px 8px", fontSize: "0.75rem", fontWeight: 700 }}>
-                                        {unreadCount}
-                                    </div>
-                                )}
+                                </Link>
+                            ))
+                        ) : (
+                            <div className="text-center py-12 border-2 border-dashed border-slate-800 rounded-3xl">
+                                <MessageCircle size={48} className="mx-auto text-slate-700 mb-4" />
+                                <h3 className="text-slate-300 font-bold mb-2">No messages yet</h3>
+                                <p className="text-slate-500">Connect with a mentor above to start a conversation!</p>
                             </div>
-                        </Link>
-                    ))
-                )}
+                        )}
+                    </div>
+                </section>
             </div>
         </div>
     );
