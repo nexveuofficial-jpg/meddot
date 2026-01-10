@@ -100,7 +100,7 @@ export default function InboxPage() {
                     <div className="grid gap-4">
                         {conversations.length > 0 ? (
                             conversations.map(convo => (
-                                <Link href={`/chat/${convo.id}`} key={convo.id}>
+                                <Link href={`/messages/room/${convo.id}`} key={convo.id}>
                                     <div className="group bg-[#151e2e]/50 backdrop-blur-md border border-white/5 rounded-2xl p-4 flex items-center gap-4 hover:bg-white/5 hover:border-cyan-500/30 transition-all cursor-pointer">
                                         <UserAvatar user={convo.partner} size="56px" />
                                         <div className="flex-1 min-w-0">

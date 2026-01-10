@@ -41,7 +41,7 @@ export default function PublicProfilePage(props) {
             });
 
             if (error) throw error;
-            router.push(`/chat/${roomId}`);
+            router.push(`/messages/room/${roomId}`);
         } catch (error) {
             console.error("Error creating DM:", error);
             alert("Failed to start chat. " + error.message);

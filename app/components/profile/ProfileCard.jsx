@@ -20,7 +20,7 @@ export default function ProfileCard({ profile, stats = { notesCount: 0, answersC
             });
 
             if (error) throw error;
-            router.push(`/chat/${roomId}`);
+            router.push(`/messages/room/${roomId}`);
         } catch (error) {
             console.error("Error creating DM:", error);
             alert("Failed to start chat.");

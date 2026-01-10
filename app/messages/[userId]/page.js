@@ -29,7 +29,7 @@ export default function MessageRedirect(props) {
                 if (error) throw error;
 
                 if (roomId) {
-                    router.replace(`/chat/${roomId}`);
+                    router.replace(`/messages/room/${roomId}`);
                 } else {
                     throw new Error("Could not create chat room.");
                 }
