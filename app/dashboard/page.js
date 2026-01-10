@@ -139,14 +139,6 @@ export default function DashboardPage() {
                         </span>
                     </h1>
                 </div>
-                <GlassButton
-                    onClick={logout}
-                    variant="danger"
-                    size="sm"
-                    className="shadow-red-500/20"
-                >
-                    Logout
-                </GlassButton>
             </header>
 
             {/* Announcements Section */}
