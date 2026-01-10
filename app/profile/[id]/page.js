@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/context/AuthContext";
 import UserAvatar from "@/app/components/ui/UserAvatar";
 import NoteCard from "@/app/components/notes/NoteCard";
+import GlassButton from "@/app/components/ui/GlassButton";
 import { MessageCircle, Edit2, Calendar, MapPin, Link as LinkIcon, BookOpen } from "lucide-react";
 import Link from "next/link";
 import Loader from "@/app/components/ui/Loader";
@@ -129,17 +130,18 @@ export default function PublicProfilePage(props) {
                     {/* Action Button */}
                     <div className="flex-shrink-0 mb-4 sm:mb-2">
                         {isMe ? (
-                            <Link href="/profile" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-50 transition-colors shadow-sm">
-                                <Edit2 size={18} />
-                                Edit Profile
+                            <Link href="/profile">
+                                <GlassButton variant="secondary" className="bg-white/90 text-slate-800 hover:bg-white border-white/50">
+                                    <Edit2 size={18} className="mr-2" />
+                                    Edit Profile
+                                </GlassButton>
                             </Link>
                         ) : (
-                            <Link 
-                                href={`/messages/${profile.id}`} 
-                                className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg transform active:scale-95 transition-all"
-                            >
-                                <MessageCircle size={20} />
-                                Message
+                            <Link href={`/messages/${profile.id}`}>
+                                <GlassButton variant="primary" className="shadow-lg shadow-blue-500/30">
+                                    <MessageCircle size={18} className="mr-2" />
+                                    Message
+                                </GlassButton>
                             </Link>
                         )}
                     </div>

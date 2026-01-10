@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import { useAuth } from "@/app/context/AuthContext";
 import DoctorCompanion from "../components/companion/DoctorCompanion";
+import GlassButton from "../components/ui/GlassButton";
 import styles from "./notes.module.css";
 
 const ITEMS_PER_PAGE = 50;
@@ -68,20 +69,11 @@ export default function NotesPage() {
             if (sourceFilter === 'official') {
                 query = query.in('author_role', ['admin', 'senior']);
             } else if (sourceFilter === 'community') {
-                query = query.not('author_role', 'in', '("admin","senior")'); // Correct syntax for not.in might vary, checking safest simple filter or handling client side mixed? 
-                // Actual Supabase syntax: .not('author_role', 'in', ['admin', 'senior']) ??
-                // Let's use filter if needed or simple logic. 
-                // .filter('author_role', 'not.in', '("admin","senior")')
-                // safer:
-                // query = query.or('author_role.neq.admin,author_role.neq.senior') -> tricky.
                 // Simplest for now: .neq('author_role', 'admin').neq('author_role', 'senior')
                 query = query.neq('author_role', 'admin').neq('author_role', 'senior');
             }
 
             if (debouncedSearch) {
-                // ILIKE for case-insensitive search on title. 
-                // Note: Searching multiple columns (title OR description) is hard without Views or RPC in simple query chaining.
-                // We will stick to Title search for performance as requested.
                 query = query.ilike('title', `%${debouncedSearch}%`);
             }
 
@@ -132,10 +124,10 @@ export default function NotesPage() {
                 {/* Upload Button checking Feature Flag */}
                 {isEnabled('enable_uploads') && user && (
                     <Link href="/notes/upload">
-                        <button className={styles.uploadButton}>
-                            <Plus size={18} />
+                        <GlassButton variant="primary" size="md">
+                            <Plus size={18} className="mr-2" />
                             Upload Note
-                        </button>
+                        </GlassButton>
                     </Link>
                 )}
             </header>
@@ -280,14 +272,14 @@ export default function NotesPage() {
                         {/* Load More Button */}
                         {hasMore && (
                             <div style={{ textAlign: 'center', marginTop: '3rem', marginBottom: '2rem' }}>
-                                <button
+                                <GlassButton
                                     onClick={loadMoreNotes}
                                     disabled={loadingMore}
-                                    className={styles.loadMoreBtn}
+                                    variant="outline"
+                                    loading={loadingMore}
                                 >
-                                    {loadingMore && <Loader size={16} />}
                                     {loadingMore ? 'Loading...' : 'Load More Notes'}
-                                </button>
+                                </GlassButton>
                             </div>
                         )}
                     </>

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useFeature } from "@/app/context/FeatureFlagContext";
 import DashboardCard from "../components/ui/DashboardCard";
 import DoctorCompanion from "../components/companion/DoctorCompanion";
+import GlassButton from "../components/ui/GlassButton";
 import { supabase } from "@/lib/supabase";
 import { Megaphone, AlertCircle } from "lucide-react";
 import styles from "./page.module.css";
@@ -138,12 +139,14 @@ export default function DashboardPage() {
                         </span>
                     </h1>
                 </div>
-                <button
+                <GlassButton
                     onClick={logout}
-                    className={styles.logoutButton}
+                    variant="danger"
+                    size="sm"
+                    className="shadow-red-500/20"
                 >
                     Logout
-                </button>
+                </GlassButton>
             </header>
 
             {/* Announcements Section */}
