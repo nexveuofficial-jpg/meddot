@@ -22,8 +22,8 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
         {/* 1. "Living" Background (Breathable Animation) */}
-        <div className="fixed top-[-20%] left-[-10%] w-[900px] h-[900px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen animate-blob-float z-[-1]" />
-        <div className="fixed bottom-[-20%] right-[-10%] w-[700px] h-[700px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none mix-blend-screen animate-blob-float z-[-1]" style={{ animationDelay: '2s' }} />
+        <div className="fixed top-[-20%] left-[-10%] w-[900px] h-[900px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen animate-[pulse_8s_ease-in-out_infinite] z-[-1]" />
+        <div className="fixed bottom-[-20%] right-[-10%] w-[700px] h-[700px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none mix-blend-screen animate-[pulse_10s_ease-in-out_infinite_reverse] z-[-1]" />
 
         <AuthProvider>
           <FeatureFlagProvider>
@@ -32,9 +32,9 @@ export default function RootLayout({ children }) {
             {/* Note: User said "Migrate entire application". A global top nav eliminates the need for sidebars in some designs, or works with them. */ }
              
             {/* Global Content Wrapper to ensure clickability over background */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-hidden relative z-10">
+            <div className="relative z-10">
                 {children}
-            </main>
+            </div>
             <Toaster position="top-center" richColors theme="dark" />
           </FeatureFlagProvider>
         </AuthProvider>

@@ -65,7 +65,7 @@ export default function InboxPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">Messages</h1>
+                        <h1 className="text-3xl font-bold text-white mb-6">Messages</h1>
                         <p className="text-slate-400">Manage your direct messages and mentor connections.</p>
                     </div>
                 </div>

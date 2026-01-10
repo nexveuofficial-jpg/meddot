@@ -14,7 +14,6 @@ module.exports = {
         'gradient-x': 'gradient-x 15s ease infinite',
         'pulse-slow': 'pulse 8s ease-in-out infinite',
         'pulse-slower': 'pulse 10s ease-in-out infinite reverse',
-        'blob-float': 'float 10s infinite ease-in-out',
       },
       keyframes: {
         'gradient-x': {
@@ -26,10 +25,6 @@ module.exports = {
             'background-size': '200% 200%',
             'background-position': 'right center',
           },
-        },
-        float: {
-          '0%, 100%': { transform: 'translateY(0) scale(1)' },
-          '50%': { transform: 'translateY(-20px) scale(1.05)' },
         },
       },
       colors: {
