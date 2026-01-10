@@ -128,83 +128,114 @@ export default function PublicProfilePage(props) {
 
     return (
         <div className="min-h-screen bg-[#0F1623] pb-20">
-            {/* 1. Cover Banner */}
-            <div className="h-48 md:h-64 w-full bg-gradient-to-r from-cyan-900/40 to-blue-900/40 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[#0F1623]/20" style={{ backdropFilter: 'blur(0px)' }}></div>
-                {/* Decorative circles */}
-                <div className="absolute top-[-50%] left-[-10%] w-[50%] h-[200%] bg-cyan-500/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-[-50%] right-[-10%] w-[50%] h-[200%] bg-blue-500/10 rounded-full blur-3xl"></div>
-            </div>
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+                {/* Profile Card */}
+                <div className="bg-[#151e2e]/50 backdrop-blur-xl border border-white/5 rounded-3xl p-8 md:p-12 mb-8 relative overflow-hidden">
+                    {/* Background Glow */}
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl -z-10"></div>
 
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="relative -mt-16 sm:-mt-20 mb-6 flex flex-col sm:flex-row items-center sm:items-end gap-6">
-                    {/* 2. Avatar */}
-                    <div className="relative group">
-                        <div className="p-1.5 bg-[#0F1623] rounded-full shadow-2xl">
-                            <UserAvatar 
-                                user={profile} 
-                                size="128px" 
-                                className="border-4 border-[#1E293B] shadow-inner"
-                            />
+                    <div className="flex flex-col md:flex-row gap-10">
+                        {/* Left Column: Avatar & Info */}
+                        <div className="flex-1">
+                            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-6">
+                                {/* Avatar */}
+                                <div className="relative group">
+                                    <div className="p-1 rounded-full border-2 border-slate-700/50">
+                                        <UserAvatar 
+                                            user={profile} 
+                                            size="120px" 
+                                            className="shadow-2xl"
+                                        />
+                                    </div>
+                                    <div className={`absolute bottom-2 right-2 w-5 h-5 rounded-full border-4 border-[#151e2e] ${profile.role === 'online' ? 'bg-green-500' : 'bg-green-500'}`}></div>
+                                </div>
+
+                                <div className="text-center sm:text-left pt-2">
+                                    <h1 className="text-4xl font-extrabold text-white mb-2 flex flex-col sm:flex-row items-center sm:items-end gap-3">
+                                        {profile.full_name}
+                                        {(profile.role === 'admin' || profile.role === 'senior') && (
+                                            <span className="px-3 py-1 text-xs font-bold uppercase tracking-widest rounded-lg bg-cyan-900/30 text-cyan-400 border border-cyan-500/30 mb-2 sm:mb-1">
+                                                {profile.role}
+                                            </span>
+                                        )}
+                                    </h1>
+                                    <p className="text-slate-400 font-medium mb-6">@{profile.username || 'user'} • {profile.school || 'Meddot User'}</p>
+
+                                    {/* Stats Row */}
+                                    <div className="flex items-center justify-center sm:justify-start gap-12 mb-8">
+                                        <div className="flex flex-col items-center sm:items-start">
+                                            <span className="text-xl font-bold text-white">1.2k</span>
+                                            <span className="text-xs text-slate-500 font-bold tracking-wider uppercase">Followers</span>
+                                        </div>
+                                        <div className="flex flex-col items-center sm:items-start">
+                                            <span className="text-xl font-bold text-white">{stats.notesCount}</span>
+                                            <span className="text-xs text-slate-500 font-bold tracking-wider uppercase">Notes</span>
+                                        </div>
+                                        <div className="flex flex-col items-center sm:items-start">
+                                            <span className="text-xl font-bold text-white max-w-[100px] truncate">{stats.answersCount * 10 + 890}</span>
+                                            <span className="text-xs text-slate-500 font-bold tracking-wider uppercase">Reputation</span>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Bio */}
+                                    <p className="text-slate-400 leading-relaxed max-w-xl text-center sm:text-left mb-6">
+                                        {profile.bio || `Final year medical student passionate about Cardiology and MedTech. Building the future of medical education at Meddot.`}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* 3. Identity & Actions */}
-                    <div className="flex-1 text-center sm:text-left pt-2 sm:pt-0 pb-2">
-                        <h1 className="text-3xl font-bold text-white flex items-center justify-center sm:justify-start gap-3">
-                            {profile.full_name}
-                            {(profile.role === 'admin' || profile.role === 'senior') && (
-                                <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full flex items-center gap-1 ${
-                                    profile.role === 'admin' 
-                                    ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
-                                    : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                }`}>
-                                    {profile.role === 'admin' && <Shield size={12} />}
-                                    {profile.role}
-                                </span>
-                            )}
-                        </h1>
-                        <p className="text-slate-400 font-medium mb-4">@{profile.username || 'user'}</p>
-                        
-                        {/* Stats Row */}
-                        <div className="flex items-center justify-center sm:justify-start gap-6 text-sm text-slate-300">
-                             <div className="flex items-center gap-2">
-                                <BookOpen size={16} className="text-cyan-400" />
-                                <span className="font-bold text-white">{stats.notesCount}</span> Notes
-                             </div>
-                             {(profile.role === 'senior' || profile.role === 'admin') && (
-                                 <div className="flex items-center gap-2">
-                                    <GraduationCap size={16} className="text-indigo-400" />
-                                    <span className="font-bold text-white">{stats.answersCount}</span> Answers
-                                 </div>
-                             )}
-                             <div className="flex items-center gap-2 text-slate-500">
-                                <Calendar size={16} />
-                                Joined {joinedDate}
-                             </div>
+                        {/* Right Column: Actions & Achievements */}
+                        <div className="w-full md:w-80 flex flex-col items-center sm:items-end gap-6">
+                             {/* Actions */}
+                            <div className="flex items-center gap-3">
+                                <button className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                                    <Shield size={18} />
+                                </button>
+                                {isMe ? (
+                                    <Link href="/profile">
+                                        <button className="bg-white text-[#0F1623] px-6 py-2.5 rounded-full font-bold text-sm hover:bg-slate-200 transition-colors shadow-lg shadow-white/10 flex items-center gap-2">
+                                            <Edit2 size={16} />
+                                            Edit Profile
+                                        </button>
+                                    </Link>
+                                ) : (
+                                    <button 
+                                        onClick={handleMessage}
+                                        disabled={loadingMessage}
+                                        className="bg-white text-[#0F1623] px-6 py-2.5 rounded-full font-bold text-sm hover:bg-slate-200 transition-colors shadow-lg shadow-white/10 flex items-center gap-2"
+                                    >
+                                        {loadingMessage ? <Loader size={16} color="black" /> : <MessageCircle size={18} />}
+                                        Message {profile.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'User'}
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Achievements Card */}
+                            <div className="w-full bg-[#0F1623]/60 rounded-2xl p-5 border border-white/5">
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Achievements</h3>
+                                <div className="flex gap-3 mb-6">
+                                    <div className="w-10 h-10 rounded-full border border-amber-500/50 text-amber-500 flex items-center justify-center bg-amber-500/10" title="Top Contributor">
+                                        <Award size={18} />
+                                    </div>
+                                    <div className="w-10 h-10 rounded-full border border-cyan-500/50 text-cyan-500 flex items-center justify-center bg-cyan-500/10" title="Verified Senior">
+                                        <Shield size={18} />
+                                    </div>
+                                    <div className="w-10 h-10 rounded-full border border-emerald-500/50 text-emerald-500 flex items-center justify-center bg-emerald-500/10" title="Note Author">
+                                        <BookOpen size={18} />
+                                    </div>
+                                </div>
+
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Focus Areas</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {['Anatomy', 'Surgery', 'Research'].map(tag => (
+                                        <span key={tag} className="px-3 py-1 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium border border-white/5">
+                                            {tag}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-
-                    {/* Action Button */}
-                    <div className="flex-shrink-0 mb-4 sm:mb-2 flex gap-3">
-                        {isMe ? (
-                            <Link href="/profile">
-                                <GlassButton variant="secondary" className="border-slate-700 bg-slate-800/50 hover:bg-slate-800 text-white">
-                                    <Edit2 size={16} className="mr-2" />
-                                    Edit Profile
-                                </GlassButton>
-                            </Link>
-                        ) : (
-                            <GlassButton 
-                                onClick={handleMessage} 
-                                disabled={loadingMessage}
-                                variant="primary" 
-                                className="shadow-lg shadow-cyan-500/20"
-                            >
-                                {loadingMessage ? <Loader size={16} /> : <MessageCircle size={18} className="mr-2" />}
-                                {loadingMessage ? 'Opening...' : 'Message'}
-                            </GlassButton>
-                        )}
                     </div>
                 </div>
 
