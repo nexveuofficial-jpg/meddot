@@ -76,7 +76,7 @@ export default function ChatLayout({ children }) {
         if (!flagsLoading) {
             fetchData();
         }
-    }, [isEnabled, flagsLoading, user]);
+    }, [isEnabled, flagsLoading, user?.id]); // Fix: fetching depends on ID, not full user object to prevent flickers
 
     if (flagsLoading) return <div className="flex h-screen items-center justify-center bg-[#0B1120]"><Loader /></div>;
 
