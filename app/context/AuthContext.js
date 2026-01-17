@@ -17,6 +17,9 @@ export function AuthProvider({ children }) {
     // Fetch profile from 'profiles' table with timeout
     const fetchProfile = async (userId) => {
         try {
+            // Optimistic Check: If we already have a profile in state, we might not need to do anything
+            // but we usually want to revalidate in background.
+
             const fetchPromise = supabase
                 .from("profiles")
                 .select("*")
@@ -34,6 +37,12 @@ export function AuthProvider({ children }) {
                 console.error("Error fetching profile:", error);
             } else {
                 setProfile(data);
+                // CACHE UPDATE: Update generic cache
+                try {
+                     localStorage.setItem(`meddot_profile_${userId}`, JSON.stringify(data));
+                } catch (e) {
+                    console.warn("Failed to cache profile", e);
+                }
             }
         } catch (err) {
             console.error("Profile fetch crash/timeout:", err);
@@ -65,10 +74,26 @@ export function AuthProvider({ children }) {
 
                 if (mounted) {
                     if (session?.user) {
-                        setDebugStatus("Session Found. Fetching Profile...");
+                        setDebugStatus("Session Found. Checking Cache...");
                         setUser(session.user);
+
+                        // --- FAST PATH: Check Cache ---
+                        try {
+                            const cached = localStorage.getItem(`meddot_profile_${session.user.id}`);
+                            if (cached) {
+                                const parsed = JSON.parse(cached);
+                                console.log("AuthContext: Loaded profile from cache (Fast Path)");
+                                setProfile(parsed);
+                                setLoading(false); // <--- CRITICAL: Stop loading immediately
+                                setDebugStatus("Profile Loaded (Cache). Revalidating...");
+                            }
+                        } catch (e) {
+                            console.warn("Cache read failed", e);
+                        }
+
+                        // --- BACKGROUND: Fetch Fresh ---
                         await fetchProfile(session.user.id);
-                        setDebugStatus("Profile Fetched. Finalizing...");
+                        setDebugStatus("Profile Synced.");
                     } else {
                         setDebugStatus("No Session Found.");
                     }
@@ -100,6 +125,10 @@ export function AuthProvider({ children }) {
                 (payload) => {
                     console.log("Realtime Profile Update:", payload.new);
                     setProfile(payload.new);
+                    // Update cache on realtime update too
+                     if (user?.id) {
+                         localStorage.setItem(`meddot_profile_${user.id}`, JSON.stringify(payload.new));
+                     }
                 }
             )
             .subscribe();
@@ -113,6 +142,13 @@ export function AuthProvider({ children }) {
                 setUser(session.user);
                 // Optimistic update to prevent flicker, but fetch profile
                 if (event === 'SIGNED_IN') {
+                    // Try to load cache immediately on sign in too?
+                    // Usually initializeAuth handles the initial load, this handles explicit sign-ins
+                     try {
+                        const cached = localStorage.getItem(`meddot_profile_${session.user.id}`);
+                        if (cached) setProfile(JSON.parse(cached));
+                    } catch(e) {}
+                    
                     await fetchProfile(session.user.id);
                 }
             } else {
@@ -196,6 +232,10 @@ export function AuthProvider({ children }) {
     // Logout
     const logout = async () => {
         try {
+            // Clear cache on logout
+            if (user?.id) {
+                localStorage.removeItem(`meddot_profile_${user.id}`);
+            }
             await supabase.auth.signOut();
             setUser(null);
             setProfile(null);
