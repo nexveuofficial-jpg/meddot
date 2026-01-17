@@ -141,9 +141,11 @@ export default function MessagesLayout({ children }) {
         <div className="flex h-[100dvh] bg-[#0B1120] overflow-hidden">
             {/* Sidebar */}
             {/* Hidden on mobile if chat is active, otherwise shown. Always shown on Desktop. */}
+            {/* Sidebar */}
+            {/* Hidden on mobile if chat is active, otherwise shown. Always shown on Desktop. */}
             <aside 
                 className={`
-                    w-full md:w-80 lg:w-96 flex-shrink-0 flex flex-col border-r border-white/5 bg-[#0F1623]/50 backdrop-blur-xl z-20
+                    w-full md:w-80 lg:w-96 flex-shrink-0 flex flex-col border-r border-cyan-500/10 bg-[#0F1623]/95 backdrop-blur-sm z-20 h-[100dvh]
                     ${isChatActive ? 'hidden md:flex' : 'flex'}
                 `}
             >
