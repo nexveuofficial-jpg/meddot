@@ -277,14 +277,6 @@ export default function MessagesLayout({ children }) {
 
             {/* Main Content Area */}
             <main className={`flex-1 relative h-full overflow-hidden ${!isChatActive ? 'hidden md:block' : 'block'}`}>
-                {!isChatActive && (
-                     <div className="flex flex-col items-center justify-center h-full text-slate-500">
-                        <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mb-4">
-                            <User size={32} opacity={0.5} />
-                        </div>
-                        <p>Select a conversation to start messaging</p>
-                    </div>
-                )}
                 {children}
             </main>
         </div>
