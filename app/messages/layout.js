@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, User, Search } from "lucide-react"; // Imported Search
-import Loader from "@/app/components/ui/Loader";
+import { ArrowLeft, User, Search } from "lucide-react"; 
+import { SidebarSkeleton } from "@/app/components/ui/LoadingSkeleton";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 
@@ -20,6 +20,8 @@ export default function MessagesLayout({ children }) {
     const isChatActive = pathname && pathname !== '/messages';
 
     useEffect(() => {
+        let subscription;
+
         const fetchDms = async () => {
             if (!user) {
                 setLoading(false);
@@ -27,12 +29,15 @@ export default function MessagesLayout({ children }) {
             }
 
             try {
-                const { data: myDms } = await supabase
+                // Initial Fetch
+                const { data: myDms, error } = await supabase
                     .from("chat_rooms")
                     .select("*")
                     .eq("type", "dm")
                     .contains("participants", [user.id])
                     .order("last_message_at", { ascending: false });
+
+                if (error) throw error;
 
                 if (myDms && myDms.length > 0) {
                     const enrichedDms = await Promise.all(myDms.map(async (dm) => {
@@ -41,14 +46,15 @@ export default function MessagesLayout({ children }) {
 
                         const { data: profile } = await supabase
                             .from('profiles')
-                            .select('username, full_name, avatar_url') // Added avatar_url fetch
+                            .select('username, full_name, avatar_url')
                             .eq('id', otherUserId)
                             .single();
 
                         return {
                             ...dm,
                             displayName: profile ? (profile.full_name || profile.username) : 'Unknown User',
-                            avatar_url: profile?.avatar_url
+                            avatar_url: profile?.avatar_url,
+                            username: profile?.username
                         };
                     }));
                     setDms(enrichedDms);
@@ -63,7 +69,30 @@ export default function MessagesLayout({ children }) {
 
         if (!authLoading) {
             fetchDms();
+
+            // Realtime Subscription
+            subscription = supabase
+                .channel('dm_list_updates')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*', // Listen to all events
+                        schema: 'public',
+                        table: 'chat_rooms',
+                        filter: `participants=cs.{${user?.id}}` // 'cs' means 'contains' in array
+                    },
+                    (payload) => {
+                         // On any change (new room or update), re-fetch to keep it simple and accurate
+                         // or optimize by manually updating state. Re-fetching is safer for now.
+                         fetchDms();
+                    }
+                )
+                .subscribe();
         }
+
+        return () => {
+            if (subscription) supabase.removeChannel(subscription);
+        };
     }, [user, authLoading]);
 
     const [globalResults, setGlobalResults] = useState([]);
@@ -122,16 +151,65 @@ export default function MessagesLayout({ children }) {
 
     const handleStartChat = async (otherUserId) => {
         try {
+            // 1. Try RPC Method (Preferred)
             const { data: roomId, error } = await supabase.rpc('get_or_create_dm_room', { 
                 other_user_id: otherUserId 
             });
 
-            if (error) throw error;
-            router.push(`/messages/room/${roomId}`);
-            setSearchTerm(""); // Clear search on selection
-        } catch (error) {
-            console.error("Error creating DM:", error);
-            alert("Failed to start chat.");
+            if (!error && roomId) {
+                router.push(`/messages/room/${roomId}`);
+                setSearchTerm("");
+                return;
+            }
+            
+            throw error || new Error("RPC returned no ID");
+
+        } catch (rpcError) {
+            console.warn("RPC failed, trying fallback:", rpcError);
+
+            // 2. Fallback: Direct Client-Side Logic
+            try {
+                // A. Check if room exists
+                const { data: existingRooms, error: searchError } = await supabase
+                    .from('chat_rooms')
+                    .select('id, participants')
+                    .eq('type', 'dm')
+                    .contains('participants', [user.id, otherUserId]);
+
+                if (existingRooms && existingRooms.length > 0) {
+                     // Check for exact match of 2 participants to avoid group chats if logic changes
+                     const correctRoom = existingRooms.find(r => r.participants.length === 2);
+                     if (correctRoom) {
+                         router.push(`/messages/room/${correctRoom.id}`);
+                         setSearchTerm("");
+                         return;
+                     }
+                }
+
+                // B. Create new room directly
+                const { data: newRoom, error: createError } = await supabase
+                    .from('chat_rooms')
+                    .insert([{
+                        name: 'Direct Message',
+                        type: 'dm',
+                        participants: [user.id, otherUserId],
+                        is_active: true,
+                        last_message_at: new Date().toISOString()
+                    }])
+                    .select()
+                    .single();
+
+                if (createError) throw createError;
+
+                if (newRoom) {
+                     router.push(`/messages/room/${newRoom.id}`);
+                     setSearchTerm("");
+                }
+
+            } catch (fallbackError) {
+                console.error("Critical Error creating DM:", fallbackError);
+                alert(`Failed to start chat. \nPlease ensure 'fix_chat_permissions.sql' is run in Supabase.\nError: ${fallbackError.message}`);
+            }
         }
     };
 
@@ -175,7 +253,7 @@ export default function MessagesLayout({ children }) {
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-slate-800">
                     {loading ? (
-                        <div className="flex justify-center p-4"><Loader size={24} /></div>
+                        <SidebarSkeleton />
                     ) : (
                         <div>
                              {dms.length === 0 && searchTerm.length === 0 && (

@@ -33,7 +33,25 @@ export function NoteCardSkeleton() {
     );
 }
 
-// Grid wrapper for convenience
+// ... existing code ...
+
+export function SidebarSkeleton() {
+    return (
+        <div className="space-y-4 p-4">
+             {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                    <div className={`${styles.skeleton}`} style={{ width: 40, height: 40, borderRadius: '50%' }} />
+                    <div className="flex-1 space-y-2">
+                        <div className={`${styles.skeleton}`} style={{ width: '60%', height: 16, borderRadius: 4 }} />
+                        <div className={`${styles.skeleton}`} style={{ width: '40%', height: 12, borderRadius: 4 }} />
+                    </div>
+                </div>
+             ))}
+        </div>
+    );
+}
+
+// ... existing SkeletonGrid ...
 export function SkeletonGrid({ count = 8 }) {
     return (
         <div style={{

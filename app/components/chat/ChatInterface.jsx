@@ -246,7 +246,7 @@ export default function ChatInterface({ roomId, basePath = "/chat" }) {
             setMessages(prev => prev.map(m => m.id === optimisticId ? data : m));
         } catch (error) {
             console.error("Send Error:", error);
-            addToast("Failed to send.", "error");
+            addToast(`Failed to send: ${error.message || "Unknown error"}`, "error");
             setMessages(prev => prev.filter(m => m.id !== optimisticId));
         }
     };

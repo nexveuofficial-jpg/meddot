@@ -66,7 +66,17 @@ BEGIN
         ARRAY[current_user_id, other_user_id],
         TRUE
     )
+    ON CONFLICT DO NOTHING
     RETURNING id INTO room_id;
+
+    -- 4. If concurrent insert happened (race condition), fetch again
+    IF room_id IS NULL THEN
+        SELECT id INTO room_id
+        FROM public.chat_rooms
+        WHERE type = 'dm'
+        AND participants @> ARRAY[current_user_id, other_user_id]
+        LIMIT 1;
+    END IF;
 
     RETURN room_id;
 END;
