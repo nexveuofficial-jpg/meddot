@@ -8,6 +8,7 @@ import { ArrowLeft, User, Search } from "lucide-react";
 import { SidebarSkeleton } from "@/app/components/ui/LoadingSkeleton";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
+import Loader from "@/app/components/ui/Loader";
 
 export default function MessagesLayoutClient({ children }) {
     const [dms, setDms] = useState([]); 
